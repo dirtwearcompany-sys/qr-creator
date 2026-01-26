@@ -609,14 +609,14 @@
         // ============================================
         // REPLACE THIS WITH YOUR FIREBASE CONFIG
         const firebaseConfig = {
-            apiKey: "AIzaSyD4UGL6xY4WaUctzhBrY0_0aisBYsY5RYE",
-            authDomain: "trails-qr-tracker.firebaseapp.com",
-            databaseURL: "https://trails-qr-tracker-default-rtdb.firebaseio.com",
-            projectId: "trails-qr-tracker",
-            storageBucket: "trails-qr-tracker.firebasestorage.app",
-            messagingSenderId: "712760332585",
-            appId: "1:712760332585:web:318373bb1359360de16738",
-            measurementId: "G-0XXHDT6ZHQ"
+              apiKey: "AIzaSyD4UGL6xY4WaUctzhBrY0_0aisBYsY5RYE",
+              authDomain: "trails-qr-tracker.firebaseapp.com",
+              databaseURL: "https://trails-qr-tracker-default-rtdb.firebaseio.com",
+              projectId: "trails-qr-tracker",
+              storageBucket: "trails-qr-tracker.firebasestorage.app",
+              messagingSenderId: "712760332585",
+              appId: "1:712760332585:web:318373bb1359360de16738",
+              measurementId: "G-0XXHDT6ZHQ"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -794,12 +794,15 @@
             btnCreate.innerHTML = '<span class="loading"></span>';
 
             try {
-                // Generate QR code using API
-                const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
-                
                 // Create new QR code entry
                 const newCodeRef = push(ref(database, `users/${currentUser.uid}/qrcodes`));
                 const qrId = newCodeRef.key;
+
+                // IMPORTANT: Generate scan URL (this is what the QR code should point to)
+                const scanUrl = `${window.location.origin}${window.location.pathname}?scan=${qrId}&uid=${currentUser.uid}`;
+                
+                // Generate QR code using the SCAN URL (not the target URL!)
+                const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(scanUrl)}`;
 
                 await set(newCodeRef, {
                     id: qrId,
