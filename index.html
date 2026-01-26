@@ -471,6 +471,21 @@
             }
         }
 
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.1);
+            }
+        }
+
+        .scan-success.loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
         .scan-label {
             font-family: 'JetBrains Mono', monospace;
             font-size: 1.5rem;
@@ -591,8 +606,8 @@
     <!-- Scan Result Page -->
     <div id="scanContainer" class="scan-container">
         <div class="scan-result">
-            <div class="scan-success">✓</div>
-            <div class="scan-label" id="scanLabel">Loading...</div>
+            <div class="scan-success loading" id="scanSuccessIcon">⏳</div>
+            <div class="scan-label" id="scanLabel">Processing scan...</div>
             <p style="margin: 1rem 0; color: var(--text-secondary);">TOTAL SCANS</p>
             <div class="scan-count" id="scanCount">-</div>
         </div>
@@ -622,6 +637,21 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const database = getDatabase(app);
+
+        // ============================================
+        // IMMEDIATE SCAN CHECK (before Firebase loads)
+        // ============================================
+        // Check if this is a scan URL IMMEDIATELY to avoid showing login page
+        const urlParams = new URLSearchParams(window.location.search);
+        const scanId = urlParams.get('scan');
+        const userId = urlParams.get('uid');
+        
+        if (scanId && userId) {
+            // Hide auth container immediately
+            document.getElementById('authContainer').style.display = 'none';
+            // Show scan container
+            document.getElementById('scanContainer').classList.add('active');
+        }
 
         // ============================================
         // STATE
@@ -964,15 +994,23 @@
         // SCAN HANDLING
         // ============================================
         async function handlePublicScan(userId, qrId) {
+            // Make absolutely sure only scan container is visible
+            authContainer.style.display = 'none';
+            dashboard.classList.remove('active');
+            scanContainer.classList.add('active');
+            
+            const iconEl = document.getElementById('scanSuccessIcon');
+            
             try {
                 // Get the QR code data (no auth required for reading)
                 const qrRef = ref(database, `users/${userId}/qrcodes/${qrId}`);
                 const snapshot = await get(qrRef);
                 
                 if (!snapshot.exists()) {
+                    iconEl.classList.remove('loading');
+                    iconEl.textContent = '✗';
                     document.getElementById('scanLabel').textContent = 'QR Code Not Found';
                     document.getElementById('scanCount').textContent = '—';
-                    scanContainer.classList.add('active');
                     return;
                 }
 
@@ -985,10 +1023,11 @@
                     lastScanned: Date.now()
                 });
 
-                // Show scan result
+                // Show success
+                iconEl.classList.remove('loading');
+                iconEl.textContent = '✓';
                 document.getElementById('scanLabel').textContent = qrData.label;
                 document.getElementById('scanCount').textContent = newScanCount;
-                scanContainer.classList.add('active');
 
                 // Redirect to target URL after 2 seconds
                 setTimeout(() => {
@@ -997,9 +1036,10 @@
 
             } catch (error) {
                 console.error('Error handling scan:', error);
+                iconEl.classList.remove('loading');
+                iconEl.textContent = '✗';
                 document.getElementById('scanLabel').textContent = 'Error Processing Scan';
                 document.getElementById('scanCount').textContent = '—';
-                scanContainer.classList.add('active');
             }
         }
 
