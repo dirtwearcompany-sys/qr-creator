@@ -549,7 +549,9 @@
                 <input type="password" id="authPassword" placeholder="••••••••">
             </div>
             <button id="btnLogin">Login</button>
-            <button id="btnSignup" style="margin-top: 0.5rem; background: transparent; border: 1px solid var(--accent); color: var(--accent);">Sign Up</button>
+            <p style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 0.85rem; text-align: center;">
+                New signups require admin approval.<br>Contact the administrator for access.
+            </p>
             <div id="authError" class="error-message" style="display: none;"></div>
         </div>
     </div>
@@ -623,14 +625,14 @@
         // ============================================
         // REPLACE THIS WITH YOUR FIREBASE CONFIG
         const firebaseConfig = {
-          apiKey: "AIzaSyD4UGL6xY4WaUctzhBrY0_0aisBYsY5RYE",
-          authDomain: "trails-qr-tracker.firebaseapp.com",
-          databaseURL: "https://trails-qr-tracker-default-rtdb.firebaseio.com",
-          projectId: "trails-qr-tracker",
-          storageBucket: "trails-qr-tracker.firebasestorage.app",
-          messagingSenderId: "712760332585",
-          appId: "1:712760332585:web:318373bb1359360de16738",
-          measurementId: "G-0XXHDT6ZHQ"
+              apiKey: "AIzaSyD4UGL6xY4WaUctzhBrY0_0aisBYsY5RYE",
+              authDomain: "trails-qr-tracker.firebaseapp.com",
+              databaseURL: "https://trails-qr-tracker-default-rtdb.firebaseio.com",
+              projectId: "trails-qr-tracker",
+              storageBucket: "trails-qr-tracker.firebasestorage.app",
+              messagingSenderId: "712760332585",
+              appId: "1:712760332585:web:318373bb1359360de16738",
+              measurementId: "G-0XXHDT6ZHQ"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -667,7 +669,6 @@
         const authEmail = document.getElementById('authEmail');
         const authPassword = document.getElementById('authPassword');
         const btnLogin = document.getElementById('btnLogin');
-        const btnSignup = document.getElementById('btnSignup');
         const authError = document.getElementById('authError');
         const btnLogout = document.getElementById('btnLogout');
         const userEmail = document.getElementById('userEmail');
@@ -724,33 +725,6 @@
             } finally {
                 btnLogin.disabled = false;
                 btnLogin.textContent = 'Login';
-            }
-        });
-
-        btnSignup.addEventListener('click', async () => {
-            const email = authEmail.value.trim();
-            const password = authPassword.value;
-            
-            if (!email || !password) {
-                showError('Please enter email and password');
-                return;
-            }
-
-            if (password.length < 6) {
-                showError('Password must be at least 6 characters');
-                return;
-            }
-
-            btnSignup.disabled = true;
-            btnSignup.innerHTML = '<span class="loading"></span>';
-
-            try {
-                await createUserWithEmailAndPassword(auth, email, password);
-            } catch (error) {
-                showError(getErrorMessage(error.code));
-            } finally {
-                btnSignup.disabled = false;
-                btnSignup.textContent = 'Sign Up';
             }
         });
 
