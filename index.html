@@ -201,8 +201,10 @@
     </div>
 </div>
 
-<!-- qrcodejs loaded globally so canvas-based generators can use it -->
+<!-- qrcodejs for the dino shape QR (canvas rendering) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- qrcode-generator: exposes isDark(row,col) directly — no pixel sampling needed -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 
 <script>
     // ============================================
@@ -216,74 +218,6 @@
     };
 
     // ============================================
-    // CORE: GET QR MODULE MATRIX FROM QRCODE.JS
-    // This reads the actual canvas pixels accurately
-    // to produce a reliable boolean grid of dark/light modules
-    // ============================================
-    window.getQRMatrix = function(text) {
-        return new Promise(function(resolve) {
-            var div = document.createElement('div');
-            div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;width:auto;height:auto;';
-            document.body.appendChild(div);
-
-            // Use 580px for high resolution sampling
-            new QRCode(div, { text: text, width: 580, height: 580, correctLevel: QRCode.CorrectLevel.H });
-
-            setTimeout(function() {
-                var canvas = div.querySelector('canvas');
-                if (!canvas) { document.body.removeChild(div); resolve(null); return; }
-
-                var ctx = canvas.getContext('2d');
-                var W = canvas.width;
-                var pixels = ctx.getImageData(0, 0, W, W).data;
-
-                function isDark(x, y) {
-                    x = Math.min(Math.max(0, Math.round(x)), W-1);
-                    y = Math.min(Math.max(0, Math.round(y)), W-1);
-                    return pixels[(y * W + x) * 4] < 128;
-                }
-
-                // Find quiet zone edges by scanning for first dark pixel
-                var qx = 0, qy = 0;
-                for (var x = 0; x < W; x++) { var found = false; for (var y = 0; y < W; y++) { if (isDark(x,y)) { qx = x; found = true; break; } } if (found) break; }
-                for (var y = 0; y < W; y++) { var found = false; for (var x = 0; x < W; x++) { if (isDark(x,y)) { qy = y; found = true; break; } } if (found) break; }
-
-                // Find end of QR by scanning from right/bottom
-                var ex = W, ey = W;
-                for (var x = W-1; x >= 0; x--) { var found = false; for (var y = 0; y < W; y++) { if (isDark(x,y)) { ex = x; found = true; break; } } if (found) break; }
-                for (var y = W-1; y >= 0; y--) { var found = false; for (var x = 0; x < W; x++) { if (isDark(x,y)) { ey = y; found = true; break; } } if (found) break; }
-
-                // Module size: measure first dark run on top edge
-                var runLen = 0;
-                for (var x = qx; x < W; x++) { if (isDark(x, qy)) runLen++; else break; }
-                var modSize = Math.max(1, runLen);
-
-                var qrSpan = ex - qx + modSize;
-                var numModules = Math.round(qrSpan / modSize);
-                // Ensure it's odd (QR codes always have odd module count)
-                if (numModules % 2 === 0) numModules++;
-
-                // Recompute modSize from actual span
-                modSize = qrSpan / numModules;
-
-                // Build boolean matrix
-                var matrix = [];
-                for (var r = 0; r < numModules; r++) {
-                    matrix[r] = [];
-                    for (var c = 0; c < numModules; c++) {
-                        var px = qx + c * modSize + modSize * 0.5;
-                        var py = qy + r * modSize + modSize * 0.5;
-                        matrix[r][c] = isDark(px, py);
-                    }
-                }
-
-                document.body.removeChild(div);
-                resolve({ matrix: matrix, numModules: numModules, modSize: modSize });
-            }, 600);
-        });
-    };
-
-    // ============================================
     // GENERATE REGULAR QR (external API)
     // ============================================
     window.generateRegularQR = function(scanUrl) {
@@ -292,133 +226,176 @@
 
     // ============================================
     // GENERATE FOOTPRINT QR
-    // Each dark data module = a 3-toed dino footprint
-    // Finder patterns + timing kept as crisp squares
-    // (scanners need them clean and square)
+    //
+    // Uses qrcode-generator which gives a direct
+    // isDark(row, col) boolean API — zero pixel
+    // sampling, zero ambiguity. The module grid is
+    // perfectly accurate.
+    //
+    // Rules for scannability:
+    //   - Finder patterns (3 corners, 7×7) → solid squares
+    //   - Separator rows/cols around finders → white squares
+    //   - Format info strips → solid squares
+    //   - Timing patterns (row 6, col 6) → solid squares
+    //   - Alignment patterns (version ≥2) → solid squares
+    //   - All remaining DARK data modules → footprint shape
+    //   - All remaining LIGHT data modules → white (empty)
     // ============================================
     window.generateFootprintQR = function(scanUrl) {
-        return getQRMatrix(scanUrl).then(function(result) {
-            if (!result) return null;
-            var matrix = result.matrix, N = result.numModules;
+        return new Promise(function(resolve) {
+            try {
+                // qrcode-generator API: qrcode(typeNumber, errorCorrectionLevel)
+                // typeNumber 0 = auto-detect size
+                var qr = qrcode(0, 'H');
+                qr.addData(scanUrl);
+                qr.make();
 
-            var CELL = 15;   // pixels per module
-            var QUIET = 4;   // quiet zone border in modules
-            var TOTAL = (N + QUIET * 2) * CELL;
+                var N = qr.getModuleCount(); // e.g. 25 for version 2, 29 for version 3, etc.
 
-            var canvas = document.createElement('canvas');
-            canvas.width = TOTAL;
-            canvas.height = TOTAL;
-            var ctx = canvas.getContext('2d');
+                // Each module rendered at CELL pixels. 4-module quiet zone on all sides.
+                var CELL  = 16;
+                var QUIET = 4;
+                var TOTAL = (N + QUIET * 2) * CELL;
 
-            // White background
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, TOTAL, TOTAL);
+                var canvas = document.createElement('canvas');
+                canvas.width  = TOTAL;
+                canvas.height = TOTAL;
+                var ctx = canvas.getContext('2d');
 
-            var offset = QUIET * CELL; // pixel offset for quiet zone
+                // ── White background ──
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, TOTAL, TOTAL);
 
-            // Helper: pixel coords of module (r,c)
-            function mx(c) { return offset + c * CELL; }
-            function my(r) { return offset + r * CELL; }
+                // Pixel top-left of module (row r, col c)
+                function px(c) { return (QUIET + c) * CELL; }
+                function py(r) { return (QUIET + r) * CELL; }
 
-            // Identify structural zones that must stay square for scanning
-            function isFinderZone(r, c) {
-                // Top-left finder (0-6) + separator (7)
-                if (r <= 7 && c <= 7) return true;
-                // Top-right finder
-                if (r <= 7 && c >= N-8) return true;
-                // Bottom-left finder
-                if (r >= N-8 && c <= 7) return true;
-                return false;
-            }
-            function isTimingZone(r, c) {
-                // Timing patterns at row 6 and col 6 between finders
-                if (r === 6 && c >= 8 && c <= N-9) return true;
-                if (c === 6 && r >= 8 && r <= N-9) return true;
-                return false;
-            }
-            function isAlignmentZone(r, c) {
-                // Alignment pattern for most QR versions: center near N-7, N-7
-                var ap = N - 7;
-                return (r >= ap-2 && r <= ap+2 && c >= ap-2 && c <= ap+2);
-            }
-            function isFormatZone(r, c) {
-                // Format info strips adjacent to finders
-                if (r <= 8 && (c === 8)) return true;
-                if (c <= 8 && (r === 8)) return true;
-                if (r <= 8 && c >= N-8) return true;
-                if (r >= N-8 && c <= 8) return true;
-                return false;
-            }
+                // ── Structural zone classifiers ──
+                // These MUST be rendered as crisp squares for any scanner to work.
 
-            // Draw structural modules as clean squares
-            for (var r = 0; r < N; r++) {
-                for (var c = 0; c < N; c++) {
-                    if (!matrix[r] || matrix[r][c] === undefined) continue;
-                    var structural = isFinderZone(r,c) || isTimingZone(r,c) || isAlignmentZone(r,c) || isFormatZone(r,c);
-                    if (structural && matrix[r][c]) {
-                        ctx.fillStyle = '#111111';
-                        ctx.fillRect(mx(c), my(r), CELL, CELL);
+                function isFinderCore(r, c) {
+                    // The three 7×7 finder patterns
+                    if (r < 7 && c < 7) return true;                  // top-left
+                    if (r < 7 && c >= N - 7) return true;             // top-right
+                    if (r >= N - 7 && c < 7) return true;             // bottom-left
+                    return false;
+                }
+                function isSeparator(r, c) {
+                    // 1-module white border around each finder (row/col 7 / N-8)
+                    if (r === 7 && c <= 7) return true;
+                    if (c === 7 && r <= 7) return true;
+                    if (r === 7 && c >= N - 8) return true;
+                    if (c === N - 8 && r <= 7) return true;
+                    if (r === N - 8 && c <= 7) return true;
+                    if (c === 7 && r >= N - 8) return true;
+                    return false;
+                }
+                function isTiming(r, c) {
+                    if (r === 6 && c >= 8 && c <= N - 9) return true;
+                    if (c === 6 && r >= 8 && r <= N - 9) return true;
+                    return false;
+                }
+                function isFormatInfo(r, c) {
+                    // Format strips adjacent to finders
+                    if (r <= 8 && c === 8) return true;
+                    if (r === 8 && c <= 8) return true;
+                    if (r <= 8 && c >= N - 8) return true;
+                    if (r >= N - 8 && c === 8) return true;
+                    return false;
+                }
+                function isAlignment(r, c) {
+                    // Alignment patterns for version ≥2 (5×5 blocks).
+                    // qrcode-generator handles multiple alignment patterns for higher versions,
+                    // but we can detect them by checking against known positions.
+                    // Safest: mark any 5×5 region centered in the bottom-right quadrant
+                    // that doesn't overlap finders. For version ≤6 there's only one at (N-7, N-7).
+                    // For higher versions we check a wider set of standard positions.
+                    // Simple reliable approach: flag bottom-right 5×5 region.
+                    if (r >= N - 9 && r <= N - 5 && c >= N - 9 && c <= N - 5) return true;
+                    // Additional alignment for higher versions (v7+, roughly)
+                    if (N > 29) {
+                        var mid = Math.round((N - 13) / 2) + 6;
+                        if (r >= mid-2 && r <= mid+2 && c >= N-9 && c <= N-5) return true;
+                        if (r >= N-9  && r <= N-5  && c >= mid-2 && c <= mid+2) return true;
+                        if (r >= mid-2 && r <= mid+2 && c >= mid-2 && c <= mid+2) return true;
+                    }
+                    return false;
+                }
+
+                function isStructural(r, c) {
+                    return isFinderCore(r,c) || isSeparator(r,c) || isTiming(r,c) || isFormatInfo(r,c) || isAlignment(r,c);
+                }
+
+                // ── Pass 1: Draw all structural modules as perfect squares ──
+                for (var r = 0; r < N; r++) {
+                    for (var c = 0; c < N; c++) {
+                        if (!isStructural(r, c)) continue;
+                        ctx.fillStyle = qr.isDark(r, c) ? '#111111' : '#ffffff';
+                        ctx.fillRect(px(c), py(r), CELL, CELL);
                     }
                 }
-            }
 
-            // Draw white gaps for structural light modules (important for finder patterns)
-            for (var r = 0; r < N; r++) {
-                for (var c = 0; c < N; c++) {
-                    if (!matrix[r] || matrix[r][c] === undefined) continue;
-                    var structural = isFinderZone(r,c) || isTimingZone(r,c) || isAlignmentZone(r,c) || isFormatZone(r,c);
-                    if (structural && !matrix[r][c]) {
-                        ctx.fillStyle = '#ffffff';
-                        ctx.fillRect(mx(c), my(r), CELL, CELL);
+                // ── Pass 2: Draw data modules — dark = footprint, light = white ──
+                for (var r = 0; r < N; r++) {
+                    for (var c = 0; c < N; c++) {
+                        if (isStructural(r, c)) continue;
+                        if (qr.isDark(r, c)) {
+                            // Center of this module cell
+                            var cx = px(c) + CELL / 2;
+                            var cy = py(r) + CELL / 2;
+                            drawFootprint(ctx, cx, cy, CELL * 0.44, '#111111');
+                        }
+                        // Light modules: already white from background, nothing to do
                     }
                 }
-            }
 
-            // Draw data modules as footprints
-            for (var r = 0; r < N; r++) {
-                for (var c = 0; c < N; c++) {
-                    if (!matrix[r] || matrix[r][c] === undefined) continue;
-                    if (isFinderZone(r,c) || isTimingZone(r,c) || isAlignmentZone(r,c) || isFormatZone(r,c)) continue;
-                    if (matrix[r][c]) {
-                        var cx = mx(c) + CELL / 2;
-                        var cy = my(r) + CELL / 2;
-                        drawFootprint(ctx, cx, cy, CELL * 0.43, '#111111');
-                    }
-                }
-            }
+                resolve(canvas.toDataURL('image/png'));
 
-            return canvas.toDataURL('image/png');
+            } catch(e) {
+                console.error('Footprint QR error:', e);
+                resolve(null);
+            }
         });
     };
 
-    // Draw a 3-toed theropod footprint
+    // ── Draw a 3-toed theropod footprint ──
+    // The whole shape fits within a CELL×CELL box.
+    // r = radius (roughly half cell size)
     function drawFootprint(ctx, cx, cy, r, color) {
         ctx.save();
         ctx.fillStyle = color;
-        // Palm pad
+
+        // Palm pad — rounded oval, slightly below center
         ctx.beginPath();
-        ctx.ellipse(cx, cy + r * 0.18, r * 0.50, r * 0.38, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx, cy + r * 0.15, r * 0.48, r * 0.36, 0, 0, Math.PI * 2);
         ctx.fill();
-        // Three toes (middle longest, two angled out)
+
+        // Three toes: center (longest, straight up), left and right angled out
+        // Each toe = elongated ellipse segment + pointed claw tip
         var toes = [
-            { a: -Math.PI/2,        l: 1.02, w: 0.20, cl: 0.34 },
-            { a: -Math.PI/2-0.52,   l: 0.80, w: 0.17, cl: 0.26 },
-            { a: -Math.PI/2+0.52,   l: 0.80, w: 0.17, cl: 0.26 },
+            { a: -Math.PI / 2,         len: 0.96, w: 0.19, cl: 0.30 },  // center
+            { a: -Math.PI / 2 - 0.50,  len: 0.76, w: 0.16, cl: 0.23 },  // left
+            { a: -Math.PI / 2 + 0.50,  len: 0.76, w: 0.16, cl: 0.23 },  // right
         ];
+
         for (var i = 0; i < toes.length; i++) {
             var t = toes[i];
-            var tx = cx + Math.cos(t.a) * r * t.l;
-            var ty = cy + Math.sin(t.a) * r * t.l;
+
+            // Toe knuckle pad
+            var tx = cx + Math.cos(t.a) * r * t.len;
+            var ty = cy + Math.sin(t.a) * r * t.len;
             ctx.beginPath();
-            ctx.ellipse(tx, ty, r * t.w, r * t.w * 1.5, t.a + Math.PI/2, 0, Math.PI * 2);
+            ctx.ellipse(tx, ty, r * t.w, r * t.w * 1.45, t.a + Math.PI / 2, 0, Math.PI * 2);
             ctx.fill();
-            // Claw
-            var clawX = cx + Math.cos(t.a) * r * (t.l + t.cl);
-            var clawY = cy + Math.sin(t.a) * r * (t.l + t.cl);
+
+            // Sharp claw tip
+            var clawX = cx + Math.cos(t.a) * r * (t.len + t.cl);
+            var clawY = cy + Math.sin(t.a) * r * (t.len + t.cl);
             ctx.beginPath();
-            ctx.ellipse(clawX, clawY, r * t.w * 0.45, r * t.w * 0.9, t.a + Math.PI/2, 0, Math.PI * 2);
+            ctx.ellipse(clawX, clawY, r * t.w * 0.42, r * t.w * 0.85, t.a + Math.PI / 2, 0, Math.PI * 2);
             ctx.fill();
         }
+
         ctx.restore();
     }
 
