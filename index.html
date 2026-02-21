@@ -20,7 +20,6 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Space Mono', monospace; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; overflow-x: hidden; }
-
         .auth-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; background: radial-gradient(circle at 20% 50%, rgba(0,255,136,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(0,255,136,0.03) 0%, transparent 50%); }
         .auth-box { background: var(--bg-secondary); border: 2px solid var(--border); padding: 3rem; max-width: 400px; width: 100%; position: relative; }
         .auth-box::before { content: ''; position: absolute; top: -2px; left: -2px; right: -2px; height: 2px; background: linear-gradient(90deg, var(--accent), transparent); animation: shimmer 2s infinite; }
@@ -36,7 +35,6 @@
         button:active { transform: translateY(0); }
         button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
         .error-message { color: var(--danger); font-size: 0.85rem; margin-top: 1rem; padding: 0.5rem; background: rgba(255,68,68,0.1); border-left: 2px solid var(--danger); }
-
         .dashboard { display: none; min-height: 100vh; }
         .dashboard.active { display: block; }
         .header { background: var(--bg-secondary); border-bottom: 2px solid var(--border); padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
@@ -46,7 +44,6 @@
         .btn-logout { padding: 0.5rem 1rem; background: transparent; border: 1px solid var(--border); color: var(--text-primary); width: auto; }
         .btn-logout:hover { background: var(--bg-tertiary); border-color: var(--accent); transform: none; box-shadow: none; }
         .main-content { padding: 2rem; max-width: 1400px; margin: 0 auto; }
-
         .style-selector { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
         .style-option { flex: 1; min-width: 140px; padding: 1rem; background: var(--bg-tertiary); border: 2px solid var(--border); color: var(--text-secondary); cursor: pointer; text-align: center; transition: all 0.3s; font-family: 'Space Mono', monospace; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; width: auto; }
         .style-option:hover { border-color: var(--accent); color: var(--text-primary); background: var(--bg-secondary); transform: none; box-shadow: none; }
@@ -54,18 +51,15 @@
         .style-option .style-icon { font-size: 2rem; line-height: 1; }
         .style-option .style-name { font-weight: 700; }
         .style-option .style-desc { font-size: 0.7rem; color: var(--text-secondary); line-height: 1.3; }
-
         .controls { display: grid; gap: 1rem; margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-secondary); border: 1px solid var(--border); }
         .input-row { display: grid; grid-template-columns: 2fr 1fr auto; gap: 1rem; align-items: end; }
         .btn-create { padding: 0.75rem 1.5rem; width: auto; }
-
         .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
         .stat-card { background: var(--bg-secondary); border: 1px solid var(--border); padding: 1.5rem; position: relative; overflow: hidden; }
         .stat-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent); transform: scaleX(0); transition: transform 0.5s; }
         .stat-card:hover::after { transform: scaleX(1); }
         .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 0.5rem; }
         .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 700; color: var(--accent); }
-
         .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
         .qr-card { background: var(--bg-secondary); border: 1px solid var(--border); padding: 1.5rem; transition: all 0.3s; animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
@@ -90,7 +84,6 @@
         .btn-download:hover { background: var(--accent); color: var(--bg-primary); box-shadow: none; }
         .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-secondary); }
         .empty-state-icon { font-size: 4rem; margin-bottom: 1rem; opacity: 0.3; }
-
         .scan-container { display: none; min-height: 100vh; padding: 2rem; align-items: center; justify-content: center; flex-direction: column; }
         .scan-container.active { display: flex; }
         .scan-result { background: var(--bg-secondary); border: 2px solid var(--border); padding: 3rem; max-width: 500px; width: 100%; text-align: center; }
@@ -100,11 +93,9 @@
         .scan-label { font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; margin-bottom: 1rem; }
         .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to{transform:rotate(360deg)} }
-
         .generating-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 999; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 1.1rem; letter-spacing: 2px; text-align: center; padding: 2rem; }
         .generating-overlay.active { display: flex; }
         .generating-overlay .big-spin { width: 60px; height: 60px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
-
         @media (max-width: 768px) {
             .header { flex-direction: column; gap: 1rem; align-items: flex-start; }
             .input-row { grid-template-columns: 1fr; }
@@ -206,14 +197,11 @@
     </div>
 </div>
 
-<!-- qrcodejs: used only for the Dino Shape QR canvas render -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
-// QRMatrix stub — no longer used, kept to avoid reference errors
+// QRMatrix stub — kept to avoid reference errors
 var QRMatrix = (function() {
-
-    // ── Reed-Solomon GF(256) arithmetic ──
     var EXP = new Array(512), LOG = new Array(256);
     (function(){
         var x = 1;
@@ -223,11 +211,8 @@ var QRMatrix = (function() {
         }
         for (var i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
     })();
-
     function gfMul(a, b) { return (a === 0 || b === 0) ? 0 : EXP[LOG[a] + LOG[b]]; }
-
     function rsEncode(data, ecCount) {
-        // Generator polynomial for ecCount error correction codewords
         var gen = [1];
         for (var i = 0; i < ecCount; i++) {
             var next = [1, EXP[i]];
@@ -247,216 +232,18 @@ var QRMatrix = (function() {
         }
         return msg.slice(data.length);
     }
-
-    // ── Byte-mode encoding ──
     function encodeData(text) {
         var bytes = [];
         for (var i = 0; i < text.length; i++) {
             var code = text.charCodeAt(i);
             if (code > 0x7f) {
-                // UTF-8 encode
-                if (code < 0x800) {
-                    bytes.push(0xc0 | (code >> 6));
-                    bytes.push(0x80 | (code & 0x3f));
-                } else {
-                    bytes.push(0xe0 | (code >> 12));
-                    bytes.push(0x80 | ((code >> 6) & 0x3f));
-                    bytes.push(0x80 | (code & 0x3f));
-                }
-            } else {
-                bytes.push(code);
-            }
+                if (code < 0x800) { bytes.push(0xc0 | (code >> 6)); bytes.push(0x80 | (code & 0x3f)); }
+                else { bytes.push(0xe0 | (code >> 12)); bytes.push(0x80 | ((code >> 6) & 0x3f)); bytes.push(0x80 | (code & 0x3f)); }
+            } else { bytes.push(code); }
         }
         return bytes;
     }
-
-    // QR version capacity table (data codewords for H error correction)
-    // version: [totalModules(=4v+17), dataCodewords, ecCodewordsPerBlock, blocks]
-    var VERSION_TABLE = [
-        null,
-        { size: 21,  dc: 7,   ec: 17, bl: 1 },  // v1
-        { size: 25,  dc: 16,  ec: 28, bl: 1 },  // v2
-        { size: 29,  dc: 26,  ec: 22, bl: 2 },  // v3
-        { size: 33,  dc: 36,  ec: 16, bl: 4 },  // v4
-        { size: 37,  dc: 46,  ec: 22, bl: 4 },  // v5
-        { size: 41,  dc: 60,  ec: 28, bl: 4 },  // v6
-        { size: 45,  dc: 66,  ec: 26, bl: 5 },  // v7 (approx, simplified)
-        { size: 49,  dc: 86,  ec: 26, bl: 6 },  // v8
-        { size: 53,  dc: 100, ec: 24, bl: 8 },  // v9
-        { size: 57,  dc: 122, ec: 28, bl: 8 },  // v10
-    ];
-
-    // Alignment pattern centers for versions 2-10
-    var ALIGN_POS = [
-        [], [], [6,18], [6,22], [6,26], [6,30], [6,34],
-        [6,22,38], [6,24,42], [6,26,46], [6,28,50]
-    ];
-
-    function encode(text) {
-        var bytes = encodeData(text);
-        var dataLen = bytes.length;
-
-        // Find minimum version that fits
-        var ver = 1;
-        for (var v = 1; v <= 10; v++) {
-            if (VERSION_TABLE[v] && VERSION_TABLE[v].dc >= dataLen + 3) {
-                ver = v; break;
-            }
-        }
-        var vt = VERSION_TABLE[ver];
-        var N = vt.size;
-
-        // Build bit stream: mode indicator (0100=byte) + char count + data + terminator
-        var bits = [];
-        function pushBits(val, len) {
-            for (var i = len - 1; i >= 0; i--) bits.push((val >> i) & 1);
-        }
-        pushBits(4, 4);        // byte mode
-        pushBits(dataLen, 8);  // character count
-        for (var i = 0; i < bytes.length; i++) pushBits(bytes[i], 8);
-        // Terminator
-        for (var i = 0; i < 4 && bits.length < vt.dc * 8; i++) bits.push(0);
-        // Pad to byte boundary
-        while (bits.length % 8 !== 0) bits.push(0);
-        // Pad codewords
-        var pad = [0xec, 0x11];
-        for (var pi = 0; bits.length < vt.dc * 8; pi++) {
-            pushBits(pad[pi % 2], 8);
-        }
-
-        // Convert bits to codewords
-        var codewords = [];
-        for (var i = 0; i < vt.dc; i++) {
-            var byte_ = 0;
-            for (var j = 0; j < 8; j++) byte_ = (byte_ << 1) | (bits[i * 8 + j] || 0);
-            codewords.push(byte_);
-        }
-
-        // RS error correction (simplified: treat all as one block)
-        var ecBytes = rsEncode(codewords, vt.ec);
-        var allBytes = codewords.concat(ecBytes);
-
-        // All data bits
-        var dataBits = [];
-        for (var i = 0; i < allBytes.length; i++) pushBits(allBytes[i], 8);
-        // Remainder bits (version-specific, versions 2-6 need 7 extra zeros for some)
-        // For simplicity add up to 7 zeros — they're ignored by decoders
-        for (var i = 0; i < 7; i++) dataBits.push(0);
-
-        // ── Build N×N matrix ──
-        var mat = [], reserved = [];
-        for (var r = 0; r < N; r++) {
-            mat[r] = new Array(N).fill(false);
-            reserved[r] = new Array(N).fill(false);
-        }
-
-        function set(r, c, dark) {
-            if (r >= 0 && r < N && c >= 0 && c < N) mat[r][c] = dark;
-        }
-        function reserve(r, c) {
-            if (r >= 0 && r < N && c >= 0 && c < N) reserved[r][c] = true;
-        }
-
-        // Place finder pattern at (top, left)
-        function placeFinder(tr, tc) {
-            for (var dr = -1; dr <= 7; dr++) {
-                for (var dc = -1; dc <= 7; dc++) {
-                    var r = tr + dr, c = tc + dc;
-                    if (r < 0 || r >= N || c < 0 || c >= N) continue;
-                    reserve(r, c);
-                    if (dr < 0 || dr === 7 || dc < 0 || dc === 7) {
-                        set(r, c, false); // separator
-                    } else {
-                        var inOuter = (dr === 0 || dr === 6 || dc === 0 || dc === 6);
-                        var inInner = (dr >= 2 && dr <= 4 && dc >= 2 && dc <= 4);
-                        set(r, c, inOuter || inInner);
-                    }
-                }
-            }
-        }
-        placeFinder(0, 0);
-        placeFinder(0, N - 7);
-        placeFinder(N - 7, 0);
-
-        // Timing patterns
-        for (var i = 8; i < N - 8; i++) {
-            var dark = (i % 2 === 0);
-            set(6, i, dark); reserve(6, i);
-            set(i, 6, dark); reserve(i, 6);
-        }
-
-        // Alignment patterns
-        var ap = ALIGN_POS[ver] || [];
-        for (var ai = 0; ai < ap.length; ai++) {
-            for (var aj = 0; aj < ap.length; aj++) {
-                var cr = ap[ai], cc = ap[aj];
-                if (reserved[cr][cc]) continue;
-                for (var dr = -2; dr <= 2; dr++) {
-                    for (var dc = -2; dc <= 2; dc++) {
-                        reserve(cr + dr, cc + dc);
-                        var onEdge = (Math.abs(dr) === 2 || Math.abs(dc) === 2);
-                        var onCenter = (dr === 0 && dc === 0);
-                        set(cr + dr, cc + dc, onEdge || onCenter);
-                    }
-                }
-            }
-        }
-
-        // Format info placeholders (reserve but fill after masking)
-        var fmtPositions = [
-            [8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[8,7],[8,8],
-            [7,8],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8],
-            [8,N-8],[8,N-7],[8,N-6],[8,N-5],[8,N-4],[8,N-3],[8,N-2],[8,N-1],
-            [N-7,8],[N-6,8],[N-5,8],[N-4,8],[N-3,8],[N-2,8],[N-1,8]
-        ];
-        for (var i = 0; i < fmtPositions.length; i++) reserve(fmtPositions[i][0], fmtPositions[i][1]);
-        // Dark module
-        set(N - 8, 8, true); reserve(N - 8, 8);
-
-        // Place data bits using zigzag pattern
-        var bitIdx = 0;
-        var dir = -1; // start going up
-        var col = N - 1;
-        while (col > 0) {
-            if (col === 6) col--; // skip timing column
-            for (var row = (dir === -1 ? N - 1 : 0); row >= 0 && row < N; row += dir) {
-                for (var dc = 0; dc <= 1; dc++) {
-                    var c = col - dc;
-                    if (!reserved[row][c]) {
-                        var bit = bitIdx < dataBits.length ? dataBits[bitIdx] : 0;
-                        bitIdx++;
-                        mat[row][c] = bit === 1;
-                    }
-                }
-            }
-            dir = -dir;
-            col -= 2;
-        }
-
-        // Apply mask pattern 0: (row + col) % 2 === 0
-        for (var r = 0; r < N; r++) {
-            for (var c = 0; c < N; c++) {
-                if (!reserved[r][c] && (r + c) % 2 === 0) {
-                    mat[r][c] = !mat[r][c];
-                }
-            }
-        }
-
-        // Write format information (EC level H = 10, mask 0 = 000)
-        // Format bits for H,mask0 = 101010000010010
-        var fmtBits = [1,0,1,0,1,0,0,0,0,0,1,0,0,1,0];
-        // Around top-left finder
-        var fmtIdx = 0;
-        var fmtSeq = [[8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[8,7],[8,8],[7,8],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8]];
-        for (var i = 0; i < fmtSeq.length; i++) set(fmtSeq[i][0], fmtSeq[i][1], fmtBits[i] === 1);
-        // Top-right and bottom-left copies
-        for (var i = 0; i < 8; i++) set(8, N - 1 - i, fmtBits[i] === 1);
-        for (var i = 0; i < 7; i++) set(N - 7 + i, 8, fmtBits[8 + i] === 1);
-
-        return { matrix: mat, size: N };
-    }
-
-    return { encode: encode };
+    return { encode: function() { return { matrix: [], size: 0 }; } };
 })();
 
 // ================================================================
@@ -478,27 +265,14 @@ window.generateRegularQR = function(scanUrl) {
 
 // ================================================================
 // GENERATE FOOTPRINT QR
-//
-// Strategy: Use qrcodejs to render the QR at a HUGE pixel size
-// (100px per module). This means each module is a 100x100 block
-// of identical pixels — zero ambiguity when reading the matrix.
-// We sample dead-center of each block. Then we redraw at CELL=24px
-// per module with footprints for data modules.
+// Each dark data module is drawn as a dinosaur footprint shape
+// matching the reference photo: wide heel pad at bottom,
+// center toe pointing up, left toe sweeping upper-left,
+// right toe angling upper-right.
 // ================================================================
 window.generateFootprintQR = function(scanUrl) {
     return new Promise(function(resolve) {
-
-        // Step 1: Render at 100px per module so reading is unambiguous.
-        // qrcodejs v1 QR with H error correction for URLs is typically
-        // version 4 (33 modules) to version 7 (45 modules).
-        // At 100px/module + 4-module quiet zone:
-        //   version 4: (33 + 8) * 100 = 4100px
-        //   version 7: (45 + 8) * 100 = 5300px
-        // We'll render at 4500px — if QR is larger it still works,
-        // the module size will just be slightly less than 100px but
-        // still very easy to detect.
         var SAMPLE_SIZE = 4500;
-
         var div = document.createElement('div');
         div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;';
         document.body.appendChild(div);
@@ -519,7 +293,7 @@ window.generateFootprintQR = function(scanUrl) {
             }
 
             var ctx = srcCanvas.getContext('2d');
-            var W = srcCanvas.width; // should be SAMPLE_SIZE
+            var W = srcCanvas.width;
             var pixels = ctx.getImageData(0, 0, W, W).data;
 
             function isDarkAt(px, py) {
@@ -528,60 +302,33 @@ window.generateFootprintQR = function(scanUrl) {
                 return pixels[(iy * W + ix) * 4] < 128;
             }
 
-            // ── Find quiet zone boundaries precisely ──
-            // Scan from left until we hit a dark pixel (start of finder)
             var quietLeft = 0;
             for (var x = 0; x < W/2; x++) {
                 var foundInCol = false;
-                for (var y = W*0.1; y < W*0.9; y++) {
-                    if (isDarkAt(x, y)) { foundInCol = true; break; }
-                }
+                for (var y = W*0.1; y < W*0.9; y++) { if (isDarkAt(x, y)) { foundInCol = true; break; } }
                 if (foundInCol) { quietLeft = x; break; }
             }
-
-            // Scan from top until dark
             var quietTop = 0;
             for (var y = 0; y < W/2; y++) {
                 var foundInRow = false;
-                for (var x = W*0.1; x < W*0.9; x++) {
-                    if (isDarkAt(x, y)) { foundInRow = true; break; }
-                }
+                for (var x = W*0.1; x < W*0.9; x++) { if (isDarkAt(x, y)) { foundInRow = true; break; } }
                 if (foundInRow) { quietTop = y; break; }
             }
-
-            // Scan from right until dark
             var quietRight = W;
             for (var x = W-1; x > W/2; x--) {
                 var foundInCol = false;
-                for (var y = W*0.1; y < W*0.9; y++) {
-                    if (isDarkAt(x, y)) { foundInCol = true; break; }
-                }
+                for (var y = W*0.1; y < W*0.9; y++) { if (isDarkAt(x, y)) { foundInCol = true; break; } }
                 if (foundInCol) { quietRight = x; break; }
             }
-
-            // ── Determine module size from finder pattern ──
-            // The top-left finder's top row is a solid dark bar = 7 modules wide.
-            // Measure the full dark extent from quietLeft on row quietTop.
             var darkEnd = quietLeft;
-            for (var x = quietLeft; x < W; x++) {
-                if (isDarkAt(x, quietTop + 1)) darkEnd = x;
-                else if (x > quietLeft + 5) break; // first gap after start
-            }
-            // Actually measure first contiguous dark run
-            darkEnd = quietLeft;
             for (var x = quietLeft; x < W; x++) {
                 if (isDarkAt(x, quietTop + 2)) darkEnd = x;
                 else break;
             }
-            // That run = 7 modules of finder bar
             var modPx = (darkEnd - quietLeft + 1) / 7;
-
-            // Total QR span in pixels
             var qrSpan = quietRight - quietLeft + modPx;
             var N = Math.round(qrSpan / modPx);
 
-            // ── Read the module matrix ──
-            // Sample dead-center of each module
             var matrix = [];
             for (var r = 0; r < N; r++) {
                 matrix[r] = [];
@@ -594,20 +341,18 @@ window.generateFootprintQR = function(scanUrl) {
 
             document.body.removeChild(div);
 
-            // ── Verify matrix looks valid: check finder pattern corners ──
-            // Top-left corner module [0][0] must be dark
             var valid = matrix[0] && matrix[0][0] === true &&
                         matrix[0][N-1] === true &&
                         matrix[N-1] && matrix[N-1][0] === true;
 
             if (!valid || N < 21) {
-                console.warn('Matrix read failed, falling back. N='+N+' valid='+valid);
+                console.warn('Matrix read failed, falling back. N='+N);
                 resolve(window.generateRegularQR(scanUrl));
                 return;
             }
 
-            // ── Render footprint QR ──
-            var CELL  = 24;  // output pixels per module
+            // ── FIX 1: Increased cell size from 24 to 28 for better scannability ──
+            var CELL  = 28;  // output pixels per module
             var QUIET = 4;   // quiet zone in modules
             var TOTAL = (N + QUIET * 2) * CELL;
 
@@ -616,15 +361,12 @@ window.generateFootprintQR = function(scanUrl) {
             outCanvas.height = TOTAL;
             var octx = outCanvas.getContext('2d');
 
-            // White background
             octx.fillStyle = '#ffffff';
             octx.fillRect(0, 0, TOTAL, TOTAL);
 
-            // Top-left pixel of module (row r, col c) in output canvas
             function ox(c) { return (QUIET + c) * CELL; }
             function oy(r) { return (QUIET + r) * CELL; }
 
-            // Structural zones: must be solid squares
             function isFinder(r, c) {
                 if (r < 7 && c < 7) return true;
                 if (r < 7 && c >= N-7) return true;
@@ -640,9 +382,7 @@ window.generateFootprintQR = function(scanUrl) {
                 if (c === 7 && r >= N-8) return true;
                 return false;
             }
-            function isTiming(r, c) {
-                return (r === 6 || c === 6);
-            }
+            function isTiming(r, c) { return (r === 6 || c === 6); }
             function isFormatInfo(r, c) {
                 if (r === 8 && c <= 8) return true;
                 if (r === 8 && c >= N-8) return true;
@@ -659,7 +399,7 @@ window.generateFootprintQR = function(scanUrl) {
                        isFormatInfo(r,c) || isAlignment(r,c);
             }
 
-            // Pass 1: draw structural zones as solid squares
+            // Pass 1: structural zones as solid squares
             for (var r = 0; r < N; r++) {
                 for (var c = 0; c < N; c++) {
                     if (!isStructural(r, c)) continue;
@@ -668,7 +408,7 @@ window.generateFootprintQR = function(scanUrl) {
                 }
             }
 
-            // Pass 2: draw data modules
+            // Pass 2: data modules as footprints
             for (var r = 0; r < N; r++) {
                 for (var c = 0; c < N; c++) {
                     if (isStructural(r, c)) continue;
@@ -680,19 +420,19 @@ window.generateFootprintQR = function(scanUrl) {
 
             resolve(outCanvas.toDataURL('image/png'));
 
-        }, 800); // generous wait for qrcodejs to render
+        }, 800);
     });
 };
 
 // ================================================================
-// DRAW A DINOSAUR FOOTPRINT inside a square cell
+// DRAW A DINOSAUR FOOTPRINT matching the reference photo:
+//   - Wide oval heel pad at bottom-center
+//   - CENTER toe: longest, points nearly straight up (slight left lean)
+//   - LEFT toe:   long, sweeps hard to upper-left (~50° from vertical)
+//   - RIGHT toe:  medium, angles to upper-right (~40° from vertical)
 //
-// x, y  = top-left corner of the cell (pixels)
-// S     = cell size in pixels
-//
-// All drawing is clipped to [x, x+S] x [y, y+S].
-// The shape covers ~72% of the cell so scanners reliably
-// read it as a dark module.
+// All parts overlap at the heel for a solid, recognizable shape.
+// Dark area coverage ~70% of cell ensures reliable QR scanning.
 // ================================================================
 function drawFootprint(ctx, x, y, S) {
     ctx.save();
@@ -704,52 +444,47 @@ function drawFootprint(ctx, x, y, S) {
 
     ctx.fillStyle = '#000000';
 
-    var cx = x + S * 0.5;
-    var cy = y + S * 0.5;
+    var cx = x + S * 0.50;
 
-    // Palm heel pad — sits in bottom 40% of cell
+    // ── HEEL PAD ── wide oval sitting at bottom-center
     ctx.beginPath();
-    ctx.ellipse(cx, y + S * 0.72, S * 0.28, S * 0.20, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, y + S * 0.76, S * 0.32, S * 0.20, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Center toe (tallest, points straight up)
+    // ── CENTER TOE ── longest, nearly straight up, slight left lean
     ctx.beginPath();
-    ctx.ellipse(cx, y + S * 0.38, S * 0.09, S * 0.21, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx - S*0.03, y + S*0.43, S * 0.095, S * 0.26, -0.10, 0, Math.PI * 2);
     ctx.fill();
     // Center claw tip
     ctx.beginPath();
-    ctx.ellipse(cx, y + S * 0.10, S * 0.055, S * 0.085, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx - S*0.06, y + S*0.12, S * 0.058, S * 0.10, -0.20, 0, Math.PI * 2);
     ctx.fill();
 
-    // Left toe (angled ~30° left)
+    // ── LEFT TOE ── long, sweeps hard to upper-left (~50° from vertical)
     ctx.beginPath();
-    ctx.ellipse(x + S*0.24, y + S*0.44, S*0.08, S*0.17, -0.55, 0, Math.PI*2);
+    ctx.ellipse(x + S*0.22, y + S*0.46, S * 0.085, S * 0.25, -0.90, 0, Math.PI * 2);
     ctx.fill();
-    // Left claw
+    // Left claw tip
     ctx.beginPath();
-    ctx.ellipse(x + S*0.10, y + S*0.22, S*0.048, S*0.075, -0.55, 0, Math.PI*2);
+    ctx.ellipse(x + S*0.065, y + S*0.20, S * 0.052, S * 0.095, -0.90, 0, Math.PI * 2);
     ctx.fill();
 
-    // Right toe (angled ~30° right)
+    // ── RIGHT TOE ── medium length, angles to upper-right (~40° from vertical)
     ctx.beginPath();
-    ctx.ellipse(x + S*0.76, y + S*0.44, S*0.08, S*0.17, 0.55, 0, Math.PI*2);
+    ctx.ellipse(x + S*0.74, y + S*0.50, S * 0.085, S * 0.21, 0.70, 0, Math.PI * 2);
     ctx.fill();
-    // Right claw
+    // Right claw tip
     ctx.beginPath();
-    ctx.ellipse(x + S*0.90, y + S*0.22, S*0.048, S*0.075, 0.55, 0, Math.PI*2);
+    ctx.ellipse(x + S*0.895, y + S*0.28, S * 0.052, S * 0.085, 0.70, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
 }
 
 // ================================================================
+// GENERATE FOOTSHAPE QR - entire QR shaped as one giant footprint
 // ================================================================
-// GENERATE FOOTSHAPE QR
-// The QR is shaped like a large dinosaur footprint.
-// Palm at bottom-right, three toes fanning upper-left (matching reference photo).
-// Data modules drawn only inside footprint shape.
-// All structural zones (finders, format, timing) always drawn on top - scanners need them.
-window.FOOTPRINT_B64 = '/9j/4AAQSkZJRgABAgAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCALQA8ADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKK8X+P+sSW/h9LCKRkYyxyZU4PevIfC3xQ13w1LGscyvb5+cOu44/GgD7GorhfA/xK0nxdahRMkN2uFaOV1UscZJAz0ruRk85GKAFooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA8I/aFsHNhFffwBkT+dfO9fXnxm0Y6z4EkiQfOkyyZ9gDXyIw2sR6HFAFvS9Uu9Hv47yymaGZOjKecV9PfDP4rWniS1jsdQlEV8OMMSxbnA7V8q1Zsb640+6S4tpGSRCCCDjOKAPvXmlrxr4YfF221S2g0rV3EdyqhFkIAU+uSTXsSOsih0YMpGQQc0APooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACignAyapS6xpsMojkv7ZX6bTMoI/WgC7RTEkSVQ0bq6noVORT6ACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAztdtFvdDvYWGcwvj67TXw9qtjJp2pTW0v31bnjFfeEiCSJ0PRlIr4++LulNpvjy9woELEbfyoA4OiiigBQzA5UkH2r2bwH8b7vSYUstZR7qNRtVwyoFHQdq8YooA+x9L+K/hfUQgfULeB26K0mT/Kuss9WsNQUNaXUcwP8AdNfByO0bhkYqw6EVs6f4v17TJFa21W7RV/hEpAoA+5M0V4J8Pvji91dppmvJHGrYWKZdzMzE9Dk17tb3Ed1Ak0LBkcZBoAlooooAKKKKACiiigAooooAKKKKACiiigDk/iF4pj8LeGprosBI4Mac4wSDivjq/wBXvtSvnvbq4Z53OWYcfpXsv7QPiLzdQj0VTlAqS9+teGUAfS3wL8Z3Oq2L6VqFyJZkb9yDgEIBXtNfFfw98Rv4a8V215vIQgxkc4+bA7V9m2lwlzaxzIcqyg/pQBPRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUABr5h+PksD+IlRHUyq53AHkfKK+l72Qw2NxKOqRMw/AV8VeOdVl1jxXd3crEliOpz0oA5yiiigAooooAKKKKAFBKnIJBHcV678M/i5P4f2adqhMtoMBcADAA7k15DS54xQB93aXrNhrNolxYXUM6MP8Alm4bHtxWhXxj4H8f6n4PvEWGeRrMt80O8heTya+rPCPjDT/F2mrc2cimQKDIig/L+dAHRUUUUAFFFFABRRRQAUUUUAFVNRv4dNsZLudgscY5JOBVvvivE/jj43jstObQ7SX97MpEmCQVINAHhPi7Wptd8RXV1MwbEjIpA/hDHFYVKSWYknJPJpKAFVijqw6g5FfU/wAEvFw1nw8NNuJVa7twXbkdCcDivleuo8CeKpvCfiGK7SQpC7Ks2CQCoOeaAPteisTw34o03xPpyXVhOsmQN4APyk9ua26ACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigCK5j822li/voV/MV8Z/ErSn0jxte2xQhARg44PFfaJr5z/aH01Le5sb0Abp5WB49FFAHhlFFFABRRRQAUUUUAFFFFABmuy+Hfi+48MeJbWQyEWrSDzR7YNcbRQB97afeJf2EF1GQVlQOPxFWa8++EGuLrPhBMSbjARF16YFeg0AFFFFABRRRQAUUUyVxHE7k8KCaAPLfi/8RJ/CtklnppQ3ch2yBxnCkdua+YdS1K51a+lu7qQvJI245PArrfivrw13xtcTxSbogiqMHuOK4agAooooAKO1FFAHoPwj12503xtZxCVvIcncpPHSvryNt8SP/eUGvhzwrfJpviK2uZGwqnrX27YOJNOtXHRoUP5gUAWKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACvIfj5pn2zw3azhcmBnYn04FevVzXj3SP7Z8H6jaou6VoSE+vFAHxLRVi/tHsL+e0kGHicowx3FV6ACiiigAooooAKKKKACiiigD3r9nrWVjmm0ktzIXlx9AK+ha+IvBPiKXwx4mt9QjOP8Alm3ToSM9a+ztG1W21nTIb21kWSJx95TkZoAv0UUUAFFFFABXGfE7xEPDng65ulbEhKqB7Hiuzr53/aG1xxfWWlxPmJ4SzgY6hqAPDbiUz3EkrEkuxPP1qKiigAooooAKKKKAHRnEin0Ir7U+H2rjWfCVrcA52AR/kAK+Ka+oPgBfmXwZ9mZwSs8jY/KgD1+iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigApGUMpVhkHqKWigD5E+Mmhx6N4xZ41C/at8pwMfxYrzuve/2i9KeS+0/UVX5Ircox9yxrwSgAooooAKKKKACiiigAooooAK9w+CPxB+w3A0C+lIhfC24JJ+YnnjtXh9TWtzJaXMdxC22SM7lPvQB98AgjI6Glrzf4SeOoPFHh9baSQLdWoWIqxALHGcgdTXpFABRRRQAV8d/FnV/7U8Z3Kbs/ZneL6c19fXbmO0kcdQua+IvGTF/GOrMe9y5/WgDDooooAKKKKACiiigAr3X9nvUiNQmsSx2hGbH414VXqXwJlMfjWXngwY/WgD6tooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAOH+KXhaTxR4Snt7cf6QCCpAycDk18f3lpNY3UlvOhSRDgg197kZBBGQa8r+I3wls/EcUl9p6iK8C52rhVOBx2oA+VaKv6vpF5oepT2F9FsmiYoxAOCR6HvVCgAooooAKKKKACiiigAooooA6PwX4rufCWuw30O5kB+ZAcZzxX2P4e1208Q6RDfWcyyIwwSueG7ivhYYr0T4Z/Ea58J6glvO5ezc4IOTjJ5OM0AfXVFUdJ1a01rT4r6yk3xSruGcZA9xV6gCrqX/IOn/wB2viPxZ/yNmqf9fDfzr7fvE8yzlQd1xXxF4wXZ4w1ZT2uXH60AYlFFFABRRRQAUUUUAFej/BeTy/GmfWPH615xXoHwgbb4yT/dH86APr+iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAPHvjh4Og1DQZNZhh/f2yk8dSSa+YiCpIIwR1r7p8SaeuqaDc2bDIkAH618P6nH5OqXcXZJnX8iaAKtFFFABRRRQAUUUUAFFFFABSjrSUUAen/C34k3HhjUorK7lzYSEBskAKB719UWV3Df2kdzA4ZJFDAg56ivgivpP4EeL5tQs20a6maWZdzIWJJCgdKAPbCMjFfGHxM042HjbUGIx50zuPzr7Pr5b+P1iLPxXZMFx5sLP/49QB5JRRRQAUUUUAFFFFABXc/CqVIvGEJdgM7QM/WuGq9pF/LpmqW13G5Xy5FY4PUA5oA+8aK5/wAG+IE8S+GrTUVI3SpuYDtzXQUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUVjnxRoyXX2Zr5PO/u4P+FAGxRTI5UmQNG25T3p9ABRRRQAUUUUAFFFFABRRRQAda+Pfit4Yk8PeKpdsT+TN+834O3LEnGa+wq5Lx14Ls/F+jyQSxqJ1G5HK5OQDgUAfFtFbfiXwzfeGNTks72JkKnALY5/KsSgAooooAKKKKACiiigAooooAK9N+Bd2bX4gK2eDbuv54rzKt/wbrb6D4ltbpBnc6o3OMAkZoA+4Oorw/wDaD0sTaZDqJXmFAmfq1ez2N5Df2cVxbuHjccMK4H412DXvw9uQgywkT+dAHyPRSsNrEHscUlABRRRQAUUUUAFFFPiQyypGOrECgD6l+BUU6eE0eQ/u2jGz8zXq9cZ8LNPGn/D7SoyPn8r5j68muzoAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAr408eaZrPhrxNPFNcXA3sZFcOxGCSQM19l1wnxL8D2/ivQpiqAXUSmRTjJbCnAoA+ZNF+IGvaJIHiu3lx2lckV6Z4e/aDukwmtQIEHGYI8nH514nfWNxp17JaXUbRzRnDI3UVWoA+wtE+L3hfW0BhmmjPfzlCf1rL8Z/GbSNAhENizT3bjKYUMnXuQa+UgzL0Yj6GgsW6kn6mgD3jT/2hrkk/b7eMDP8Ayziz/Wuo0z4/+G53WO7W7V2/uwjH86+XutFAH3NpHinSNajV7S7jJYZCs6hvyzWwDmvhHSdav9GvVu7Gdo5VGM9eK918B/HNJdllr4IfgG5dwF/LFAHvVFVNO1O01W1W5sp0miYAhlPFW6ACiiigDifiH4FtfF2hzKkareqpMTcDLHHU18h6rps+k6ncWVwhV4XKHjg49K+8sV89/HbwQyumu2aYjVQsiherEnnNAHglFBGDiigAooooAKKKKACiiigApQSCCDgjkGko6UAe7/Bb4keRImg6nJ8hwkDn1J5ySa9W+JF7ZReC7lp5k2MVxhhzXxvb3EtrOk0LFZEOVPoa2tW8Z67rdjHZX94ZYI1Cqu0DAFAGJOQbiQjoWOPzqOjNFABRRRQAUUUUAFKCQQQcEUlFAH1r8FtaTUfBFnZ+ZvltYgHyeeSa9Kr5i+AXiCLTNfm06R8NfMqICeuK+nQc0AFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUhUEEHkHilooA8F+N/w+VoH8QafHym6S4AAHoB9a+eiCDg9a+9r6yg1CzltbhN0Ugww9a+OfiR4b/4RrxTLAOEmLSKPQZoA4+iiigAooooAKKKKAO08IfErW/CU6eVIbiAH/VSu20Dp0FfS3g34kaR4rtV8uUJc4+ZMYH618ag4qzZ39zY3Mc9vKyPGwYYPGRQB96g5xjGD6UtfPHgP45TxeVYa9+8XAVJEVUCj3Ne86ZrFjq9ss9lcxTKwz8jA4oAvVm65pUGs6TNZ3CBkZSQCM844rSooA+HfF2gTeG/ENxp8wOVO4E+h5rCr6Y+OXgn+09MXV7NMTxEtMcE5UCvmcgg4PWgAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigDY8Lat/YfiWx1L/n3k3V9saLfLqOj2l0pz5sSufxGa+D6+rPgj4k/tjwwbeVv3sL7FB9AKAPU6KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAK8J+OXgO+1WaPXLJWk8mMRsgwB1JJr3ao5oUniaORQysMEEZoA+BSu1iDwRxSV6z8avBP9hayNStYiLa4baAo6YAz9K8moAKKKKACiiigAooooAXPSuq8KePta8K3Km2u5jbg5MIfCmuUooA+ufBHxZ0nxQkVvPIkF8+AIhk8/WvRVO4ZHQ18CxzywSB4ZHjYdCjYNeqeDPjXqmieXaahiW0UYJ27n9uTQB9O6jZRajp89nMoaOVCjAjsa+NfiF4cbw54rvLcR7LdpW8kDptFfR1p8Z/DNxZC4LTLxypAB/LNeEfFnxlYeMNbglsEdUgDKSygZyc0Aee0UUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAV6j8EfELaX4uS2kkIt5I3yM8bj0ry6rWm3DWupW0yuV2SqSQccZFAH3oDkA+tLWR4a1ePW9Ct76JgyuMZHtWvQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQBzXjnw3H4m8N3NoVBmCN5RxnDGvjXWtJn0TVriwuAQ8LlMkYzivu+vD/jZ8PPt1v8A27YR/vIlxIq8biT196APnCinMrI5VgQQcHNIRigBKKKKACiiigAooooAKKKKAFzSd6KKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD6a+AfiSK70A6JvG+0TfjPq1ey18f/AAi186L4zt4skLdukR/PNfXyOJEDL0PIoAdRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABTJYkmjZJFDKeoNPooA+dPiX8HZbaeXU9DjLRNy0IBZs4yTXiFxbzWs7wTxtHKhwyMMEV98OodSrAFTwQa4LxZ8JvD/iWOVkt4rO5k+9PFGNxPrQB8f0V6V4s+DuueHmea1ie5s1HMrEA/lXmzKVOCCCKAEooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKANbww7ReJtOdPvLMCK+2dEdpNEs3f7xjBNfHvw50eTV/GVgqrlI5lZ/pX2ZawC2tY4F6IuBQBNRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAMljjlQpIiup6hhmvJfiZ8J7LWLGbUdNi2XaAsVXgHpjAFeu0GgD4IvbSawu5bWdSskbFWBGORVevePjd8PfJm/t7ToMRkfvwo+85bqa8IPHB6igBKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKAMnAoA94/Z70Tde3uoSL8piXYfcNX0PXmXwP0/7N4Btbhlw8m4H869NoAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooArX1jBqNo9tcxrJG45DDNfNnxA+C+oaZdTXukKJbM/Nhn+bOMngCvpykZVYYYAj3oA+CbixurR2We3ljK9dyEVXr7Y1/wAB6D4ijdb60DM3cHH8q8R8afAq808SXukTJJAoz5CIxb160AeK0VNc201nO8FxE0cq9VbqKhoAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACprNPMvYE/vSKP1qGtbw1p8mpa/ZwRnkSqx4zwCKAPsjwTYDTPC1rbAYC5OPrXQ1FbRrFbRoowAoqWgAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKRlDKVYZBGCKWigD56+OPgOO3A1zT4gAxZpwAAFAAxXgtfc/ijRo9f8N32mSLkXEezPccivirXdMbSNau7EoyiKVlXd3ANAGbRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAV6T8FNJOpeO4ty5jWJzn3FedQQS3MywwRtJIxwqqMk19R/BjwLN4d0r7dfKPtUvzJ1GFYdCKAPVwMKB6CloooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAr54+OfgRo5V12yixEBtlCjgsSea+h6rX9jBqNnJbXEayRuMEMAaAPgkjBxRXpfxO+GN74X1JruyiaXTpT8m3LMDjJzgcCvNWUqSGBBHUGgBKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAp8cbSOqIMsxwB70yu6+F/hCTxR4ki3I3kwESlugOD0oA9V+EHwut7W0g13VYFkncB4ldf9WfY17eihVCqMADAFR28EdtAsMShUUYAAqWgAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAgvLOC/tnt7hA8bjDA+leK+OvgbBeebf6IyQvyTCFLFjXuNGKAPgm+sZ9Ou5La5jZJEJBDCq1fR3xk+GbX8TazpEK+co/eRjAG0DJP1r50eGVDh43X6qRQAyiiigAooooAKKKKACiiigAooooAKKKKACirlhpd5qVwsNrA7s3Tg4r0zwx8C9d1Obfqqi2tSAVeNwW/KgDzLTtOutVvY7SygeedzwiDk19hfDvwbB4S8PQw7QZ3G9iBjG4A4pnhD4aaL4UiRoo1nuFAxNIg3D8RXa9BigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigBrosiFHUMpGCCK5DV/hj4Y1uRpLq0fc3Xy32j9K7GigDyW6+Afhhwxt45kY9N0xNcxqf7PMhRjY3kKHtvLGvoGigD5L1T4KeItNUsHS4x2ijauIvPDes2G43Om3MSr1LRkCvuus+/0PTNTjZL2yinVhghxQB8IUV9Y+IPgl4b1aGRLKGLTmbo0UeSPzry3xB8BdX05C2lvLe49QF4oA8gorqX+HfieOTy201g3puFdBoXwY8S6nKPtVpJbwn+MEGgDzapI4ZZQfLRmx6Cvpvw78BtH00B9QlF6e6yxiu2t/hv4Rtk2x6DZj1IU8/rQB8cQ6NqVwQIbGdyeypmu+8H/B/WdfuYZb2M2tvkF1lQqSPavpu18K6HZsGt9MgjI6FRWsqBBheB6UAc54Y8EaP4YskhtLcF8Dcz/Nk47ZrpAAowAAPalooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACjGaKKAIjbQE5MEZPrsFSKqoMKoA9AKWigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD//2Q==';
+window.FOOTPRINT_B64 = '/9j/4AAQSkZJRgABAg=='; // placeholder - not used in this path
 
 window.generateFootshapeQR = function(scanUrl) {
     return new Promise(function(resolve) {
@@ -796,7 +531,6 @@ window.generateFootshapeQR = function(scanUrl) {
             function ox(c){return PAD+(Q+c)*CELL;}
             function oy(r){return PAD+(Q+r)*CELL;}
 
-            // Build footprint path sized to contain the entire QR grid
             var x0=ox(0), y0=oy(0);
             var xN=ox(N), yN=oy(N);
             var gw=xN-x0, gh=yN-y0;
@@ -835,7 +569,6 @@ window.generateFootshapeQR = function(scanUrl) {
             p.bezierCurveTo(...gp(0.18,1.01),...gp(0.30,1.05),...gp(0.50,1.04));
             p.closePath();
 
-            // Build mask for point-in-path testing
             var mc=document.createElement('canvas');
             mc.width=CS; mc.height=CS;
             var mctx=mc.getContext('2d');
@@ -848,14 +581,10 @@ window.generateFootshapeQR = function(scanUrl) {
                 return mpxa[(iy*CS+ix)*4+3]>64;
             }
 
-            // Draw light footprint silhouette behind
             ctx.fillStyle='#f0f0f0';
             ctx.fill(p);
 
-            // Structural zone helpers
-            function isFinder(r,c){
-                return (r<7&&c<7)||(r<7&&c>=N-7)||(r>=N-7&&c<7);
-            }
+            function isFinder(r,c){ return (r<7&&c<7)||(r<7&&c>=N-7)||(r>=N-7&&c<7); }
             function isSep(r,c){
                 if(r===7&&c<=7||c===7&&r<=7) return true;
                 if(r===7&&c>=N-8||c===N-8&&r<=7) return true;
@@ -863,18 +592,10 @@ window.generateFootshapeQR = function(scanUrl) {
                 return false;
             }
             function isTiming(r,c){ return r===6||c===6; }
-            function isFmt(r,c){
-                return (r===8&&(c<=8||c>=N-8))||(c===8&&(r<=8||r>=N-8));
-            }
-            function isAlign(r,c){
-                var a=N-7;
-                return Math.abs(r-a)<=2&&Math.abs(c-a)<=2;
-            }
-            function isStruct(r,c){
-                return isFinder(r,c)||isSep(r,c)||isTiming(r,c)||isFmt(r,c)||isAlign(r,c);
-            }
+            function isFmt(r,c){ return (r===8&&(c<=8||c>=N-8))||(c===8&&(r<=8||r>=N-8)); }
+            function isAlign(r,c){ var a=N-7; return Math.abs(r-a)<=2&&Math.abs(c-a)<=2; }
+            function isStruct(r,c){ return isFinder(r,c)||isSep(r,c)||isTiming(r,c)||isFmt(r,c)||isAlign(r,c); }
 
-            // Draw dark data modules only where inside footprint
             for(var r=0;r<N;r++){
                 for(var c=0;c<N;c++){
                     if(isStruct(r,c)||!mat[r][c]) continue;
@@ -884,8 +605,6 @@ window.generateFootshapeQR = function(scanUrl) {
                     }
                 }
             }
-
-            // Unconditionally overdraw ALL structural zones as perfect squares
             for(var r=0;r<N;r++){
                 for(var c=0;c<N;c++){
                     if(!isStruct(r,c)) continue;
@@ -894,7 +613,6 @@ window.generateFootshapeQR = function(scanUrl) {
                 }
             }
 
-            // Outline footprint
             ctx.strokeStyle='#000';
             ctx.lineWidth=2;
             ctx.stroke(p);
@@ -904,312 +622,230 @@ window.generateFootshapeQR = function(scanUrl) {
     });
 };
 
-    // ============================================
-    // GENERATE DINO SHAPE QR
-    // Strategy: Draw a COMPLETE, UNTOUCHED QR code
-    // into the torso of a detailed T-Rex illustration.
-    // The dino is art around the QR — not a clip mask.
-    // QR remains 100% intact and scannable.
-    // ============================================
-    window.generateDinosaurQR = function(scanUrl) {
-        return new Promise(function(resolve) {
-            var div = document.createElement('div');
-            div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;';
-            document.body.appendChild(div);
+// ================================================================
+// GENERATE DINO SHAPE QR - QR embedded in T-Rex illustration
+// ================================================================
+window.generateDinosaurQR = function(scanUrl) {
+    return new Promise(function(resolve) {
+        var div = document.createElement('div');
+        div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;';
+        document.body.appendChild(div);
 
-            new QRCode(div, { text: scanUrl, width: 230, height: 230, correctLevel: QRCode.CorrectLevel.H });
+        new QRCode(div, { text: scanUrl, width: 230, height: 230, correctLevel: QRCode.CorrectLevel.H });
 
-            setTimeout(function() {
-                var src = div.querySelector('canvas');
-                if (!src) { document.body.removeChild(div); resolve(null); return; }
+        setTimeout(function() {
+            var src = div.querySelector('canvas');
+            if (!src) { document.body.removeChild(div); resolve(null); return; }
 
-                var C = 560;
-                var out = document.createElement('canvas');
-                out.width = C; out.height = C;
-                var ctx = out.getContext('2d');
+            var C = 560;
+            var out = document.createElement('canvas');
+            out.width = C; out.height = C;
+            var ctx = out.getContext('2d');
 
-                // White background
-                ctx.fillStyle = '#f8fff4';
-                ctx.fillRect(0, 0, C, C);
+            ctx.fillStyle = '#f8fff4';
+            ctx.fillRect(0, 0, C, C);
 
-                // Scale helper
-                function s(v) { return v * C; }
+            function s(v) { return v * C; }
 
-                var skin1 = '#2d5a1b';   // darkest
-                var skin2 = '#3d7a25';   // mid
-                var skin3 = '#5aaa38';   // light
-                var skin4 = '#8dd460';   // highlight
-                var belly  = '#b8e890';  // underside
-                var mouth  = '#8b1a1a';  // mouth interior
-                var tooth  = '#fffde7';
-                var tongue = '#cc4444';
-                var claw   = '#1a2a0a';
-                var eye1   = '#ffcc00';
+            var skin1 = '#2d5a1b', skin2 = '#3d7a25', skin3 = '#5aaa38', skin4 = '#8dd460';
+            var belly = '#b8e890', mouth = '#8b1a1a', tooth = '#fffde7', tongue = '#cc4444';
+            var claw = '#1a2a0a', eye1 = '#ffcc00';
 
-                // ---- TAIL ----
-                ctx.fillStyle = skin1;
-                ctx.beginPath();
-                ctx.moveTo(s(0.03), s(0.57));
-                ctx.bezierCurveTo(s(0.07), s(0.50), s(0.14), s(0.46), s(0.23), s(0.44));
-                ctx.bezierCurveTo(s(0.28), s(0.43), s(0.32), s(0.44), s(0.34), s(0.46));
-                ctx.bezierCurveTo(s(0.31), s(0.51), s(0.26), s(0.56), s(0.20), s(0.60));
-                ctx.bezierCurveTo(s(0.13), s(0.65), s(0.07), s(0.65), s(0.04), s(0.63));
-                ctx.closePath(); ctx.fill();
-                // Tail stripe highlight
-                ctx.fillStyle = skin2;
-                ctx.beginPath();
-                ctx.moveTo(s(0.06), s(0.52)); ctx.bezierCurveTo(s(0.11), s(0.48), s(0.18), s(0.46), s(0.24), s(0.46));
-                ctx.bezierCurveTo(s(0.20), s(0.48), s(0.13), s(0.51), s(0.08), s(0.55)); ctx.closePath(); ctx.fill();
+            // TAIL
+            ctx.fillStyle = skin1;
+            ctx.beginPath();
+            ctx.moveTo(s(0.03), s(0.57));
+            ctx.bezierCurveTo(s(0.07),s(0.50),s(0.14),s(0.46),s(0.23),s(0.44));
+            ctx.bezierCurveTo(s(0.28),s(0.43),s(0.32),s(0.44),s(0.34),s(0.46));
+            ctx.bezierCurveTo(s(0.31),s(0.51),s(0.26),s(0.56),s(0.20),s(0.60));
+            ctx.bezierCurveTo(s(0.13),s(0.65),s(0.07),s(0.65),s(0.04),s(0.63));
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = skin2;
+            ctx.beginPath();
+            ctx.moveTo(s(0.06),s(0.52)); ctx.bezierCurveTo(s(0.11),s(0.48),s(0.18),s(0.46),s(0.24),s(0.46));
+            ctx.bezierCurveTo(s(0.20),s(0.48),s(0.13),s(0.51),s(0.08),s(0.55)); ctx.closePath(); ctx.fill();
 
-                // ---- BACK LEG (behind body) ----
-                ctx.fillStyle = skin1;
-                // Upper leg
-                ctx.beginPath();
-                ctx.moveTo(s(0.28), s(0.57)); ctx.bezierCurveTo(s(0.25), s(0.63), s(0.24), s(0.70), s(0.25), s(0.76));
-                ctx.bezierCurveTo(s(0.26), s(0.80), s(0.29), s(0.82), s(0.32), s(0.82));
-                ctx.bezierCurveTo(s(0.35), s(0.82), s(0.37), s(0.80), s(0.38), s(0.76));
-                ctx.bezierCurveTo(s(0.39), s(0.71), s(0.37), s(0.63), s(0.34), s(0.59));
-                ctx.bezierCurveTo(s(0.31), s(0.56), s(0.29), s(0.55), s(0.28), s(0.57)); ctx.fill();
-                // Lower leg
-                ctx.beginPath();
-                ctx.moveTo(s(0.26), s(0.80)); ctx.bezierCurveTo(s(0.25), s(0.86), s(0.24), s(0.91), s(0.23), s(0.95));
-                ctx.bezierCurveTo(s(0.22), s(0.97), s(0.23), s(0.975), s(0.26), s(0.975));
-                ctx.bezierCurveTo(s(0.29), s(0.975), s(0.32), s(0.96), s(0.33), s(0.92));
-                ctx.bezierCurveTo(s(0.34), s(0.88), s(0.33), s(0.83), s(0.32), s(0.80));
-                ctx.bezierCurveTo(s(0.30), s(0.78), s(0.27), s(0.78), s(0.26), s(0.80)); ctx.fill();
-                // Back foot
-                ctx.fillStyle = skin1;
-                ctx.beginPath(); ctx.ellipse(s(0.235), s(0.972), s(0.062), s(0.022), -0.15, 0, Math.PI*2); ctx.fill();
-                // Back claws
-                for (var i = 0; i < 3; i++) {
-                    ctx.fillStyle = claw;
-                    ctx.beginPath(); ctx.ellipse(s(0.20)+(i*s(0.040)), s(0.982), s(0.011), s(0.018), (i-1)*0.25, 0, Math.PI*2); ctx.fill();
-                }
+            // BACK LEG
+            ctx.fillStyle = skin1;
+            ctx.beginPath();
+            ctx.moveTo(s(0.28),s(0.57)); ctx.bezierCurveTo(s(0.25),s(0.63),s(0.24),s(0.70),s(0.25),s(0.76));
+            ctx.bezierCurveTo(s(0.26),s(0.80),s(0.29),s(0.82),s(0.32),s(0.82));
+            ctx.bezierCurveTo(s(0.35),s(0.82),s(0.37),s(0.80),s(0.38),s(0.76));
+            ctx.bezierCurveTo(s(0.39),s(0.71),s(0.37),s(0.63),s(0.34),s(0.59));
+            ctx.bezierCurveTo(s(0.31),s(0.56),s(0.29),s(0.55),s(0.28),s(0.57)); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(s(0.26),s(0.80)); ctx.bezierCurveTo(s(0.25),s(0.86),s(0.24),s(0.91),s(0.23),s(0.95));
+            ctx.bezierCurveTo(s(0.22),s(0.97),s(0.23),s(0.975),s(0.26),s(0.975));
+            ctx.bezierCurveTo(s(0.29),s(0.975),s(0.32),s(0.96),s(0.33),s(0.92));
+            ctx.bezierCurveTo(s(0.34),s(0.88),s(0.33),s(0.83),s(0.32),s(0.80));
+            ctx.bezierCurveTo(s(0.30),s(0.78),s(0.27),s(0.78),s(0.26),s(0.80)); ctx.fill();
+            ctx.fillStyle = skin1;
+            ctx.beginPath(); ctx.ellipse(s(0.235),s(0.972),s(0.062),s(0.022),-0.15,0,Math.PI*2); ctx.fill();
+            for(var i=0;i<3;i++){ctx.fillStyle=claw;ctx.beginPath();ctx.ellipse(s(0.20)+(i*s(0.040)),s(0.982),s(0.011),s(0.018),(i-1)*0.25,0,Math.PI*2);ctx.fill();}
 
-                // ---- MAIN BODY ----
-                ctx.fillStyle = skin2;
-                ctx.beginPath();
-                ctx.moveTo(s(0.22), s(0.44));
-                ctx.bezierCurveTo(s(0.30), s(0.38), s(0.40), s(0.34), s(0.52), s(0.30));
-                ctx.bezierCurveTo(s(0.60), s(0.27), s(0.66), s(0.26), s(0.70), s(0.28));
-                ctx.bezierCurveTo(s(0.74), s(0.30), s(0.76), s(0.34), s(0.76), s(0.38));
-                ctx.bezierCurveTo(s(0.75), s(0.44), s(0.72), s(0.50), s(0.66), s(0.55));
-                ctx.bezierCurveTo(s(0.59), s(0.60), s(0.50), s(0.62), s(0.42), s(0.62));
-                ctx.bezierCurveTo(s(0.35), s(0.62), s(0.28), s(0.60), s(0.24), s(0.57));
-                ctx.bezierCurveTo(s(0.21), s(0.54), s(0.20), s(0.50), s(0.22), s(0.44));
-                ctx.fill();
+            // MAIN BODY
+            ctx.fillStyle = skin2;
+            ctx.beginPath();
+            ctx.moveTo(s(0.22),s(0.44));
+            ctx.bezierCurveTo(s(0.30),s(0.38),s(0.40),s(0.34),s(0.52),s(0.30));
+            ctx.bezierCurveTo(s(0.60),s(0.27),s(0.66),s(0.26),s(0.70),s(0.28));
+            ctx.bezierCurveTo(s(0.74),s(0.30),s(0.76),s(0.34),s(0.76),s(0.38));
+            ctx.bezierCurveTo(s(0.75),s(0.44),s(0.72),s(0.50),s(0.66),s(0.55));
+            ctx.bezierCurveTo(s(0.59),s(0.60),s(0.50),s(0.62),s(0.42),s(0.62));
+            ctx.bezierCurveTo(s(0.35),s(0.62),s(0.28),s(0.60),s(0.24),s(0.57));
+            ctx.bezierCurveTo(s(0.21),s(0.54),s(0.20),s(0.50),s(0.22),s(0.44)); ctx.fill();
+            ctx.fillStyle = skin3;
+            ctx.beginPath();
+            ctx.moveTo(s(0.24),s(0.42)); ctx.bezierCurveTo(s(0.33),s(0.36),s(0.44),s(0.32),s(0.56),s(0.29));
+            ctx.bezierCurveTo(s(0.62),s(0.28),s(0.67),s(0.28),s(0.69),s(0.29));
+            ctx.bezierCurveTo(s(0.65),s(0.28),s(0.58),s(0.29),s(0.50),s(0.31));
+            ctx.bezierCurveTo(s(0.40),s(0.34),s(0.30),s(0.38),s(0.24),s(0.42)); ctx.fill();
+            ctx.fillStyle = belly;
+            ctx.beginPath();
+            ctx.moveTo(s(0.30),s(0.60)); ctx.bezierCurveTo(s(0.38),s(0.63),s(0.50),s(0.65),s(0.58),s(0.62));
+            ctx.bezierCurveTo(s(0.64),s(0.60),s(0.67),s(0.56),s(0.68),s(0.52));
+            ctx.bezierCurveTo(s(0.65),s(0.57),s(0.59),s(0.61),s(0.52),s(0.62));
+            ctx.bezierCurveTo(s(0.45),s(0.63),s(0.38),s(0.62),s(0.30),s(0.60)); ctx.fill();
 
-                // Body dorsal highlight
-                ctx.fillStyle = skin3;
-                ctx.beginPath();
-                ctx.moveTo(s(0.24), s(0.42)); ctx.bezierCurveTo(s(0.33), s(0.36), s(0.44), s(0.32), s(0.56), s(0.29));
-                ctx.bezierCurveTo(s(0.62), s(0.28), s(0.67), s(0.28), s(0.69), s(0.29));
-                ctx.bezierCurveTo(s(0.65), s(0.28), s(0.58), s(0.29), s(0.50), s(0.31));
-                ctx.bezierCurveTo(s(0.40), s(0.34), s(0.30), s(0.38), s(0.24), s(0.42)); ctx.fill();
+            // Dorsal spines
+            ctx.fillStyle = skin1;
+            var spines=[[0.23,0.42,0.024],[0.30,0.39,0.030],[0.38,0.36,0.034],[0.46,0.32,0.032],[0.53,0.29,0.028],[0.59,0.28,0.022],[0.64,0.27,0.018]];
+            for(var i=0;i<spines.length;i++){var sp=spines[i];ctx.beginPath();ctx.moveTo(s(sp[0]-0.011),s(sp[1]));ctx.lineTo(s(sp[0]),s(sp[1]-sp[2]));ctx.lineTo(s(sp[0]+0.011),s(sp[1]));ctx.fill();}
 
-                // Belly / underside
-                ctx.fillStyle = belly;
-                ctx.beginPath();
-                ctx.moveTo(s(0.30), s(0.60)); ctx.bezierCurveTo(s(0.38), s(0.63), s(0.50), s(0.65), s(0.58), s(0.62));
-                ctx.bezierCurveTo(s(0.64), s(0.60), s(0.67), s(0.56), s(0.68), s(0.52));
-                ctx.bezierCurveTo(s(0.65), s(0.57), s(0.59), s(0.61), s(0.52), s(0.62));
-                ctx.bezierCurveTo(s(0.45), s(0.63), s(0.38), s(0.62), s(0.30), s(0.60)); ctx.fill();
+            // Scale texture
+            ctx.fillStyle='rgba(0,0,0,0.10)';
+            var scales=[[0.35,0.44],[0.40,0.42],[0.45,0.40],[0.50,0.39],[0.55,0.38],[0.60,0.37],[0.37,0.49],[0.42,0.47],[0.47,0.45],[0.52,0.44],[0.57,0.42],[0.39,0.53],[0.44,0.51],[0.49,0.49],[0.54,0.48]];
+            for(var i=0;i<scales.length;i++){ctx.beginPath();ctx.arc(s(scales[i][0]),s(scales[i][1]),s(0.0065),0,Math.PI*2);ctx.fill();}
 
-                // Dorsal spines / ridge bumps
-                ctx.fillStyle = skin1;
-                var spines = [[0.23,0.42,0.024],[0.30,0.39,0.030],[0.38,0.36,0.034],[0.46,0.32,0.032],[0.53,0.29,0.028],[0.59,0.28,0.022],[0.64,0.27,0.018]];
-                for (var i = 0; i < spines.length; i++) {
-                    var sp = spines[i];
-                    ctx.beginPath(); ctx.moveTo(s(sp[0]-0.011), s(sp[1])); ctx.lineTo(s(sp[0]), s(sp[1]-sp[2])); ctx.lineTo(s(sp[0]+0.011), s(sp[1])); ctx.fill();
-                }
+            // TINY ARM
+            ctx.fillStyle=skin1;
+            ctx.beginPath();
+            ctx.moveTo(s(0.69),s(0.40)); ctx.bezierCurveTo(s(0.72),s(0.43),s(0.73),s(0.47),s(0.71),s(0.51));
+            ctx.bezierCurveTo(s(0.70),s(0.53),s(0.68),s(0.54),s(0.67),s(0.52));
+            ctx.bezierCurveTo(s(0.66),s(0.50),s(0.66),s(0.46),s(0.67),s(0.43));
+            ctx.bezierCurveTo(s(0.68),s(0.41),s(0.69),s(0.40),s(0.69),s(0.40)); ctx.fill();
+            for(var i=0;i<2;i++){ctx.fillStyle=claw;ctx.beginPath();ctx.ellipse(s(0.685)+i*s(0.016),s(0.535),s(0.008),s(0.013),i*0.35-0.2,0,Math.PI*2);ctx.fill();}
 
-                // Scale texture
-                ctx.fillStyle = 'rgba(0,0,0,0.10)';
-                var scales = [[0.35,0.44],[0.40,0.42],[0.45,0.40],[0.50,0.39],[0.55,0.38],[0.60,0.37],[0.37,0.49],[0.42,0.47],[0.47,0.45],[0.52,0.44],[0.57,0.42],[0.39,0.53],[0.44,0.51],[0.49,0.49],[0.54,0.48]];
-                for (var i = 0; i < scales.length; i++) {
-                    ctx.beginPath(); ctx.arc(s(scales[i][0]), s(scales[i][1]), s(0.0065), 0, Math.PI*2); ctx.fill();
-                }
+            // FRONT LEG
+            ctx.fillStyle=skin2;
+            ctx.beginPath();
+            ctx.moveTo(s(0.56),s(0.59)); ctx.bezierCurveTo(s(0.54),s(0.64),s(0.52),s(0.70),s(0.53),s(0.76));
+            ctx.bezierCurveTo(s(0.54),s(0.80),s(0.57),s(0.82),s(0.60),s(0.82));
+            ctx.bezierCurveTo(s(0.63),s(0.82),s(0.65),s(0.80),s(0.66),s(0.76));
+            ctx.bezierCurveTo(s(0.67),s(0.71),s(0.65),s(0.65),s(0.63),s(0.61));
+            ctx.bezierCurveTo(s(0.61),s(0.58),s(0.57),s(0.57),s(0.56),s(0.59)); ctx.fill();
+            ctx.fillStyle=skin3;
+            ctx.beginPath(); ctx.ellipse(s(0.59),s(0.76),s(0.024),s(0.020),0.2,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle=skin1;
+            ctx.beginPath();
+            ctx.moveTo(s(0.55),s(0.80)); ctx.bezierCurveTo(s(0.54),s(0.87),s(0.53),s(0.91),s(0.52),s(0.95));
+            ctx.bezierCurveTo(s(0.51),s(0.975),s(0.51),s(0.978),s(0.54),s(0.978));
+            ctx.bezierCurveTo(s(0.57),s(0.978),s(0.61),s(0.965),s(0.62),s(0.92));
+            ctx.bezierCurveTo(s(0.63),s(0.87),s(0.63),s(0.84),s(0.61),s(0.80));
+            ctx.bezierCurveTo(s(0.60),s(0.78),s(0.56),s(0.78),s(0.55),s(0.80)); ctx.fill();
+            ctx.fillStyle=skin1;
+            ctx.beginPath(); ctx.ellipse(s(0.52),s(0.974),s(0.070),s(0.025),-0.15,0,Math.PI*2); ctx.fill();
+            for(var i=0;i<3;i++){ctx.fillStyle=claw;ctx.beginPath();ctx.ellipse(s(0.49)+i*s(0.048),s(0.983),s(0.013),s(0.021),(i-1)*0.28,0,Math.PI*2);ctx.fill();}
 
-                // ---- TINY ARM ----
-                ctx.fillStyle = skin1;
-                ctx.beginPath();
-                ctx.moveTo(s(0.69), s(0.40)); ctx.bezierCurveTo(s(0.72), s(0.43), s(0.73), s(0.47), s(0.71), s(0.51));
-                ctx.bezierCurveTo(s(0.70), s(0.53), s(0.68), s(0.54), s(0.67), s(0.52));
-                ctx.bezierCurveTo(s(0.66), s(0.50), s(0.66), s(0.46), s(0.67), s(0.43));
-                ctx.bezierCurveTo(s(0.68), s(0.41), s(0.69), s(0.40), s(0.69), s(0.40)); ctx.fill();
-                for (var i = 0; i < 2; i++) {
-                    ctx.fillStyle = claw;
-                    ctx.beginPath(); ctx.ellipse(s(0.685)+i*s(0.016), s(0.535), s(0.008), s(0.013), i*0.35-0.2, 0, Math.PI*2); ctx.fill();
-                }
+            // NECK
+            ctx.fillStyle=skin2;
+            ctx.beginPath();
+            ctx.moveTo(s(0.68),s(0.28)); ctx.bezierCurveTo(s(0.70),s(0.23),s(0.72),s(0.18),s(0.74),s(0.14));
+            ctx.bezierCurveTo(s(0.76),s(0.11),s(0.79),s(0.10),s(0.82),s(0.10));
+            ctx.bezierCurveTo(s(0.84),s(0.11),s(0.85),s(0.13),s(0.84),s(0.16));
+            ctx.bezierCurveTo(s(0.83),s(0.20),s(0.80),s(0.24),s(0.77),s(0.27));
+            ctx.bezierCurveTo(s(0.74),s(0.30),s(0.71),s(0.32),s(0.69),s(0.32));
+            ctx.bezierCurveTo(s(0.67),s(0.32),s(0.66),s(0.31),s(0.68),s(0.28)); ctx.fill();
+            ctx.fillStyle=belly;
+            ctx.beginPath();
+            ctx.moveTo(s(0.70),s(0.31)); ctx.bezierCurveTo(s(0.72),s(0.26),s(0.74),s(0.21),s(0.76),s(0.17));
+            ctx.bezierCurveTo(s(0.77),s(0.15),s(0.78),s(0.14),s(0.79),s(0.15));
+            ctx.bezierCurveTo(s(0.78),s(0.19),s(0.76),s(0.24),s(0.74),s(0.28));
+            ctx.bezierCurveTo(s(0.73),s(0.30),s(0.71),s(0.31),s(0.70),s(0.31)); ctx.fill();
 
-                // ---- FRONT LEG (main) ----
-                ctx.fillStyle = skin2;
-                // Thigh
-                ctx.beginPath();
-                ctx.moveTo(s(0.56), s(0.59)); ctx.bezierCurveTo(s(0.54), s(0.64), s(0.52), s(0.70), s(0.53), s(0.76));
-                ctx.bezierCurveTo(s(0.54), s(0.80), s(0.57), s(0.82), s(0.60), s(0.82));
-                ctx.bezierCurveTo(s(0.63), s(0.82), s(0.65), s(0.80), s(0.66), s(0.76));
-                ctx.bezierCurveTo(s(0.67), s(0.71), s(0.65), s(0.65), s(0.63), s(0.61));
-                ctx.bezierCurveTo(s(0.61), s(0.58), s(0.57), s(0.57), s(0.56), s(0.59)); ctx.fill();
-                // Knee highlight
-                ctx.fillStyle = skin3;
-                ctx.beginPath(); ctx.ellipse(s(0.59), s(0.76), s(0.024), s(0.020), 0.2, 0, Math.PI*2); ctx.fill();
-                // Lower leg
-                ctx.fillStyle = skin1;
-                ctx.beginPath();
-                ctx.moveTo(s(0.55), s(0.80)); ctx.bezierCurveTo(s(0.54), s(0.87), s(0.53), s(0.91), s(0.52), s(0.95));
-                ctx.bezierCurveTo(s(0.51), s(0.975), s(0.51), s(0.978), s(0.54), s(0.978));
-                ctx.bezierCurveTo(s(0.57), s(0.978), s(0.61), s(0.965), s(0.62), s(0.92));
-                ctx.bezierCurveTo(s(0.63), s(0.87), s(0.63), s(0.84), s(0.61), s(0.80));
-                ctx.bezierCurveTo(s(0.60), s(0.78), s(0.56), s(0.78), s(0.55), s(0.80)); ctx.fill();
-                // Front foot
-                ctx.fillStyle = skin1;
-                ctx.beginPath(); ctx.ellipse(s(0.52), s(0.974), s(0.070), s(0.025), -0.15, 0, Math.PI*2); ctx.fill();
-                for (var i = 0; i < 3; i++) {
-                    ctx.fillStyle = claw;
-                    ctx.beginPath(); ctx.ellipse(s(0.49)+i*s(0.048), s(0.983), s(0.013), s(0.021), (i-1)*0.28, 0, Math.PI*2); ctx.fill();
-                }
+            // HEAD
+            ctx.fillStyle=skin2;
+            ctx.beginPath();
+            ctx.moveTo(s(0.76),s(0.10));
+            ctx.bezierCurveTo(s(0.79),s(0.06),s(0.84),s(0.04),s(0.89),s(0.05));
+            ctx.bezierCurveTo(s(0.94),s(0.06),s(0.97),s(0.09),s(0.975),s(0.13));
+            ctx.bezierCurveTo(s(0.98),s(0.17),s(0.975),s(0.22),s(0.965),s(0.25));
+            ctx.bezierCurveTo(s(0.955),s(0.28),s(0.935),s(0.30),s(0.91),s(0.30));
+            ctx.bezierCurveTo(s(0.89),s(0.30),s(0.87),s(0.29),s(0.86),s(0.28));
+            ctx.bezierCurveTo(s(0.83),s(0.27),s(0.80),s(0.27),s(0.78),s(0.29));
+            ctx.bezierCurveTo(s(0.76),s(0.31),s(0.74),s(0.31),s(0.73),s(0.29));
+            ctx.bezierCurveTo(s(0.72),s(0.27),s(0.72),s(0.23),s(0.72),s(0.19));
+            ctx.bezierCurveTo(s(0.72),s(0.14),s(0.74),s(0.11),s(0.76),s(0.10)); ctx.fill();
+            ctx.fillStyle=skin3;
+            ctx.beginPath();
+            ctx.moveTo(s(0.78),s(0.08)); ctx.bezierCurveTo(s(0.83),s(0.05),s(0.88),s(0.05),s(0.92),s(0.07));
+            ctx.bezierCurveTo(s(0.94),s(0.08),s(0.95),s(0.10),s(0.94),s(0.11));
+            ctx.bezierCurveTo(s(0.90),s(0.08),s(0.85),s(0.07),s(0.80),s(0.09)); ctx.fill();
+            ctx.fillStyle=skin1;
+            var headRidge=[[0.80,0.07,0.012],[0.85,0.055,0.013],[0.89,0.055,0.012]];
+            for(var i=0;i<headRidge.length;i++){var hr=headRidge[i];ctx.beginPath();ctx.moveTo(s(hr[0]-0.010),s(hr[1]));ctx.lineTo(s(hr[0]),s(hr[1]-hr[2]));ctx.lineTo(s(hr[0]+0.010),s(hr[1]));ctx.fill();}
 
-                // ---- NECK ----
-                ctx.fillStyle = skin2;
-                ctx.beginPath();
-                ctx.moveTo(s(0.68), s(0.28)); ctx.bezierCurveTo(s(0.70), s(0.23), s(0.72), s(0.18), s(0.74), s(0.14));
-                ctx.bezierCurveTo(s(0.76), s(0.11), s(0.79), s(0.10), s(0.82), s(0.10));
-                ctx.bezierCurveTo(s(0.84), s(0.11), s(0.85), s(0.13), s(0.84), s(0.16));
-                ctx.bezierCurveTo(s(0.83), s(0.20), s(0.80), s(0.24), s(0.77), s(0.27));
-                ctx.bezierCurveTo(s(0.74), s(0.30), s(0.71), s(0.32), s(0.69), s(0.32));
-                ctx.bezierCurveTo(s(0.67), s(0.32), s(0.66), s(0.31), s(0.68), s(0.28)); ctx.fill();
-                // Throat
-                ctx.fillStyle = belly;
-                ctx.beginPath();
-                ctx.moveTo(s(0.70), s(0.31)); ctx.bezierCurveTo(s(0.72), s(0.26), s(0.74), s(0.21), s(0.76), s(0.17));
-                ctx.bezierCurveTo(s(0.77), s(0.15), s(0.78), s(0.14), s(0.79), s(0.15));
-                ctx.bezierCurveTo(s(0.78), s(0.19), s(0.76), s(0.24), s(0.74), s(0.28));
-                ctx.bezierCurveTo(s(0.73), s(0.30), s(0.71), s(0.31), s(0.70), s(0.31)); ctx.fill();
+            // MOUTH
+            ctx.fillStyle=mouth;
+            ctx.beginPath();
+            ctx.moveTo(s(0.80),s(0.18)); ctx.bezierCurveTo(s(0.85),s(0.17),s(0.90),s(0.17),s(0.94),s(0.19));
+            ctx.bezierCurveTo(s(0.96),s(0.20),s(0.965),s(0.23),s(0.96),s(0.25));
+            ctx.bezierCurveTo(s(0.93),s(0.27),s(0.89),s(0.28),s(0.86),s(0.27));
+            ctx.bezierCurveTo(s(0.83),s(0.26),s(0.81),s(0.24),s(0.80),s(0.22));
+            ctx.bezierCurveTo(s(0.79),s(0.20),s(0.79),s(0.19),s(0.80),s(0.18)); ctx.fill();
+            ctx.fillStyle=skin2;
+            ctx.beginPath();
+            ctx.moveTo(s(0.74),s(0.29)); ctx.bezierCurveTo(s(0.77),s(0.30),s(0.82),s(0.31),s(0.86),s(0.30));
+            ctx.bezierCurveTo(s(0.90),s(0.29),s(0.93),s(0.28),s(0.94),s(0.29));
+            ctx.bezierCurveTo(s(0.95),s(0.30),s(0.95),s(0.33),s(0.94),s(0.35));
+            ctx.bezierCurveTo(s(0.92),s(0.37),s(0.88),s(0.38),s(0.85),s(0.37));
+            ctx.bezierCurveTo(s(0.82),s(0.36),s(0.79),s(0.36),s(0.77),s(0.37));
+            ctx.bezierCurveTo(s(0.75),s(0.38),s(0.73),s(0.37),s(0.72),s(0.35));
+            ctx.bezierCurveTo(s(0.72),s(0.32),s(0.73),s(0.29),s(0.74),s(0.29)); ctx.fill();
+            ctx.fillStyle=mouth;
+            ctx.beginPath();
+            ctx.moveTo(s(0.78),s(0.30)); ctx.bezierCurveTo(s(0.83),s(0.30),s(0.88),s(0.29),s(0.92),s(0.30));
+            ctx.bezierCurveTo(s(0.93),s(0.31),s(0.94),s(0.33),s(0.93),s(0.34));
+            ctx.bezierCurveTo(s(0.90),s(0.35),s(0.86),s(0.35),s(0.83),s(0.34));
+            ctx.bezierCurveTo(s(0.80),s(0.33),s(0.78),s(0.32),s(0.78),s(0.30)); ctx.fill();
 
-                // ---- HEAD ----
-                ctx.fillStyle = skin2;
-                ctx.beginPath();
-                ctx.moveTo(s(0.76), s(0.10));
-                ctx.bezierCurveTo(s(0.79), s(0.06), s(0.84), s(0.04), s(0.89), s(0.05));
-                ctx.bezierCurveTo(s(0.94), s(0.06), s(0.97), s(0.09), s(0.975), s(0.13));
-                ctx.bezierCurveTo(s(0.98), s(0.17), s(0.975), s(0.22), s(0.965), s(0.25));
-                ctx.bezierCurveTo(s(0.955), s(0.28), s(0.935), s(0.30), s(0.91), s(0.30));
-                ctx.bezierCurveTo(s(0.89), s(0.30), s(0.87), s(0.29), s(0.86), s(0.28));
-                ctx.bezierCurveTo(s(0.83), s(0.27), s(0.80), s(0.27), s(0.78), s(0.29));
-                ctx.bezierCurveTo(s(0.76), s(0.31), s(0.74), s(0.31), s(0.73), s(0.29));
-                ctx.bezierCurveTo(s(0.72), s(0.27), s(0.72), s(0.23), s(0.72), s(0.19));
-                ctx.bezierCurveTo(s(0.72), s(0.14), s(0.74), s(0.11), s(0.76), s(0.10));
-                ctx.fill();
-                // Head top highlight
-                ctx.fillStyle = skin3;
-                ctx.beginPath();
-                ctx.moveTo(s(0.78), s(0.08)); ctx.bezierCurveTo(s(0.83), s(0.05), s(0.88), s(0.05), s(0.92), s(0.07));
-                ctx.bezierCurveTo(s(0.94), s(0.08), s(0.95), s(0.10), s(0.94), s(0.11));
-                ctx.bezierCurveTo(s(0.90), s(0.08), s(0.85), s(0.07), s(0.80), s(0.09)); ctx.fill();
-                // Head ridge bumps
-                ctx.fillStyle = skin1;
-                var headRidge = [[0.80,0.07,0.012],[0.85,0.055,0.013],[0.89,0.055,0.012]];
-                for (var i = 0; i < headRidge.length; i++) {
-                    var hr = headRidge[i];
-                    ctx.beginPath(); ctx.moveTo(s(hr[0]-0.010),s(hr[1])); ctx.lineTo(s(hr[0]),s(hr[1]-hr[2])); ctx.lineTo(s(hr[0]+0.010),s(hr[1])); ctx.fill();
-                }
+            // TEETH
+            ctx.fillStyle=tooth;
+            var upT=[0.82,0.855,0.885,0.912];
+            for(var i=0;i<upT.length;i++){var tx=upT[i];ctx.beginPath();ctx.moveTo(s(tx),s(0.265));ctx.lineTo(s(tx+0.013),s(0.282));ctx.lineTo(s(tx+0.026),s(0.265));ctx.fill();}
+            var loT=[0.83,0.860,0.890];
+            for(var i=0;i<loT.length;i++){var tx=loT[i];ctx.beginPath();ctx.moveTo(s(tx),s(0.313));ctx.lineTo(s(tx+0.013),s(0.296));ctx.lineTo(s(tx+0.026),s(0.313));ctx.fill();}
+            ctx.fillStyle=tongue;
+            ctx.beginPath();
+            ctx.moveTo(s(0.82),s(0.305)); ctx.bezierCurveTo(s(0.85),s(0.325),s(0.88),s(0.33),s(0.90),s(0.32));
+            ctx.bezierCurveTo(s(0.88),s(0.305),s(0.85),s(0.295),s(0.82),s(0.305)); ctx.fill();
 
-                // ---- OPEN MOUTH interior ----
-                // Upper jaw gap
-                ctx.fillStyle = mouth;
-                ctx.beginPath();
-                ctx.moveTo(s(0.80), s(0.18)); ctx.bezierCurveTo(s(0.85), s(0.17), s(0.90), s(0.17), s(0.94), s(0.19));
-                ctx.bezierCurveTo(s(0.96), s(0.20), s(0.965), s(0.23), s(0.96), s(0.25));
-                ctx.bezierCurveTo(s(0.93), s(0.27), s(0.89), s(0.28), s(0.86), s(0.27));
-                ctx.bezierCurveTo(s(0.83), s(0.26), s(0.81), s(0.24), s(0.80), s(0.22));
-                ctx.bezierCurveTo(s(0.79), s(0.20), s(0.79), s(0.19), s(0.80), s(0.18)); ctx.fill();
+            // EYE
+            ctx.fillStyle=skin1; ctx.beginPath(); ctx.ellipse(s(0.806),s(0.125),s(0.034),s(0.028),-0.2,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='#ffffcc'; ctx.beginPath(); ctx.ellipse(s(0.808),s(0.123),s(0.024),s(0.020),-0.2,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle=eye1; ctx.beginPath(); ctx.ellipse(s(0.811),s(0.122),s(0.015),s(0.013),0,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='#111'; ctx.beginPath(); ctx.ellipse(s(0.812),s(0.122),s(0.005),s(0.012),0,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.beginPath(); ctx.ellipse(s(0.817),s(0.116),s(0.005),s(0.004),0,0,Math.PI*2); ctx.fill();
 
-                // ---- LOWER JAW ----
-                ctx.fillStyle = skin2;
-                ctx.beginPath();
-                ctx.moveTo(s(0.74), s(0.29)); ctx.bezierCurveTo(s(0.77), s(0.30), s(0.82), s(0.31), s(0.86), s(0.30));
-                ctx.bezierCurveTo(s(0.90), s(0.29), s(0.93), s(0.28), s(0.94), s(0.29));
-                ctx.bezierCurveTo(s(0.95), s(0.30), s(0.95), s(0.33), s(0.94), s(0.35));
-                ctx.bezierCurveTo(s(0.92), s(0.37), s(0.88), s(0.38), s(0.85), s(0.37));
-                ctx.bezierCurveTo(s(0.82), s(0.36), s(0.79), s(0.36), s(0.77), s(0.37));
-                ctx.bezierCurveTo(s(0.75), s(0.38), s(0.73), s(0.37), s(0.72), s(0.35));
-                ctx.bezierCurveTo(s(0.72), s(0.32), s(0.73), s(0.29), s(0.74), s(0.29)); ctx.fill();
-                // Lower jaw interior
-                ctx.fillStyle = mouth;
-                ctx.beginPath();
-                ctx.moveTo(s(0.78), s(0.30)); ctx.bezierCurveTo(s(0.83), s(0.30), s(0.88), s(0.29), s(0.92), s(0.30));
-                ctx.bezierCurveTo(s(0.93), s(0.31), s(0.94), s(0.33), s(0.93), s(0.34));
-                ctx.bezierCurveTo(s(0.90), s(0.35), s(0.86), s(0.35), s(0.83), s(0.34));
-                ctx.bezierCurveTo(s(0.80), s(0.33), s(0.78), s(0.32), s(0.78), s(0.30)); ctx.fill();
+            // NOSTRIL
+            ctx.fillStyle=skin1; ctx.beginPath(); ctx.ellipse(s(0.955),s(0.115),s(0.011),s(0.008),0.5,0,Math.PI*2); ctx.fill();
 
-                // ---- TEETH ----
-                // Upper teeth
-                ctx.fillStyle = tooth;
-                var upT = [0.82, 0.855, 0.885, 0.912];
-                for (var i = 0; i < upT.length; i++) {
-                    var tx = upT[i];
-                    ctx.beginPath(); ctx.moveTo(s(tx), s(0.265)); ctx.lineTo(s(tx+0.013), s(0.282)); ctx.lineTo(s(tx+0.026), s(0.265)); ctx.fill();
-                }
-                // Lower teeth
-                var loT = [0.83, 0.860, 0.890];
-                for (var i = 0; i < loT.length; i++) {
-                    var tx = loT[i];
-                    ctx.beginPath(); ctx.moveTo(s(tx), s(0.313)); ctx.lineTo(s(tx+0.013), s(0.296)); ctx.lineTo(s(tx+0.026), s(0.313)); ctx.fill();
-                }
+            // QR CODE in torso
+            var qrW=218, qrH=218, qrX=s(0.285), qrY=s(0.325);
+            ctx.shadowColor='rgba(0,0,0,0.25)'; ctx.shadowBlur=10; ctx.shadowOffsetX=2; ctx.shadowOffsetY=2;
+            ctx.fillStyle='#ffffff';
+            ctx.beginPath(); ctx.roundRect(qrX-10,qrY-10,qrW+20,qrH+20,5); ctx.fill();
+            ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;
+            ctx.drawImage(src, qrX, qrY, qrW, qrH);
+            ctx.strokeStyle=skin1; ctx.lineWidth=2.5;
+            ctx.beginPath(); ctx.roundRect(qrX-10,qrY-10,qrW+20,qrH+20,5); ctx.stroke();
 
-                // Tongue
-                ctx.fillStyle = tongue;
-                ctx.beginPath();
-                ctx.moveTo(s(0.82), s(0.305)); ctx.bezierCurveTo(s(0.85), s(0.325), s(0.88), s(0.33), s(0.90), s(0.32));
-                ctx.bezierCurveTo(s(0.88), s(0.305), s(0.85), s(0.295), s(0.82), s(0.305)); ctx.fill();
+            document.body.removeChild(div);
+            resolve(out.toDataURL('image/png'));
+        }, 500);
+    });
+};
 
-                // ---- EYE ----
-                ctx.fillStyle = skin1; // socket
-                ctx.beginPath(); ctx.ellipse(s(0.806), s(0.125), s(0.034), s(0.028), -0.2, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = '#ffffcc'; // sclera
-                ctx.beginPath(); ctx.ellipse(s(0.808), s(0.123), s(0.024), s(0.020), -0.2, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = eye1; // iris
-                ctx.beginPath(); ctx.ellipse(s(0.811), s(0.122), s(0.015), s(0.013), 0, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = '#111'; // pupil slit
-                ctx.beginPath(); ctx.ellipse(s(0.812), s(0.122), s(0.005), s(0.012), 0, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = 'rgba(255,255,255,0.85)'; // shine
-                ctx.beginPath(); ctx.ellipse(s(0.817), s(0.116), s(0.005), s(0.004), 0, 0, Math.PI*2); ctx.fill();
-
-                // ---- NOSTRIL ----
-                ctx.fillStyle = skin1;
-                ctx.beginPath(); ctx.ellipse(s(0.955), s(0.115), s(0.011), s(0.008), 0.5, 0, Math.PI*2); ctx.fill();
-
-                // ---- QR CODE in torso ----
-                var qrW = 218, qrH = 218;
-                var qrX = s(0.285);
-                var qrY = s(0.325);
-
-                // Drop shadow
-                ctx.shadowColor = 'rgba(0,0,0,0.25)';
-                ctx.shadowBlur = 10;
-                ctx.shadowOffsetX = 2;
-                ctx.shadowOffsetY = 2;
-                // White backing pad
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.roundRect(qrX - 10, qrY - 10, qrW + 20, qrH + 20, 5);
-                ctx.fill();
-                ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-
-                // Draw QR code
-                ctx.drawImage(src, qrX, qrY, qrW, qrH);
-
-                // Green border
-                ctx.strokeStyle = skin1;
-                ctx.lineWidth = 2.5;
-                ctx.beginPath(); ctx.roundRect(qrX - 10, qrY - 10, qrW + 20, qrH + 20, 5); ctx.stroke();
-
-                document.body.removeChild(div);
-                resolve(out.toDataURL('image/png'));
-            }, 500);
-        });
-    };
 </script>
 
 <script type="module">
@@ -1232,7 +868,6 @@ window.generateFootshapeQR = function(scanUrl) {
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // Immediate scan check
     const urlParams = new URLSearchParams(window.location.search);
     const scanIdParam = urlParams.get('scan');
     const userIdParam = urlParams.get('uid');
