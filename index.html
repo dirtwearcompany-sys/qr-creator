@@ -529,73 +529,31 @@ window.generateFootshapeQR = function(scanUrl) {
         }
 
         function continueWithImage(fpImg) {
-            // ── Step 1: Sample the QR matrix at high resolution ──
-            var QSAMPLE = 4000;
+            // Generate a clean scannable QR, then place it centered inside the footprint image
+
+            var QR_SIZE = 320;
+            var QUIET_PX = 16;
+
             var div = document.createElement('div');
             div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;';
             document.body.appendChild(div);
-            new QRCode(div, { text: scanUrl, width: QSAMPLE, height: QSAMPLE, correctLevel: QRCode.CorrectLevel.H });
+            new QRCode(div, { text: scanUrl, width: QR_SIZE, height: QR_SIZE, correctLevel: QRCode.CorrectLevel.H });
 
             setTimeout(function() {
-                var src = div.querySelector('canvas');
-                if (!src) { document.body.removeChild(div); resolve(window.generateRegularQR(scanUrl)); return; }
-
-                var sctx = src.getContext('2d');
-                var SW = src.width;
-                var spx = sctx.getImageData(0, 0, SW, SW).data;
-                function qd(x, y) {
-                    x = Math.round(Math.min(Math.max(x, 0), SW-1));
-                    y = Math.round(Math.min(Math.max(y, 0), SW-1));
-                    return spx[(y * SW + x) * 4] < 128;
-                }
-
-                // Detect QR boundaries
-                var ql=0; outer1: for(var x=0;x<SW/2;x++) for(var y=SW*.1;y<SW*.9;y++) if(qd(x,y)){ql=x;break outer1;}
-                var qt=0; outer2: for(var y=0;y<SW/2;y++) for(var x=SW*.1;x<SW*.9;x++) if(qd(x,y)){qt=y;break outer2;}
-                var qr=SW-1; outer3: for(var x=SW-1;x>SW/2;x--) for(var y=SW*.1;y<SW*.9;y++) if(qd(x,y)){qr=x;break outer3;}
-                var re=ql; for(var x=ql;x<SW;x++){if(qd(x,qt+1))re=x;else break;}
-                var mp = (re - ql + 1) / 7;
-                var N = Math.round((qr - ql + mp) / mp);
+                var qrCanvas = div.querySelector('canvas');
+                if (!qrCanvas) { document.body.removeChild(div); resolve(window.generateRegularQR(scanUrl)); return; }
                 document.body.removeChild(div);
-                if (N < 21) { resolve(window.generateRegularQR(scanUrl)); return; }
 
-                // Read full matrix
-                var mat = [];
-                for (var r = 0; r < N; r++) {
-                    mat[r] = [];
-                    for (var c = 0; c < N; c++) {
-                        mat[r][c] = qd(ql + (c + 0.5) * mp, qt + (r + 0.5) * mp);
-                    }
-                }
+                var OUT = 700;
 
-                // ── Step 2: Decide cell size & canvas dimensions ──
-                // Use a generous cell size so the QR is large and scannable.
-                // We render the QR as a clean square FIRST, then overlay the
-                // footprint shape as a visual flourish — never compromising scannability.
-                var CELL = 14;        // pixels per module
-                var QUIET = 4;        // quiet zone in modules (QR spec minimum)
-                var QR_PX = (N + QUIET * 2) * CELL;   // total QR canvas size
-
-                // The footprint will be rendered LARGER than the QR, as decorative border.
-                // We leave a margin around the QR for the footprint outline to show.
-                var MARGIN = Math.round(CELL * 6);
-                var OUT = QR_PX + MARGIN * 2;
-
-                // QR grid top-left in the output canvas
-                var qLeft = MARGIN + QUIET * CELL;
-                var qTop  = MARGIN + QUIET * CELL;
-
-                function ox(c) { return qLeft + c * CELL; }
-                function oy(r) { return qTop  + r * CELL; }
-
-                // ── Step 3: Build footprint pixel mask at output resolution ──
-                // Scale footprint to fill most of the output canvas
-                var fpScale = Math.min((OUT - MARGIN) / fpImg.width, (OUT - MARGIN) / fpImg.height) * 1.05;
+                // Scale footprint to fill the output canvas
+                var fpScale = Math.min(OUT / fpImg.width, OUT / fpImg.height) * 0.90;
                 var fpW = Math.round(fpImg.width  * fpScale);
                 var fpH = Math.round(fpImg.height * fpScale);
                 var fpOffX = Math.round((OUT - fpW) / 2);
                 var fpOffY = Math.round((OUT - fpH) / 2);
 
+                // Find bounding box of the dark footprint pixels
                 var mc = document.createElement('canvas');
                 mc.width = OUT; mc.height = OUT;
                 var mctx = mc.getContext('2d');
@@ -604,113 +562,47 @@ window.generateFootshapeQR = function(scanUrl) {
                 mctx.drawImage(fpImg, fpOffX, fpOffY, fpW, fpH);
                 var maskData = mctx.getImageData(0, 0, OUT, OUT).data;
 
-                function inFoot(px, py) {
-                    var ix = Math.round(Math.min(Math.max(px, 0), OUT - 1));
-                    var iy = Math.round(Math.min(Math.max(py, 0), OUT - 1));
-                    var i = (iy * OUT + ix) * 4;
-                    return (maskData[i] + maskData[i+1] + maskData[i+2]) < 200;
+                var bLeft = OUT, bRight = 0, bTop = OUT, bBottom = 0;
+                for (var y = 0; y < OUT; y++) {
+                    for (var x = 0; x < OUT; x++) {
+                        var i = (y * OUT + x) * 4;
+                        if (maskData[i] + maskData[i+1] + maskData[i+2] < 200) {
+                            if (x < bLeft)   bLeft   = x;
+                            if (x > bRight)  bRight  = x;
+                            if (y < bTop)    bTop    = y;
+                            if (y > bBottom) bBottom = y;
+                        }
+                    }
                 }
 
-                // ── Step 4: Build output canvas ──
+                var bW = bRight - bLeft;
+                var bH = bBottom - bTop;
+                var bCX = Math.round(bLeft + bW / 2);
+                var bCY = Math.round(bTop  + bH / 2);
+
+                // Size the QR to fit snugly inside the footprint bounding box
+                var fitSize = Math.round(Math.min(bW, bH) * 0.70);
+                var totalSize = fitSize + QUIET_PX * 2;
+                var blockX = Math.round(bCX - totalSize / 2);
+                var blockY = Math.round(bCY - totalSize / 2);
+                var qrX = blockX + QUIET_PX;
+                var qrY = blockY + QUIET_PX;
+
+                // Compose: white bg → footprint → white QR box → QR code
                 var outCanvas = document.createElement('canvas');
                 outCanvas.width  = OUT;
                 outCanvas.height = OUT;
                 var ctx = outCanvas.getContext('2d');
 
-                // Pure white background — essential for scanner contrast
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, OUT, OUT);
 
-                // ── Step 5: Structural zone helpers ──
-                function isFinder(r,c){ return (r<7&&c<7)||(r<7&&c>=N-7)||(r>=N-7&&c<7); }
-                function isSep(r,c){
-                    if(r===7&&c<=7||c===7&&r<=7) return true;
-                    if(r===7&&c>=N-8||c===N-8&&r<=7) return true;
-                    if(r===N-8&&c<=7||c===7&&r>=N-8) return true;
-                    return false;
-                }
-                function isTiming(r,c){ return r===6||c===6; }
-                function isFmt(r,c){ return (r===8&&(c<=8||c>=N-8))||(c===8&&(r<=8||r>=N-8)); }
-                function isAlign(r,c){ var a=N-7; return Math.abs(r-a)<=2&&Math.abs(c-a)<=2; }
-                function isStruct(r,c){ return isFinder(r,c)||isSep(r,c)||isTiming(r,c)||isAlign(r,c)||isFmt(r,c); }
-
-                // ── Step 6: Draw every QR module as a clean black/white square ──
-                // This guarantees the QR is scannable — we draw ALL modules, always.
-                // For dark modules inside the footprint: solid black
-                // For dark modules outside the footprint: solid black (still needed for scanning!)
-                // For light modules: white (already white from background, but explicitly fill)
-                // The footprint shape appears because dark modules that fall on the footprint
-                // silhouette create the visual "footprint filled with QR" effect.
-                for (var r = 0; r < N; r++) {
-                    for (var c = 0; c < N; c++) {
-                        var isDark = mat[r][c];
-                        var px = Math.round(ox(c));
-                        var py = Math.round(oy(r));
-                        var cs = CELL;
-
-                        if (isStruct(r, c)) {
-                            // Structural zones MUST be perfect — always solid black or white
-                            ctx.fillStyle = isDark ? '#000000' : '#ffffff';
-                            ctx.fillRect(px, py, cs, cs);
-                        } else {
-                            // Data modules: dark ones inside footprint = black
-                            // dark ones outside footprint = draw lighter grey so visual reads as footprint
-                            // BUT light modules always stay white for scanner readability
-                            if (isDark) {
-                                var cellCenterX = ox(c) + CELL / 2;
-                                var cellCenterY = oy(r) + CELL / 2;
-                                if (inFoot(cellCenterX, cellCenterY)) {
-                                    ctx.fillStyle = '#000000';
-                                } else {
-                                    // Outside footprint: still draw black but smaller dot
-                                    // so the QR remains scannable but footprint shape is visible
-                                    ctx.fillStyle = '#000000';
-                                }
-                                ctx.fillRect(px, py, cs, cs);
-                            }
-                            // Light modules: leave as white background
-                        }
-                    }
-                }
-
-                // ── Step 7: Draw footprint OUTLINE on top as decorative border ──
-                // This makes the footprint shape visually clear without breaking the QR
-                // We draw it as a thin outline only, not a filled shape
-                ctx.save();
-                ctx.globalCompositeOperation = 'source-over';
-
-                // Trace the footprint outline by drawing the footprint image with
-                // only its edges — use the mask canvas stroked as an outline
-                // Simple approach: draw footprint image at low opacity for context
-                ctx.globalAlpha = 0.18;
                 ctx.drawImage(fpImg, fpOffX, fpOffY, fpW, fpH);
-                ctx.globalAlpha = 1.0;
-                ctx.restore();
 
-                // ── Step 8: Draw a clean white quiet zone border around the QR ──
-                // This ensures the scanner sees a proper quiet zone
                 ctx.fillStyle = '#ffffff';
-                // Top quiet zone
-                ctx.fillRect(qLeft - QUIET*CELL, qTop - QUIET*CELL, N*CELL + QUIET*CELL*2, QUIET*CELL);
-                // Bottom quiet zone
-                ctx.fillRect(qLeft - QUIET*CELL, qTop + N*CELL, N*CELL + QUIET*CELL*2, QUIET*CELL);
-                // Left quiet zone
-                ctx.fillRect(qLeft - QUIET*CELL, qTop, QUIET*CELL, N*CELL);
-                // Right quiet zone
-                ctx.fillRect(qLeft + N*CELL, qTop, QUIET*CELL, N*CELL);
+                ctx.fillRect(blockX, blockY, totalSize, totalSize);
 
-                // Redraw structural zones on top of the quiet zone restoration
-                // to make sure nothing got accidentally cleared
-                for (var r = 0; r < N; r++) {
-                    for (var c = 0; c < N; c++) {
-                        if (isStruct(r, c)) {
-                            var px = Math.round(ox(c));
-                            var py = Math.round(oy(r));
-                            ctx.fillStyle = mat[r][c] ? '#000000' : '#ffffff';
-                            ctx.fillRect(px, py, CELL, CELL);
-                        }
-                    }
-                }
+                ctx.drawImage(qrCanvas, qrX, qrY, fitSize, fitSize);
 
                 resolve(outCanvas.toDataURL('image/png'));
             }, 800);
