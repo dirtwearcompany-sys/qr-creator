@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR Code Manager</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root {
             --bg-primary: #0a0a0a;
@@ -19,466 +18,92 @@
             --danger: #ff4444;
             --warning: #ffaa00;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Mono', monospace; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; overflow-x: hidden; }
 
-        body {
-            font-family: 'Space Mono', monospace;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        /* Auth */
-        .auth-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            background:
-                radial-gradient(circle at 20% 50%, rgba(0,255,136,0.05) 0%, transparent 50%),
-                radial-gradient(circle at 80% 50%, rgba(0,255,136,0.03) 0%, transparent 50%);
-        }
-
-        .auth-box {
-            background: var(--bg-secondary);
-            border: 2px solid var(--border);
-            padding: 3rem;
-            max-width: 400px;
-            width: 100%;
-            position: relative;
-        }
-
-        .auth-box::before {
-            content: '';
-            position: absolute;
-            top: -2px; left: -2px; right: -2px;
-            height: 2px;
-            background: linear-gradient(90deg, var(--accent), transparent);
-            animation: shimmer 2s infinite;
-        }
-
+        .auth-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; background: radial-gradient(circle at 20% 50%, rgba(0,255,136,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(0,255,136,0.03) 0%, transparent 50%); }
+        .auth-box { background: var(--bg-secondary); border: 2px solid var(--border); padding: 3rem; max-width: 400px; width: 100%; position: relative; }
+        .auth-box::before { content: ''; position: absolute; top: -2px; left: -2px; right: -2px; height: 2px; background: linear-gradient(90deg, var(--accent), transparent); animation: shimmer 2s infinite; }
         @keyframes shimmer { 0%,100%{opacity:.5}50%{opacity:1} }
-
-        h1 {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            margin-bottom: 2rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
+        h1 { font-family: 'JetBrains Mono', monospace; font-size: 2rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 2px; }
+        .subtitle { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 1px; }
         .input-group { margin-bottom: 1.5rem; }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-secondary);
-        }
-
-        input {
-            width: 100%;
-            padding: 0.75rem;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            font-family: 'Space Mono', monospace;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(0,255,136,0.1);
-        }
-
-        button {
-            width: 100%;
-            padding: 0.75rem;
-            background: var(--accent);
-            color: var(--bg-primary);
-            border: none;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        button:hover {
-            background: var(--accent-dim);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,255,136,0.3);
-        }
-
+        label { display: block; margin-bottom: 0.5rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); }
+        input { width: 100%; padding: 0.75rem; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text-primary); font-family: 'Space Mono', monospace; font-size: 0.9rem; transition: all 0.3s; }
+        input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,255,136,0.1); }
+        button { width: 100%; padding: 0.75rem; background: var(--accent); color: var(--bg-primary); border: none; font-family: 'JetBrains Mono', monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: all 0.3s; }
+        button:hover { background: var(--accent-dim); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,255,136,0.3); }
         button:active { transform: translateY(0); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+        .error-message { color: var(--danger); font-size: 0.85rem; margin-top: 1rem; padding: 0.5rem; background: rgba(255,68,68,0.1); border-left: 2px solid var(--danger); }
 
-        .error-message {
-            color: var(--danger);
-            font-size: 0.85rem;
-            margin-top: 1rem;
-            padding: 0.5rem;
-            background: rgba(255,68,68,0.1);
-            border-left: 2px solid var(--danger);
-        }
-
-        /* Dashboard */
         .dashboard { display: none; min-height: 100vh; }
         .dashboard.active { display: block; }
-
-        .header {
-            background: var(--bg-secondary);
-            border-bottom: 2px solid var(--border);
-            padding: 1.5rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
+        .header { background: var(--bg-secondary); border-bottom: 2px solid var(--border); padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
         .header h1 { font-size: 1.5rem; margin: 0; }
-
         .user-info { display: flex; align-items: center; gap: 1rem; }
         .user-email { font-size: 0.85rem; color: var(--text-secondary); }
-
-        .btn-logout {
-            padding: 0.5rem 1rem;
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            width: auto;
-        }
-
-        .btn-logout:hover { background: var(--bg-tertiary); border-color: var(--accent); }
-
+        .btn-logout { padding: 0.5rem 1rem; background: transparent; border: 1px solid var(--border); color: var(--text-primary); width: auto; }
+        .btn-logout:hover { background: var(--bg-tertiary); border-color: var(--accent); transform: none; box-shadow: none; }
         .main-content { padding: 2rem; max-width: 1400px; margin: 0 auto; }
 
-        /* Style Selector */
-        .style-selector {
-            display: flex;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .style-option {
-            flex: 1;
-            min-width: 140px;
-            padding: 1rem;
-            background: var(--bg-tertiary);
-            border: 2px solid var(--border);
-            color: var(--text-secondary);
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.3s;
-            font-family: 'Space Mono', monospace;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-            width: auto;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .style-option:hover {
-            border-color: var(--accent);
-            color: var(--text-primary);
-            background: var(--bg-secondary);
-            transform: none;
-            box-shadow: none;
-        }
-
-        .style-option.selected {
-            border-color: var(--accent);
-            background: rgba(0,255,136,0.08);
-            color: var(--accent);
-            transform: none;
-            box-shadow: 0 0 12px rgba(0,255,136,0.2);
-        }
-
+        .style-selector { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .style-option { flex: 1; min-width: 140px; padding: 1rem; background: var(--bg-tertiary); border: 2px solid var(--border); color: var(--text-secondary); cursor: pointer; text-align: center; transition: all 0.3s; font-family: 'Space Mono', monospace; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; width: auto; }
+        .style-option:hover { border-color: var(--accent); color: var(--text-primary); background: var(--bg-secondary); transform: none; box-shadow: none; }
+        .style-option.selected { border-color: var(--accent); background: rgba(0,255,136,0.08); color: var(--accent); transform: none; box-shadow: 0 0 12px rgba(0,255,136,0.2); }
         .style-option .style-icon { font-size: 2rem; line-height: 1; }
         .style-option .style-name { font-weight: 700; }
         .style-option .style-desc { font-size: 0.7rem; color: var(--text-secondary); line-height: 1.3; }
 
-        .controls {
-            display: grid;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-        }
-
-        .input-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr auto;
-            gap: 1rem;
-            align-items: end;
-        }
-
+        .controls { display: grid; gap: 1rem; margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-secondary); border: 1px solid var(--border); }
+        .input-row { display: grid; grid-template-columns: 2fr 1fr auto; gap: 1rem; align-items: end; }
         .btn-create { padding: 0.75rem 1.5rem; width: auto; }
 
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            padding: 1.5rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 2px;
-            background: var(--accent);
-            transform: scaleX(0);
-            transition: transform 0.5s;
-        }
-
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--bg-secondary); border: 1px solid var(--border); padding: 1.5rem; position: relative; overflow: hidden; }
+        .stat-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent); transform: scaleX(0); transition: transform 0.5s; }
         .stat-card:hover::after { transform: scaleX(1); }
+        .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 0.5rem; }
+        .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 700; color: var(--accent); }
 
-        .stat-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--accent);
-        }
-
-        .qr-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .qr-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            padding: 1.5rem;
-            transition: all 0.3s;
-            position: relative;
-            animation: slideIn 0.3s ease-out;
-        }
-
+        .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+        .qr-card { background: var(--bg-secondary); border: 1px solid var(--border); padding: 1.5rem; transition: all 0.3s; animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-
-        .qr-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,255,136,0.1);
-        }
-
+        .qr-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,255,136,0.1); }
         .qr-card.locked { border-color: var(--warning); }
-
-        /* Style badge on card */
-        .qr-style-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 0.2rem 0.5rem;
-            background: rgba(0,255,136,0.1);
-            border: 1px solid rgba(0,255,136,0.3);
-            color: var(--accent);
-            margin-bottom: 0.75rem;
-        }
-
-        .qr-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .qr-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            font-size: 1.1rem;
-            word-break: break-word;
-        }
-
-        .lock-icon {
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.3s;
-        }
-
+        .qr-style-badge { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; padding: 0.2rem 0.5rem; background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); color: var(--accent); margin-bottom: 0.75rem; }
+        .qr-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .qr-label { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1.1rem; word-break: break-word; }
+        .lock-icon { cursor: pointer; font-size: 1.2rem; transition: all 0.3s; }
         .lock-icon:hover { color: var(--accent); transform: rotate(15deg); }
-
-        .qr-image-container {
-            background: white;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 160px;
-        }
-
-        .qr-image-container img,
-        .qr-image-container canvas {
-            max-width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .qr-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            padding: 1rem;
-            background: var(--bg-tertiary);
-            border-left: 2px solid var(--accent);
-        }
-
+        .qr-image-container { background: white; padding: 1rem; margin-bottom: 1rem; display: flex; justify-content: center; align-items: center; min-height: 160px; }
+        .qr-image-container img { max-width: 100%; height: auto; display: block; }
+        .qr-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; padding: 1rem; background: var(--bg-tertiary); border-left: 2px solid var(--accent); }
         .qr-stat { display: flex; flex-direction: column; }
-
-        .qr-stat-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-secondary);
-            margin-bottom: 0.25rem;
-        }
-
-        .qr-stat-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            font-size: 1.2rem;
-            color: var(--accent);
-        }
-
+        .qr-stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 0.25rem; }
+        .qr-stat-value { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1.2rem; color: var(--accent); }
         .qr-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-
         .btn-action { padding: 0.5rem; font-size: 0.85rem; width: 100%; }
-
         .btn-delete { background: var(--danger); }
-        .btn-delete:hover { background: #cc0000; }
-
-        .btn-download {
-            background: transparent;
-            border: 1px solid var(--accent);
-            color: var(--accent);
-        }
-
-        .btn-download:hover { background: var(--accent); color: var(--bg-primary); }
-
+        .btn-delete:hover { background: #cc0000; box-shadow: none; }
+        .btn-download { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+        .btn-download:hover { background: var(--accent); color: var(--bg-primary); box-shadow: none; }
         .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-secondary); }
         .empty-state-icon { font-size: 4rem; margin-bottom: 1rem; opacity: 0.3; }
 
-        /* Scan Page */
-        .scan-container {
-            display: none;
-            min-height: 100vh;
-            padding: 2rem;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-
+        .scan-container { display: none; min-height: 100vh; padding: 2rem; align-items: center; justify-content: center; flex-direction: column; }
         .scan-container.active { display: flex; }
-
-        .scan-result {
-            background: var(--bg-secondary);
-            border: 2px solid var(--border);
-            padding: 3rem;
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-        }
-
-        .scan-success {
-            font-size: 4rem;
-            color: var(--accent);
-            margin-bottom: 1rem;
-            animation: scaleIn 0.5s ease-out;
-        }
-
-        @keyframes scaleIn { from{transform:scale(0)} to{transform:scale(1)} }
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.1)} }
-
+        .scan-result { background: var(--bg-secondary); border: 2px solid var(--border); padding: 3rem; max-width: 500px; width: 100%; text-align: center; }
+        .scan-success { font-size: 4rem; color: var(--accent); margin-bottom: 1rem; }
         .scan-success.loading { animation: pulse 1.5s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.1)} }
         .scan-label { font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; margin-bottom: 1rem; }
-        .scan-count { font-size: 3rem; font-weight: 700; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
-
-        .loading {
-            display: inline-block;
-            width: 20px; height: 20px;
-            border: 2px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
+        .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to{transform:rotate(360deg)} }
 
-        /* Generating overlay */
-        .generating-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 999;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--accent);
-            font-size: 1.1rem;
-            letter-spacing: 2px;
-        }
-
+        .generating-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 999; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 1.1rem; letter-spacing: 2px; text-align: center; padding: 2rem; }
         .generating-overlay.active { display: flex; }
-        .generating-overlay .big-spin {
-            width: 60px; height: 60px;
-            border: 3px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
+        .generating-overlay .big-spin { width: 60px; height: 60px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
 
         @media (max-width: 768px) {
             .header { flex-direction: column; gap: 1rem; align-items: flex-start; }
@@ -490,13 +115,11 @@
 </head>
 <body>
 
-<!-- Generating Overlay -->
 <div class="generating-overlay" id="generatingOverlay">
     <div class="big-spin"></div>
     <div id="generatingText">GENERATING QR CODE...</div>
 </div>
 
-<!-- Authentication -->
 <div id="authContainer" class="auth-container">
     <div class="auth-box">
         <h1>QR Manager</h1>
@@ -517,7 +140,6 @@
     </div>
 </div>
 
-<!-- Dashboard -->
 <div id="dashboard" class="dashboard">
     <div class="header">
         <h1>QR Code Manager</h1>
@@ -526,46 +148,33 @@
             <button class="btn-logout" id="btnLogout">Logout</button>
         </div>
     </div>
-
     <div class="main-content">
         <div class="stats">
-            <div class="stat-card">
-                <div class="stat-label">Total QR Codes</div>
-                <div class="stat-value" id="totalCodes">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Total Scans</div>
-                <div class="stat-value" id="totalScans">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Locked Codes</div>
-                <div class="stat-value" id="lockedCodes">0</div>
-            </div>
+            <div class="stat-card"><div class="stat-label">Total QR Codes</div><div class="stat-value" id="totalCodes">0</div></div>
+            <div class="stat-card"><div class="stat-label">Total Scans</div><div class="stat-value" id="totalScans">0</div></div>
+            <div class="stat-card"><div class="stat-label">Locked Codes</div><div class="stat-value" id="lockedCodes">0</div></div>
         </div>
-
         <div class="controls">
-            <!-- Style Selector -->
             <div>
                 <label style="margin-bottom:0.75rem;display:block;">QR Code Style</label>
                 <div class="style-selector">
-                    <button class="style-option selected" data-style="regular" onclick="selectStyle('regular', this)">
+                    <button class="style-option selected" data-style="regular" onclick="selectStyle('regular',this)">
                         <span class="style-icon">⬛</span>
                         <span class="style-name">Regular</span>
                         <span class="style-desc">Classic square QR code</span>
                     </button>
-                    <button class="style-option" data-style="footprint" onclick="selectStyle('footprint', this)">
+                    <button class="style-option" data-style="footprint" onclick="selectStyle('footprint',this)">
                         <span class="style-icon">🦕</span>
                         <span class="style-name">Dino Tracks</span>
-                        <span class="style-desc">Modules as dinosaur footprints</span>
+                        <span class="style-desc">Modules as dino footprints</span>
                     </button>
-                    <button class="style-option" data-style="dinosaur" onclick="selectStyle('dinosaur', this)">
+                    <button class="style-option" data-style="dinosaur" onclick="selectStyle('dinosaur',this)">
                         <span class="style-icon">🦖</span>
                         <span class="style-name">Dino Shape</span>
-                        <span class="style-desc">QR inside a dinosaur silhouette</span>
+                        <span class="style-desc">QR inside a T-Rex frame</span>
                     </button>
                 </div>
             </div>
-
             <div class="input-row">
                 <div class="input-group" style="margin:0;">
                     <label for="qrUrl">Target URL</label>
@@ -578,17 +187,12 @@
                 <button class="btn-create" id="btnCreate">Create QR</button>
             </div>
         </div>
-
         <div id="qrGrid" class="qr-grid">
-            <div class="empty-state">
-                <div class="empty-state-icon">⊞</div>
-                <p>No QR codes yet. Create your first one above.</p>
-            </div>
+            <div class="empty-state"><div class="empty-state-icon">⊞</div><p>No QR codes yet. Create your first one above.</p></div>
         </div>
     </div>
 </div>
 
-<!-- Scan Result Page -->
 <div id="scanContainer" class="scan-container">
     <div class="scan-result">
         <div class="scan-success loading" id="scanSuccessIcon">⏳</div>
@@ -597,8 +201,534 @@
     </div>
 </div>
 
-<!-- Hidden canvas for QR generation -->
-<canvas id="hiddenCanvas" style="display:none;"></canvas>
+<!-- qrcodejs loaded globally so canvas-based generators can use it -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+    // ============================================
+    // STYLE SELECTION
+    // ============================================
+    window._selectedStyle = 'regular';
+    window.selectStyle = function(style, el) {
+        window._selectedStyle = style;
+        document.querySelectorAll('.style-option').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+    };
+
+    // ============================================
+    // CORE: GET QR MODULE MATRIX FROM QRCODE.JS
+    // This reads the actual canvas pixels accurately
+    // to produce a reliable boolean grid of dark/light modules
+    // ============================================
+    window.getQRMatrix = function(text) {
+        return new Promise(function(resolve) {
+            var div = document.createElement('div');
+            div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;width:auto;height:auto;';
+            document.body.appendChild(div);
+
+            // Use 580px for high resolution sampling
+            new QRCode(div, { text: text, width: 580, height: 580, correctLevel: QRCode.CorrectLevel.H });
+
+            setTimeout(function() {
+                var canvas = div.querySelector('canvas');
+                if (!canvas) { document.body.removeChild(div); resolve(null); return; }
+
+                var ctx = canvas.getContext('2d');
+                var W = canvas.width;
+                var pixels = ctx.getImageData(0, 0, W, W).data;
+
+                function isDark(x, y) {
+                    x = Math.min(Math.max(0, Math.round(x)), W-1);
+                    y = Math.min(Math.max(0, Math.round(y)), W-1);
+                    return pixels[(y * W + x) * 4] < 128;
+                }
+
+                // Find quiet zone edges by scanning for first dark pixel
+                var qx = 0, qy = 0;
+                for (var x = 0; x < W; x++) { var found = false; for (var y = 0; y < W; y++) { if (isDark(x,y)) { qx = x; found = true; break; } } if (found) break; }
+                for (var y = 0; y < W; y++) { var found = false; for (var x = 0; x < W; x++) { if (isDark(x,y)) { qy = y; found = true; break; } } if (found) break; }
+
+                // Find end of QR by scanning from right/bottom
+                var ex = W, ey = W;
+                for (var x = W-1; x >= 0; x--) { var found = false; for (var y = 0; y < W; y++) { if (isDark(x,y)) { ex = x; found = true; break; } } if (found) break; }
+                for (var y = W-1; y >= 0; y--) { var found = false; for (var x = 0; x < W; x++) { if (isDark(x,y)) { ey = y; found = true; break; } } if (found) break; }
+
+                // Module size: measure first dark run on top edge
+                var runLen = 0;
+                for (var x = qx; x < W; x++) { if (isDark(x, qy)) runLen++; else break; }
+                var modSize = Math.max(1, runLen);
+
+                var qrSpan = ex - qx + modSize;
+                var numModules = Math.round(qrSpan / modSize);
+                // Ensure it's odd (QR codes always have odd module count)
+                if (numModules % 2 === 0) numModules++;
+
+                // Recompute modSize from actual span
+                modSize = qrSpan / numModules;
+
+                // Build boolean matrix
+                var matrix = [];
+                for (var r = 0; r < numModules; r++) {
+                    matrix[r] = [];
+                    for (var c = 0; c < numModules; c++) {
+                        var px = qx + c * modSize + modSize * 0.5;
+                        var py = qy + r * modSize + modSize * 0.5;
+                        matrix[r][c] = isDark(px, py);
+                    }
+                }
+
+                document.body.removeChild(div);
+                resolve({ matrix: matrix, numModules: numModules, modSize: modSize });
+            }, 600);
+        });
+    };
+
+    // ============================================
+    // GENERATE REGULAR QR (external API)
+    // ============================================
+    window.generateRegularQR = function(scanUrl) {
+        return Promise.resolve('https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(scanUrl));
+    };
+
+    // ============================================
+    // GENERATE FOOTPRINT QR
+    // Each dark data module = a 3-toed dino footprint
+    // Finder patterns + timing kept as crisp squares
+    // (scanners need them clean and square)
+    // ============================================
+    window.generateFootprintQR = function(scanUrl) {
+        return getQRMatrix(scanUrl).then(function(result) {
+            if (!result) return null;
+            var matrix = result.matrix, N = result.numModules;
+
+            var CELL = 15;   // pixels per module
+            var QUIET = 4;   // quiet zone border in modules
+            var TOTAL = (N + QUIET * 2) * CELL;
+
+            var canvas = document.createElement('canvas');
+            canvas.width = TOTAL;
+            canvas.height = TOTAL;
+            var ctx = canvas.getContext('2d');
+
+            // White background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, TOTAL, TOTAL);
+
+            var offset = QUIET * CELL; // pixel offset for quiet zone
+
+            // Helper: pixel coords of module (r,c)
+            function mx(c) { return offset + c * CELL; }
+            function my(r) { return offset + r * CELL; }
+
+            // Identify structural zones that must stay square for scanning
+            function isFinderZone(r, c) {
+                // Top-left finder (0-6) + separator (7)
+                if (r <= 7 && c <= 7) return true;
+                // Top-right finder
+                if (r <= 7 && c >= N-8) return true;
+                // Bottom-left finder
+                if (r >= N-8 && c <= 7) return true;
+                return false;
+            }
+            function isTimingZone(r, c) {
+                // Timing patterns at row 6 and col 6 between finders
+                if (r === 6 && c >= 8 && c <= N-9) return true;
+                if (c === 6 && r >= 8 && r <= N-9) return true;
+                return false;
+            }
+            function isAlignmentZone(r, c) {
+                // Alignment pattern for most QR versions: center near N-7, N-7
+                var ap = N - 7;
+                return (r >= ap-2 && r <= ap+2 && c >= ap-2 && c <= ap+2);
+            }
+            function isFormatZone(r, c) {
+                // Format info strips adjacent to finders
+                if (r <= 8 && (c === 8)) return true;
+                if (c <= 8 && (r === 8)) return true;
+                if (r <= 8 && c >= N-8) return true;
+                if (r >= N-8 && c <= 8) return true;
+                return false;
+            }
+
+            // Draw structural modules as clean squares
+            for (var r = 0; r < N; r++) {
+                for (var c = 0; c < N; c++) {
+                    if (!matrix[r] || matrix[r][c] === undefined) continue;
+                    var structural = isFinderZone(r,c) || isTimingZone(r,c) || isAlignmentZone(r,c) || isFormatZone(r,c);
+                    if (structural && matrix[r][c]) {
+                        ctx.fillStyle = '#111111';
+                        ctx.fillRect(mx(c), my(r), CELL, CELL);
+                    }
+                }
+            }
+
+            // Draw white gaps for structural light modules (important for finder patterns)
+            for (var r = 0; r < N; r++) {
+                for (var c = 0; c < N; c++) {
+                    if (!matrix[r] || matrix[r][c] === undefined) continue;
+                    var structural = isFinderZone(r,c) || isTimingZone(r,c) || isAlignmentZone(r,c) || isFormatZone(r,c);
+                    if (structural && !matrix[r][c]) {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(mx(c), my(r), CELL, CELL);
+                    }
+                }
+            }
+
+            // Draw data modules as footprints
+            for (var r = 0; r < N; r++) {
+                for (var c = 0; c < N; c++) {
+                    if (!matrix[r] || matrix[r][c] === undefined) continue;
+                    if (isFinderZone(r,c) || isTimingZone(r,c) || isAlignmentZone(r,c) || isFormatZone(r,c)) continue;
+                    if (matrix[r][c]) {
+                        var cx = mx(c) + CELL / 2;
+                        var cy = my(r) + CELL / 2;
+                        drawFootprint(ctx, cx, cy, CELL * 0.43, '#111111');
+                    }
+                }
+            }
+
+            return canvas.toDataURL('image/png');
+        });
+    };
+
+    // Draw a 3-toed theropod footprint
+    function drawFootprint(ctx, cx, cy, r, color) {
+        ctx.save();
+        ctx.fillStyle = color;
+        // Palm pad
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + r * 0.18, r * 0.50, r * 0.38, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Three toes (middle longest, two angled out)
+        var toes = [
+            { a: -Math.PI/2,        l: 1.02, w: 0.20, cl: 0.34 },
+            { a: -Math.PI/2-0.52,   l: 0.80, w: 0.17, cl: 0.26 },
+            { a: -Math.PI/2+0.52,   l: 0.80, w: 0.17, cl: 0.26 },
+        ];
+        for (var i = 0; i < toes.length; i++) {
+            var t = toes[i];
+            var tx = cx + Math.cos(t.a) * r * t.l;
+            var ty = cy + Math.sin(t.a) * r * t.l;
+            ctx.beginPath();
+            ctx.ellipse(tx, ty, r * t.w, r * t.w * 1.5, t.a + Math.PI/2, 0, Math.PI * 2);
+            ctx.fill();
+            // Claw
+            var clawX = cx + Math.cos(t.a) * r * (t.l + t.cl);
+            var clawY = cy + Math.sin(t.a) * r * (t.l + t.cl);
+            ctx.beginPath();
+            ctx.ellipse(clawX, clawY, r * t.w * 0.45, r * t.w * 0.9, t.a + Math.PI/2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    // ============================================
+    // GENERATE DINO SHAPE QR
+    // Strategy: Draw a COMPLETE, UNTOUCHED QR code
+    // into the torso of a detailed T-Rex illustration.
+    // The dino is art around the QR — not a clip mask.
+    // QR remains 100% intact and scannable.
+    // ============================================
+    window.generateDinosaurQR = function(scanUrl) {
+        return new Promise(function(resolve) {
+            var div = document.createElement('div');
+            div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;';
+            document.body.appendChild(div);
+
+            new QRCode(div, { text: scanUrl, width: 230, height: 230, correctLevel: QRCode.CorrectLevel.H });
+
+            setTimeout(function() {
+                var src = div.querySelector('canvas');
+                if (!src) { document.body.removeChild(div); resolve(null); return; }
+
+                var C = 560;
+                var out = document.createElement('canvas');
+                out.width = C; out.height = C;
+                var ctx = out.getContext('2d');
+
+                // White background
+                ctx.fillStyle = '#f8fff4';
+                ctx.fillRect(0, 0, C, C);
+
+                // Scale helper
+                function s(v) { return v * C; }
+
+                var skin1 = '#2d5a1b';   // darkest
+                var skin2 = '#3d7a25';   // mid
+                var skin3 = '#5aaa38';   // light
+                var skin4 = '#8dd460';   // highlight
+                var belly  = '#b8e890';  // underside
+                var mouth  = '#8b1a1a';  // mouth interior
+                var tooth  = '#fffde7';
+                var tongue = '#cc4444';
+                var claw   = '#1a2a0a';
+                var eye1   = '#ffcc00';
+
+                // ---- TAIL ----
+                ctx.fillStyle = skin1;
+                ctx.beginPath();
+                ctx.moveTo(s(0.03), s(0.57));
+                ctx.bezierCurveTo(s(0.07), s(0.50), s(0.14), s(0.46), s(0.23), s(0.44));
+                ctx.bezierCurveTo(s(0.28), s(0.43), s(0.32), s(0.44), s(0.34), s(0.46));
+                ctx.bezierCurveTo(s(0.31), s(0.51), s(0.26), s(0.56), s(0.20), s(0.60));
+                ctx.bezierCurveTo(s(0.13), s(0.65), s(0.07), s(0.65), s(0.04), s(0.63));
+                ctx.closePath(); ctx.fill();
+                // Tail stripe highlight
+                ctx.fillStyle = skin2;
+                ctx.beginPath();
+                ctx.moveTo(s(0.06), s(0.52)); ctx.bezierCurveTo(s(0.11), s(0.48), s(0.18), s(0.46), s(0.24), s(0.46));
+                ctx.bezierCurveTo(s(0.20), s(0.48), s(0.13), s(0.51), s(0.08), s(0.55)); ctx.closePath(); ctx.fill();
+
+                // ---- BACK LEG (behind body) ----
+                ctx.fillStyle = skin1;
+                // Upper leg
+                ctx.beginPath();
+                ctx.moveTo(s(0.28), s(0.57)); ctx.bezierCurveTo(s(0.25), s(0.63), s(0.24), s(0.70), s(0.25), s(0.76));
+                ctx.bezierCurveTo(s(0.26), s(0.80), s(0.29), s(0.82), s(0.32), s(0.82));
+                ctx.bezierCurveTo(s(0.35), s(0.82), s(0.37), s(0.80), s(0.38), s(0.76));
+                ctx.bezierCurveTo(s(0.39), s(0.71), s(0.37), s(0.63), s(0.34), s(0.59));
+                ctx.bezierCurveTo(s(0.31), s(0.56), s(0.29), s(0.55), s(0.28), s(0.57)); ctx.fill();
+                // Lower leg
+                ctx.beginPath();
+                ctx.moveTo(s(0.26), s(0.80)); ctx.bezierCurveTo(s(0.25), s(0.86), s(0.24), s(0.91), s(0.23), s(0.95));
+                ctx.bezierCurveTo(s(0.22), s(0.97), s(0.23), s(0.975), s(0.26), s(0.975));
+                ctx.bezierCurveTo(s(0.29), s(0.975), s(0.32), s(0.96), s(0.33), s(0.92));
+                ctx.bezierCurveTo(s(0.34), s(0.88), s(0.33), s(0.83), s(0.32), s(0.80));
+                ctx.bezierCurveTo(s(0.30), s(0.78), s(0.27), s(0.78), s(0.26), s(0.80)); ctx.fill();
+                // Back foot
+                ctx.fillStyle = skin1;
+                ctx.beginPath(); ctx.ellipse(s(0.235), s(0.972), s(0.062), s(0.022), -0.15, 0, Math.PI*2); ctx.fill();
+                // Back claws
+                for (var i = 0; i < 3; i++) {
+                    ctx.fillStyle = claw;
+                    ctx.beginPath(); ctx.ellipse(s(0.20)+(i*s(0.040)), s(0.982), s(0.011), s(0.018), (i-1)*0.25, 0, Math.PI*2); ctx.fill();
+                }
+
+                // ---- MAIN BODY ----
+                ctx.fillStyle = skin2;
+                ctx.beginPath();
+                ctx.moveTo(s(0.22), s(0.44));
+                ctx.bezierCurveTo(s(0.30), s(0.38), s(0.40), s(0.34), s(0.52), s(0.30));
+                ctx.bezierCurveTo(s(0.60), s(0.27), s(0.66), s(0.26), s(0.70), s(0.28));
+                ctx.bezierCurveTo(s(0.74), s(0.30), s(0.76), s(0.34), s(0.76), s(0.38));
+                ctx.bezierCurveTo(s(0.75), s(0.44), s(0.72), s(0.50), s(0.66), s(0.55));
+                ctx.bezierCurveTo(s(0.59), s(0.60), s(0.50), s(0.62), s(0.42), s(0.62));
+                ctx.bezierCurveTo(s(0.35), s(0.62), s(0.28), s(0.60), s(0.24), s(0.57));
+                ctx.bezierCurveTo(s(0.21), s(0.54), s(0.20), s(0.50), s(0.22), s(0.44));
+                ctx.fill();
+
+                // Body dorsal highlight
+                ctx.fillStyle = skin3;
+                ctx.beginPath();
+                ctx.moveTo(s(0.24), s(0.42)); ctx.bezierCurveTo(s(0.33), s(0.36), s(0.44), s(0.32), s(0.56), s(0.29));
+                ctx.bezierCurveTo(s(0.62), s(0.28), s(0.67), s(0.28), s(0.69), s(0.29));
+                ctx.bezierCurveTo(s(0.65), s(0.28), s(0.58), s(0.29), s(0.50), s(0.31));
+                ctx.bezierCurveTo(s(0.40), s(0.34), s(0.30), s(0.38), s(0.24), s(0.42)); ctx.fill();
+
+                // Belly / underside
+                ctx.fillStyle = belly;
+                ctx.beginPath();
+                ctx.moveTo(s(0.30), s(0.60)); ctx.bezierCurveTo(s(0.38), s(0.63), s(0.50), s(0.65), s(0.58), s(0.62));
+                ctx.bezierCurveTo(s(0.64), s(0.60), s(0.67), s(0.56), s(0.68), s(0.52));
+                ctx.bezierCurveTo(s(0.65), s(0.57), s(0.59), s(0.61), s(0.52), s(0.62));
+                ctx.bezierCurveTo(s(0.45), s(0.63), s(0.38), s(0.62), s(0.30), s(0.60)); ctx.fill();
+
+                // Dorsal spines / ridge bumps
+                ctx.fillStyle = skin1;
+                var spines = [[0.23,0.42,0.024],[0.30,0.39,0.030],[0.38,0.36,0.034],[0.46,0.32,0.032],[0.53,0.29,0.028],[0.59,0.28,0.022],[0.64,0.27,0.018]];
+                for (var i = 0; i < spines.length; i++) {
+                    var sp = spines[i];
+                    ctx.beginPath(); ctx.moveTo(s(sp[0]-0.011), s(sp[1])); ctx.lineTo(s(sp[0]), s(sp[1]-sp[2])); ctx.lineTo(s(sp[0]+0.011), s(sp[1])); ctx.fill();
+                }
+
+                // Scale texture
+                ctx.fillStyle = 'rgba(0,0,0,0.10)';
+                var scales = [[0.35,0.44],[0.40,0.42],[0.45,0.40],[0.50,0.39],[0.55,0.38],[0.60,0.37],[0.37,0.49],[0.42,0.47],[0.47,0.45],[0.52,0.44],[0.57,0.42],[0.39,0.53],[0.44,0.51],[0.49,0.49],[0.54,0.48]];
+                for (var i = 0; i < scales.length; i++) {
+                    ctx.beginPath(); ctx.arc(s(scales[i][0]), s(scales[i][1]), s(0.0065), 0, Math.PI*2); ctx.fill();
+                }
+
+                // ---- TINY ARM ----
+                ctx.fillStyle = skin1;
+                ctx.beginPath();
+                ctx.moveTo(s(0.69), s(0.40)); ctx.bezierCurveTo(s(0.72), s(0.43), s(0.73), s(0.47), s(0.71), s(0.51));
+                ctx.bezierCurveTo(s(0.70), s(0.53), s(0.68), s(0.54), s(0.67), s(0.52));
+                ctx.bezierCurveTo(s(0.66), s(0.50), s(0.66), s(0.46), s(0.67), s(0.43));
+                ctx.bezierCurveTo(s(0.68), s(0.41), s(0.69), s(0.40), s(0.69), s(0.40)); ctx.fill();
+                for (var i = 0; i < 2; i++) {
+                    ctx.fillStyle = claw;
+                    ctx.beginPath(); ctx.ellipse(s(0.685)+i*s(0.016), s(0.535), s(0.008), s(0.013), i*0.35-0.2, 0, Math.PI*2); ctx.fill();
+                }
+
+                // ---- FRONT LEG (main) ----
+                ctx.fillStyle = skin2;
+                // Thigh
+                ctx.beginPath();
+                ctx.moveTo(s(0.56), s(0.59)); ctx.bezierCurveTo(s(0.54), s(0.64), s(0.52), s(0.70), s(0.53), s(0.76));
+                ctx.bezierCurveTo(s(0.54), s(0.80), s(0.57), s(0.82), s(0.60), s(0.82));
+                ctx.bezierCurveTo(s(0.63), s(0.82), s(0.65), s(0.80), s(0.66), s(0.76));
+                ctx.bezierCurveTo(s(0.67), s(0.71), s(0.65), s(0.65), s(0.63), s(0.61));
+                ctx.bezierCurveTo(s(0.61), s(0.58), s(0.57), s(0.57), s(0.56), s(0.59)); ctx.fill();
+                // Knee highlight
+                ctx.fillStyle = skin3;
+                ctx.beginPath(); ctx.ellipse(s(0.59), s(0.76), s(0.024), s(0.020), 0.2, 0, Math.PI*2); ctx.fill();
+                // Lower leg
+                ctx.fillStyle = skin1;
+                ctx.beginPath();
+                ctx.moveTo(s(0.55), s(0.80)); ctx.bezierCurveTo(s(0.54), s(0.87), s(0.53), s(0.91), s(0.52), s(0.95));
+                ctx.bezierCurveTo(s(0.51), s(0.975), s(0.51), s(0.978), s(0.54), s(0.978));
+                ctx.bezierCurveTo(s(0.57), s(0.978), s(0.61), s(0.965), s(0.62), s(0.92));
+                ctx.bezierCurveTo(s(0.63), s(0.87), s(0.63), s(0.84), s(0.61), s(0.80));
+                ctx.bezierCurveTo(s(0.60), s(0.78), s(0.56), s(0.78), s(0.55), s(0.80)); ctx.fill();
+                // Front foot
+                ctx.fillStyle = skin1;
+                ctx.beginPath(); ctx.ellipse(s(0.52), s(0.974), s(0.070), s(0.025), -0.15, 0, Math.PI*2); ctx.fill();
+                for (var i = 0; i < 3; i++) {
+                    ctx.fillStyle = claw;
+                    ctx.beginPath(); ctx.ellipse(s(0.49)+i*s(0.048), s(0.983), s(0.013), s(0.021), (i-1)*0.28, 0, Math.PI*2); ctx.fill();
+                }
+
+                // ---- NECK ----
+                ctx.fillStyle = skin2;
+                ctx.beginPath();
+                ctx.moveTo(s(0.68), s(0.28)); ctx.bezierCurveTo(s(0.70), s(0.23), s(0.72), s(0.18), s(0.74), s(0.14));
+                ctx.bezierCurveTo(s(0.76), s(0.11), s(0.79), s(0.10), s(0.82), s(0.10));
+                ctx.bezierCurveTo(s(0.84), s(0.11), s(0.85), s(0.13), s(0.84), s(0.16));
+                ctx.bezierCurveTo(s(0.83), s(0.20), s(0.80), s(0.24), s(0.77), s(0.27));
+                ctx.bezierCurveTo(s(0.74), s(0.30), s(0.71), s(0.32), s(0.69), s(0.32));
+                ctx.bezierCurveTo(s(0.67), s(0.32), s(0.66), s(0.31), s(0.68), s(0.28)); ctx.fill();
+                // Throat
+                ctx.fillStyle = belly;
+                ctx.beginPath();
+                ctx.moveTo(s(0.70), s(0.31)); ctx.bezierCurveTo(s(0.72), s(0.26), s(0.74), s(0.21), s(0.76), s(0.17));
+                ctx.bezierCurveTo(s(0.77), s(0.15), s(0.78), s(0.14), s(0.79), s(0.15));
+                ctx.bezierCurveTo(s(0.78), s(0.19), s(0.76), s(0.24), s(0.74), s(0.28));
+                ctx.bezierCurveTo(s(0.73), s(0.30), s(0.71), s(0.31), s(0.70), s(0.31)); ctx.fill();
+
+                // ---- HEAD ----
+                ctx.fillStyle = skin2;
+                ctx.beginPath();
+                ctx.moveTo(s(0.76), s(0.10));
+                ctx.bezierCurveTo(s(0.79), s(0.06), s(0.84), s(0.04), s(0.89), s(0.05));
+                ctx.bezierCurveTo(s(0.94), s(0.06), s(0.97), s(0.09), s(0.975), s(0.13));
+                ctx.bezierCurveTo(s(0.98), s(0.17), s(0.975), s(0.22), s(0.965), s(0.25));
+                ctx.bezierCurveTo(s(0.955), s(0.28), s(0.935), s(0.30), s(0.91), s(0.30));
+                ctx.bezierCurveTo(s(0.89), s(0.30), s(0.87), s(0.29), s(0.86), s(0.28));
+                ctx.bezierCurveTo(s(0.83), s(0.27), s(0.80), s(0.27), s(0.78), s(0.29));
+                ctx.bezierCurveTo(s(0.76), s(0.31), s(0.74), s(0.31), s(0.73), s(0.29));
+                ctx.bezierCurveTo(s(0.72), s(0.27), s(0.72), s(0.23), s(0.72), s(0.19));
+                ctx.bezierCurveTo(s(0.72), s(0.14), s(0.74), s(0.11), s(0.76), s(0.10));
+                ctx.fill();
+                // Head top highlight
+                ctx.fillStyle = skin3;
+                ctx.beginPath();
+                ctx.moveTo(s(0.78), s(0.08)); ctx.bezierCurveTo(s(0.83), s(0.05), s(0.88), s(0.05), s(0.92), s(0.07));
+                ctx.bezierCurveTo(s(0.94), s(0.08), s(0.95), s(0.10), s(0.94), s(0.11));
+                ctx.bezierCurveTo(s(0.90), s(0.08), s(0.85), s(0.07), s(0.80), s(0.09)); ctx.fill();
+                // Head ridge bumps
+                ctx.fillStyle = skin1;
+                var headRidge = [[0.80,0.07,0.012],[0.85,0.055,0.013],[0.89,0.055,0.012]];
+                for (var i = 0; i < headRidge.length; i++) {
+                    var hr = headRidge[i];
+                    ctx.beginPath(); ctx.moveTo(s(hr[0]-0.010),s(hr[1])); ctx.lineTo(s(hr[0]),s(hr[1]-hr[2])); ctx.lineTo(s(hr[0]+0.010),s(hr[1])); ctx.fill();
+                }
+
+                // ---- OPEN MOUTH interior ----
+                // Upper jaw gap
+                ctx.fillStyle = mouth;
+                ctx.beginPath();
+                ctx.moveTo(s(0.80), s(0.18)); ctx.bezierCurveTo(s(0.85), s(0.17), s(0.90), s(0.17), s(0.94), s(0.19));
+                ctx.bezierCurveTo(s(0.96), s(0.20), s(0.965), s(0.23), s(0.96), s(0.25));
+                ctx.bezierCurveTo(s(0.93), s(0.27), s(0.89), s(0.28), s(0.86), s(0.27));
+                ctx.bezierCurveTo(s(0.83), s(0.26), s(0.81), s(0.24), s(0.80), s(0.22));
+                ctx.bezierCurveTo(s(0.79), s(0.20), s(0.79), s(0.19), s(0.80), s(0.18)); ctx.fill();
+
+                // ---- LOWER JAW ----
+                ctx.fillStyle = skin2;
+                ctx.beginPath();
+                ctx.moveTo(s(0.74), s(0.29)); ctx.bezierCurveTo(s(0.77), s(0.30), s(0.82), s(0.31), s(0.86), s(0.30));
+                ctx.bezierCurveTo(s(0.90), s(0.29), s(0.93), s(0.28), s(0.94), s(0.29));
+                ctx.bezierCurveTo(s(0.95), s(0.30), s(0.95), s(0.33), s(0.94), s(0.35));
+                ctx.bezierCurveTo(s(0.92), s(0.37), s(0.88), s(0.38), s(0.85), s(0.37));
+                ctx.bezierCurveTo(s(0.82), s(0.36), s(0.79), s(0.36), s(0.77), s(0.37));
+                ctx.bezierCurveTo(s(0.75), s(0.38), s(0.73), s(0.37), s(0.72), s(0.35));
+                ctx.bezierCurveTo(s(0.72), s(0.32), s(0.73), s(0.29), s(0.74), s(0.29)); ctx.fill();
+                // Lower jaw interior
+                ctx.fillStyle = mouth;
+                ctx.beginPath();
+                ctx.moveTo(s(0.78), s(0.30)); ctx.bezierCurveTo(s(0.83), s(0.30), s(0.88), s(0.29), s(0.92), s(0.30));
+                ctx.bezierCurveTo(s(0.93), s(0.31), s(0.94), s(0.33), s(0.93), s(0.34));
+                ctx.bezierCurveTo(s(0.90), s(0.35), s(0.86), s(0.35), s(0.83), s(0.34));
+                ctx.bezierCurveTo(s(0.80), s(0.33), s(0.78), s(0.32), s(0.78), s(0.30)); ctx.fill();
+
+                // ---- TEETH ----
+                // Upper teeth
+                ctx.fillStyle = tooth;
+                var upT = [0.82, 0.855, 0.885, 0.912];
+                for (var i = 0; i < upT.length; i++) {
+                    var tx = upT[i];
+                    ctx.beginPath(); ctx.moveTo(s(tx), s(0.265)); ctx.lineTo(s(tx+0.013), s(0.282)); ctx.lineTo(s(tx+0.026), s(0.265)); ctx.fill();
+                }
+                // Lower teeth
+                var loT = [0.83, 0.860, 0.890];
+                for (var i = 0; i < loT.length; i++) {
+                    var tx = loT[i];
+                    ctx.beginPath(); ctx.moveTo(s(tx), s(0.313)); ctx.lineTo(s(tx+0.013), s(0.296)); ctx.lineTo(s(tx+0.026), s(0.313)); ctx.fill();
+                }
+
+                // Tongue
+                ctx.fillStyle = tongue;
+                ctx.beginPath();
+                ctx.moveTo(s(0.82), s(0.305)); ctx.bezierCurveTo(s(0.85), s(0.325), s(0.88), s(0.33), s(0.90), s(0.32));
+                ctx.bezierCurveTo(s(0.88), s(0.305), s(0.85), s(0.295), s(0.82), s(0.305)); ctx.fill();
+
+                // ---- EYE ----
+                ctx.fillStyle = skin1; // socket
+                ctx.beginPath(); ctx.ellipse(s(0.806), s(0.125), s(0.034), s(0.028), -0.2, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#ffffcc'; // sclera
+                ctx.beginPath(); ctx.ellipse(s(0.808), s(0.123), s(0.024), s(0.020), -0.2, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = eye1; // iris
+                ctx.beginPath(); ctx.ellipse(s(0.811), s(0.122), s(0.015), s(0.013), 0, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#111'; // pupil slit
+                ctx.beginPath(); ctx.ellipse(s(0.812), s(0.122), s(0.005), s(0.012), 0, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,0.85)'; // shine
+                ctx.beginPath(); ctx.ellipse(s(0.817), s(0.116), s(0.005), s(0.004), 0, 0, Math.PI*2); ctx.fill();
+
+                // ---- NOSTRIL ----
+                ctx.fillStyle = skin1;
+                ctx.beginPath(); ctx.ellipse(s(0.955), s(0.115), s(0.011), s(0.008), 0.5, 0, Math.PI*2); ctx.fill();
+
+                // ---- QR CODE in torso ----
+                var qrW = 218, qrH = 218;
+                var qrX = s(0.285);
+                var qrY = s(0.325);
+
+                // Drop shadow
+                ctx.shadowColor = 'rgba(0,0,0,0.25)';
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+                // White backing pad
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.roundRect(qrX - 10, qrY - 10, qrW + 20, qrH + 20, 5);
+                ctx.fill();
+                ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+
+                // Draw QR code
+                ctx.drawImage(src, qrX, qrY, qrW, qrH);
+
+                // Green border
+                ctx.strokeStyle = skin1;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath(); ctx.roundRect(qrX - 10, qrY - 10, qrW + 20, qrH + 20, 5); ctx.stroke();
+
+                document.body.removeChild(div);
+                resolve(out.toDataURL('image/png'));
+            }, 500);
+        });
+    };
+</script>
 
 <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
@@ -618,545 +748,120 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const database = getDatabase(app);
+    const db = getDatabase(app);
 
     // Immediate scan check
     const urlParams = new URLSearchParams(window.location.search);
-    const scanId = urlParams.get('scan');
-    const userId = urlParams.get('uid');
-
-    if (scanId && userId) {
+    const scanIdParam = urlParams.get('scan');
+    const userIdParam = urlParams.get('uid');
+    if (scanIdParam && userIdParam) {
         document.getElementById('authContainer').style.display = 'none';
         document.getElementById('scanContainer').classList.add('active');
     }
 
     let currentUser = null;
     let qrCodes = {};
-    let selectedStyle = 'regular';
 
-    // DOM refs
     const authContainer = document.getElementById('authContainer');
     const dashboard = document.getElementById('dashboard');
     const scanContainer = document.getElementById('scanContainer');
-    const authEmail = document.getElementById('authEmail');
-    const authPassword = document.getElementById('authPassword');
-    const btnLogin = document.getElementById('btnLogin');
-    const authError = document.getElementById('authError');
-    const btnLogout = document.getElementById('btnLogout');
-    const userEmail = document.getElementById('userEmail');
-    const qrUrl = document.getElementById('qrUrl');
-    const qrLabel = document.getElementById('qrLabel');
-    const btnCreate = document.getElementById('btnCreate');
-    const qrGrid = document.getElementById('qrGrid');
-    const totalCodes = document.getElementById('totalCodes');
-    const totalScans = document.getElementById('totalScans');
-    const lockedCodes = document.getElementById('lockedCodes');
     const generatingOverlay = document.getElementById('generatingOverlay');
     const generatingText = document.getElementById('generatingText');
 
-    // Style selector
-    window.selectStyle = (style, el) => {
-        selectedStyle = style;
-        document.querySelectorAll('.style-option').forEach(b => b.classList.remove('selected'));
-        el.classList.add('selected');
-    };
-
-    // ============================================
-    // QR CODE GENERATORS
-    // ============================================
-
-    // Wait for QRCode library to load
-    function waitForQRCode() {
-        return new Promise((resolve) => {
-            if (typeof QRCode !== 'undefined') { resolve(); return; }
-            const check = setInterval(() => {
-                if (typeof QRCode !== 'undefined') { clearInterval(check); resolve(); }
-            }, 100);
-        });
-    }
-
-    // Generate raw QR module grid using qrcodejs
-    function getQRModules(text) {
-        return new Promise(async (resolve) => {
-            await waitForQRCode();
-            const tempDiv = document.createElement('div');
-            tempDiv.style.display = 'none';
-            document.body.appendChild(tempDiv);
-            const qr = new QRCode(tempDiv, {
-                text: text,
-                width: 256,
-                height: 256,
-                correctLevel: QRCode.CorrectLevel.H
-            });
-            setTimeout(() => {
-                const img = tempDiv.querySelector('img');
-                const canvas = tempDiv.querySelector('canvas');
-                document.body.removeChild(tempDiv);
-                // Get module data from canvas
-                if (canvas) {
-                    const ctx = canvas.getContext('2d');
-                    const size = canvas.width;
-                    const imageData = ctx.getImageData(0, 0, size, size);
-                    resolve({ imageData, size, canvas });
-                } else {
-                    resolve({ imageData: null, size: 0, canvas: null });
-                }
-            }, 200);
-        });
-    }
-
-    // REGULAR QR - just use api.qrserver.com
-    async function generateRegularQR(scanUrl) {
-        return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(scanUrl)}`;
-    }
-
-    // FOOTPRINT QR - draw each module as a dinosaur footprint using canvas
-    async function generateFootprintQR(scanUrl) {
-        await waitForQRCode();
-
-        const tempDiv = document.createElement('div');
-        tempDiv.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
-        document.body.appendChild(tempDiv);
-
-        return new Promise((resolve) => {
-            new QRCode(tempDiv, {
-                text: scanUrl,
-                width: 256,
-                height: 256,
-                correctLevel: QRCode.CorrectLevel.H
-            });
-
-            setTimeout(() => {
-                const srcCanvas = tempDiv.querySelector('canvas');
-                if (!srcCanvas) { document.body.removeChild(tempDiv); resolve(null); return; }
-
-                const srcCtx = srcCanvas.getContext('2d');
-                const srcSize = srcCanvas.width;
-                const pixelData = srcCtx.getImageData(0, 0, srcSize, srcSize).data;
-
-                // Figure out module size by scanning first row
-                // QR codes have a quiet zone border - skip it
-                let moduleSize = Math.round(srcSize / 25); // approximate
-                if (moduleSize < 1) moduleSize = 1;
-
-                const numModules = Math.round(srcSize / moduleSize);
-                const padding = 2;
-                const drawModuleSize = 14;
-                const totalSize = numModules * drawModuleSize + padding * 2 * drawModuleSize;
-
-                const outCanvas = document.createElement('canvas');
-                outCanvas.width = totalSize;
-                outCanvas.height = totalSize;
-                const ctx = outCanvas.getContext('2d');
-
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, totalSize, totalSize);
-
-                // Draw each dark module as a footprint
-                for (let row = 0; row < numModules; row++) {
-                    for (let col = 0; col < numModules; col++) {
-                        // Sample pixel from source canvas
-                        const px = Math.floor((col + 0.5) * moduleSize);
-                        const py = Math.floor((row + 0.5) * moduleSize);
-                        const idx = (py * srcSize + px) * 4;
-                        const isDark = pixelData[idx] < 128;
-
-                        if (isDark) {
-                            const x = (col + padding) * drawModuleSize;
-                            const y = (row + padding) * drawModuleSize;
-                            drawFootprint(ctx, x + drawModuleSize / 2, y + drawModuleSize / 2, drawModuleSize * 0.45);
-                        }
-                    }
-                }
-
-                document.body.removeChild(tempDiv);
-                resolve(outCanvas.toDataURL('image/png'));
-            }, 300);
-        });
-    }
-
-    // Draw a dinosaur/reptile footprint (3-toed claw shape)
-    function drawFootprint(ctx, cx, cy, r) {
-        ctx.save();
-        ctx.fillStyle = '#1a1a1a';
-
-        // Main palm pad (oval)
-        ctx.beginPath();
-        ctx.ellipse(cx, cy + r * 0.1, r * 0.55, r * 0.45, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Three toes
-        const toes = [
-            { angle: -Math.PI / 2,        len: 1.1 }, // middle (longest)
-            { angle: -Math.PI / 2 - 0.6,  len: 0.85 }, // left
-            { angle: -Math.PI / 2 + 0.6,  len: 0.85 }, // right
-        ];
-
-        for (const toe of toes) {
-            const tx = cx + Math.cos(toe.angle) * r * toe.len;
-            const ty = cy + Math.sin(toe.angle) * r * toe.len;
-            ctx.beginPath();
-            ctx.ellipse(tx, ty, r * 0.22, r * 0.35, toe.angle + Math.PI / 2, 0, Math.PI * 2);
-            ctx.fill();
-            // Claw tip
-            const clawX = cx + Math.cos(toe.angle) * r * (toe.len + 0.45);
-            const clawY = cy + Math.sin(toe.angle) * r * (toe.len + 0.45);
-            ctx.beginPath();
-            ctx.ellipse(clawX, clawY, r * 0.12, r * 0.2, toe.angle + Math.PI / 2, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        ctx.restore();
-    }
-
-    // DINOSAUR SHAPE QR - render QR code inside a T-Rex silhouette
-    async function generateDinosaurQR(scanUrl) {
-        await waitForQRCode();
-
-        const tempDiv = document.createElement('div');
-        tempDiv.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
-        document.body.appendChild(tempDiv);
-
-        return new Promise((resolve) => {
-            new QRCode(tempDiv, {
-                text: scanUrl,
-                width: 256,
-                height: 256,
-                correctLevel: QRCode.CorrectLevel.H
-            });
-
-            setTimeout(() => {
-                const srcCanvas = tempDiv.querySelector('canvas');
-                if (!srcCanvas) { document.body.removeChild(tempDiv); resolve(null); return; }
-
-                const SIZE = 400;
-                const outCanvas = document.createElement('canvas');
-                outCanvas.width = SIZE;
-                outCanvas.height = SIZE;
-                const ctx = outCanvas.getContext('2d');
-
-                // White background
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, SIZE, SIZE);
-
-                // --- Draw T-Rex silhouette as clip path ---
-                // Scaled to fit 400x400 canvas
-                // This is a simplified but recognizable T-Rex side profile
-                const dino = buildTRexPath(SIZE);
-
-                // Fill silhouette with light green tint as background
-                ctx.save();
-                ctx.fillStyle = '#e8f5e9';
-                ctx.fill(dino);
-                ctx.restore();
-
-                // Now clip to the silhouette and draw QR code inside
-                ctx.save();
-                ctx.clip(dino);
-
-                // Draw QR code scaled to fill the silhouette area
-                // The body region of the T-Rex is roughly center of image
-                const qrSize = SIZE * 0.72;
-                const qrX = (SIZE - qrSize) / 2 + SIZE * 0.02;
-                const qrY = (SIZE - qrSize) / 2 + SIZE * 0.05;
-                ctx.drawImage(srcCanvas, qrX, qrY, qrSize, qrSize);
-
-                ctx.restore();
-
-                // Draw silhouette outline on top
-                ctx.save();
-                ctx.strokeStyle = '#2d5a27';
-                ctx.lineWidth = 3;
-                ctx.stroke(dino);
-                ctx.restore();
-
-                // Add tiny dino label
-                ctx.save();
-                ctx.fillStyle = '#2d5a27';
-                ctx.font = 'bold 11px "Space Mono", monospace';
-                ctx.textAlign = 'center';
-                ctx.fillText('🦖 SCAN ME', SIZE / 2, SIZE - 8);
-                ctx.restore();
-
-                document.body.removeChild(tempDiv);
-                resolve(outCanvas.toDataURL('image/png'));
-            }, 300);
-        });
-    }
-
-    // Build a T-Rex side-profile Path2D
-    function buildTRexPath(S) {
-        // Normalized coordinates (0-1) for a side-view T-Rex
-        // Then scaled to canvas size S
-        const s = (x, y) => [x * S, y * S];
-        const p = new Path2D();
-
-        // T-Rex profile: facing right, S=400
-        // Starting from tail tip, going clockwise
-        p.moveTo(...s(0.08, 0.65)); // tail tip
-
-        // Tail top
-        p.bezierCurveTo(...s(0.12, 0.58), ...s(0.18, 0.52), ...s(0.26, 0.5));
-
-        // Back/spine
-        p.bezierCurveTo(...s(0.34, 0.48), ...s(0.42, 0.44), ...s(0.52, 0.38));
-
-        // Neck rise
-        p.bezierCurveTo(...s(0.58, 0.34), ...s(0.62, 0.28), ...s(0.65, 0.22));
-
-        // Head top
-        p.bezierCurveTo(...s(0.67, 0.17), ...s(0.72, 0.14), ...s(0.78, 0.15));
-
-        // Snout top
-        p.bezierCurveTo(...s(0.83, 0.16), ...s(0.88, 0.18), ...s(0.91, 0.22));
-
-        // Upper jaw tip
-        p.bezierCurveTo(...s(0.93, 0.24), ...s(0.94, 0.27), ...s(0.93, 0.30));
-
-        // Lower jaw
-        p.bezierCurveTo(...s(0.91, 0.33), ...s(0.87, 0.35), ...s(0.83, 0.34));
-
-        // Chin / throat
-        p.bezierCurveTo(...s(0.79, 0.33), ...s(0.75, 0.34), ...s(0.72, 0.37));
-
-        // Chest
-        p.bezierCurveTo(...s(0.68, 0.40), ...s(0.66, 0.44), ...s(0.65, 0.47));
-
-        // Tiny arm (T-Rex arm!)
-        p.bezierCurveTo(...s(0.64, 0.49), ...s(0.63, 0.52), ...s(0.62, 0.54));
-        p.bezierCurveTo(...s(0.60, 0.56), ...s(0.58, 0.57), ...s(0.57, 0.56));
-        p.bezierCurveTo(...s(0.56, 0.55), ...s(0.56, 0.53), ...s(0.57, 0.51));
-        p.bezierCurveTo(...s(0.58, 0.50), ...s(0.59, 0.49), ...s(0.60, 0.50));
-
-        // Belly
-        p.bezierCurveTo(...s(0.62, 0.53), ...s(0.60, 0.58), ...s(0.56, 0.62));
-
-        // Front thigh
-        p.bezierCurveTo(...s(0.52, 0.65), ...s(0.50, 0.68), ...s(0.50, 0.72));
-
-        // Front shin
-        p.bezierCurveTo(...s(0.50, 0.78), ...s(0.49, 0.84), ...s(0.48, 0.88));
-
-        // Front foot
-        p.bezierCurveTo(...s(0.47, 0.91), ...s(0.44, 0.93), ...s(0.42, 0.92));
-        p.bezierCurveTo(...s(0.39, 0.91), ...s(0.38, 0.88), ...s(0.40, 0.86));
-
-        // Foot bottom
-        p.bezierCurveTo(...s(0.41, 0.85), ...s(0.43, 0.86), ...s(0.44, 0.89));
-        p.bezierCurveTo(...s(0.45, 0.91), ...s(0.46, 0.92), ...s(0.46, 0.90));
-
-        // Gap between legs (belly underside)
-        p.bezierCurveTo(...s(0.45, 0.86), ...s(0.43, 0.80), ...s(0.40, 0.75));
-        p.bezierCurveTo(...s(0.37, 0.70), ...s(0.33, 0.66), ...s(0.30, 0.65));
-
-        // Back thigh
-        p.bezierCurveTo(...s(0.26, 0.64), ...s(0.22, 0.65), ...s(0.20, 0.68));
-
-        // Back shin
-        p.bezierCurveTo(...s(0.18, 0.74), ...s(0.17, 0.80), ...s(0.16, 0.86));
-
-        // Back foot
-        p.bezierCurveTo(...s(0.15, 0.90), ...s(0.13, 0.92), ...s(0.11, 0.91));
-        p.bezierCurveTo(...s(0.08, 0.90), ...s(0.07, 0.87), ...s(0.09, 0.85));
-        p.bezierCurveTo(...s(0.10, 0.84), ...s(0.12, 0.85), ...s(0.12, 0.88));
-        p.bezierCurveTo(...s(0.13, 0.90), ...s(0.14, 0.91), ...s(0.14, 0.89));
-
-        // Under belly back
-        p.bezierCurveTo(...s(0.13, 0.84), ...s(0.12, 0.78), ...s(0.12, 0.72));
-
-        // Tail underside
-        p.bezierCurveTo(...s(0.11, 0.68), ...s(0.09, 0.67), ...s(0.08, 0.65));
-
-        p.closePath();
-        return p;
-    }
-
-    // ============================================
-    // AUTH
-    // ============================================
-    onAuthStateChanged(auth, (user) => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const scanId = urlParams.get('scan');
-        const uid = urlParams.get('uid');
-
-        if (scanId && uid) {
-            handlePublicScan(uid, scanId);
-            return;
-        }
-
-        if (user) {
-            currentUser = user;
-            userEmail.textContent = user.email;
-            showDashboard();
-            loadQRCodes();
-        } else {
-            currentUser = null;
-            showAuth();
-        }
+    onAuthStateChanged(auth, user => {
+        const p = new URLSearchParams(window.location.search);
+        const sid = p.get('scan'), uid = p.get('uid');
+        if (sid && uid) { handlePublicScan(uid, sid); return; }
+        if (user) { currentUser = user; document.getElementById('userEmail').textContent = user.email; showDashboard(); loadQRCodes(); }
+        else { currentUser = null; showAuth(); }
     });
 
-    btnLogin.addEventListener('click', async () => {
-        const email = authEmail.value.trim();
-        const password = authPassword.value;
+    document.getElementById('btnLogin').addEventListener('click', async () => {
+        const email = document.getElementById('authEmail').value.trim();
+        const password = document.getElementById('authPassword').value;
         if (!email || !password) { showError('Please enter email and password'); return; }
-
-        btnLogin.disabled = true;
-        btnLogin.innerHTML = '<span class="loading"></span>';
-
-        try {
-            await signInWithEmailAndPassword(auth, email, password);
-        } catch (error) {
-            showError(getErrorMessage(error.code));
-        } finally {
-            btnLogin.disabled = false;
-            btnLogin.textContent = 'Login';
-        }
+        const btn = document.getElementById('btnLogin');
+        btn.disabled = true; btn.innerHTML = '<span class="loading"></span>';
+        try { await signInWithEmailAndPassword(auth, email, password); }
+        catch(e) { showError(getErrMsg(e.code)); }
+        finally { btn.disabled = false; btn.textContent = 'Login'; }
     });
 
-    btnLogout.addEventListener('click', () => signOut(auth));
+    document.getElementById('btnLogout').addEventListener('click', () => signOut(auth));
+    document.getElementById('authPassword').addEventListener('keypress', e => { if(e.key==='Enter') document.getElementById('btnLogin').click(); });
 
-    function showError(msg) {
-        authError.textContent = msg;
-        authError.style.display = 'block';
-        setTimeout(() => { authError.style.display = 'none'; }, 5000);
-    }
+    function showError(msg) { const el = document.getElementById('authError'); el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display='none', 5000); }
+    function getErrMsg(code) { return {'auth/invalid-email':'Invalid email','auth/user-disabled':'Account disabled','auth/user-not-found':'No account found','auth/wrong-password':'Incorrect password','auth/network-request-failed':'Network error','auth/too-many-requests':'Too many attempts'}[code] || 'Authentication error'; }
+    function showAuth() { authContainer.style.display='flex'; dashboard.classList.remove('active'); scanContainer.classList.remove('active'); }
+    function showDashboard() { authContainer.style.display='none'; dashboard.classList.add('active'); scanContainer.classList.remove('active'); }
 
-    function getErrorMessage(code) {
-        const m = {
-            'auth/invalid-email': 'Invalid email address',
-            'auth/user-disabled': 'Account disabled',
-            'auth/user-not-found': 'No account found',
-            'auth/wrong-password': 'Incorrect password',
-            'auth/network-request-failed': 'Network error',
-            'auth/too-many-requests': 'Too many attempts'
-        };
-        return m[code] || 'Authentication error';
-    }
-
-    function showAuth() {
-        authContainer.style.display = 'flex';
-        dashboard.classList.remove('active');
-        scanContainer.classList.remove('active');
-    }
-
-    function showDashboard() {
-        authContainer.style.display = 'none';
-        dashboard.classList.add('active');
-        scanContainer.classList.remove('active');
-    }
-
-    // ============================================
-    // QR CODE MANAGEMENT
-    // ============================================
     function loadQRCodes() {
-        const codesRef = ref(database, `users/${currentUser.uid}/qrcodes`);
-        onValue(codesRef, (snapshot) => {
-            qrCodes = snapshot.val() || {};
-            renderQRCodes();
-            updateStats();
+        onValue(ref(db, `users/${currentUser.uid}/qrcodes`), snap => {
+            qrCodes = snap.val() || {};
+            renderQRCodes(); updateStats();
         });
     }
 
-    btnCreate.addEventListener('click', async () => {
-        const url = qrUrl.value.trim();
-        const label = qrLabel.value.trim();
+    document.getElementById('btnCreate').addEventListener('click', async () => {
+        const url = document.getElementById('qrUrl').value.trim();
+        const label = document.getElementById('qrLabel').value.trim();
         if (!url) { alert('Please enter a URL'); return; }
         if (!label) { alert('Please enter a label'); return; }
 
-        btnCreate.disabled = true;
-
-        // Show generating overlay with style-specific message
-        const styleMessages = {
-            regular: 'GENERATING QR CODE...',
-            footprint: 'STAMPING DINO TRACKS...',
-            dinosaur: 'SUMMONING T-REX...'
-        };
-        generatingText.textContent = styleMessages[selectedStyle] || 'GENERATING...';
+        const style = window._selectedStyle;
+        const btn = document.getElementById('btnCreate');
+        btn.disabled = true;
+        const msgs = { regular:'GENERATING QR CODE...', footprint:'STAMPING DINO TRACKS...', dinosaur:'SUMMONING T-REX...' };
+        generatingText.textContent = msgs[style] || 'GENERATING...';
         generatingOverlay.classList.add('active');
 
         try {
-            const newCodeRef = push(ref(database, `users/${currentUser.uid}/qrcodes`));
-            const qrId = newCodeRef.key;
+            const newRef = push(ref(db, `users/${currentUser.uid}/qrcodes`));
+            const qrId = newRef.key;
             const scanUrl = `${window.location.origin}${window.location.pathname}?scan=${qrId}&uid=${currentUser.uid}`;
 
             let qrImageUrl;
-            const style = selectedStyle;
+            if (style === 'regular')       qrImageUrl = await window.generateRegularQR(scanUrl);
+            else if (style === 'footprint') qrImageUrl = await window.generateFootprintQR(scanUrl);
+            else if (style === 'dinosaur')  qrImageUrl = await window.generateDinosaurQR(scanUrl);
 
-            if (style === 'regular') {
-                qrImageUrl = await generateRegularQR(scanUrl);
-            } else if (style === 'footprint') {
-                qrImageUrl = await generateFootprintQR(scanUrl);
-                if (!qrImageUrl) throw new Error('Failed to generate footprint QR');
-            } else if (style === 'dinosaur') {
-                qrImageUrl = await generateDinosaurQR(scanUrl);
-                if (!qrImageUrl) throw new Error('Failed to generate dinosaur QR');
-            }
+            if (!qrImageUrl) throw new Error('Generation returned null');
 
-            await set(newCodeRef, {
-                id: qrId,
-                label: label,
-                url: url,
-                qrImageUrl: qrImageUrl,
-                qrStyle: style,
-                scanCount: 0,
-                locked: false,
-                createdAt: serverTimestamp(),
-                lastScanned: null
-            });
-
-            qrUrl.value = '';
-            qrLabel.value = '';
-        } catch (error) {
-            console.error('Error creating QR code:', error);
-            alert('Failed to create QR code: ' + error.message);
+            await set(newRef, { id:qrId, label, url, qrImageUrl, qrStyle:style, scanCount:0, locked:false, createdAt:serverTimestamp(), lastScanned:null });
+            document.getElementById('qrUrl').value = '';
+            document.getElementById('qrLabel').value = '';
+        } catch(e) {
+            console.error(e);
+            alert('Failed to create QR code: ' + e.message);
         } finally {
-            btnCreate.disabled = false;
+            btn.disabled = false;
             generatingOverlay.classList.remove('active');
         }
     });
 
-    const styleLabels = {
-        regular: '⬛ Regular',
-        footprint: '🦕 Dino Tracks',
-        dinosaur: '🦖 Dino Shape'
-    };
+    const styleLabels = { regular:'⬛ Regular', footprint:'🦕 Dino Tracks', dinosaur:'🦖 Dino Shape' };
 
     function renderQRCodes() {
         const codes = Object.values(qrCodes);
-        if (codes.length === 0) {
-            qrGrid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⊞</div><p>No QR codes yet. Create your first one above.</p></div>`;
-            return;
-        }
-
-        codes.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-        qrGrid.innerHTML = codes.map(code => {
+        const grid = document.getElementById('qrGrid');
+        if (!codes.length) { grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⊞</div><p>No QR codes yet. Create your first one above.</p></div>`; return; }
+        codes.sort((a,b) => (b.createdAt||0)-(a.createdAt||0));
+        grid.innerHTML = codes.map(code => {
             const scanUrl = `${window.location.origin}${window.location.pathname}?scan=${code.id}&uid=${currentUser.uid}`;
             const lastScanned = code.lastScanned ? new Date(code.lastScanned).toLocaleString() : 'Never';
-            const styleBadge = styleLabels[code.qrStyle] || '⬛ Regular';
-            const isDataUrl = code.qrImageUrl && code.qrImageUrl.startsWith('data:');
-
             return `
-                <div class="qr-card ${code.locked ? 'locked' : ''}" data-id="${code.id}">
-                    <div class="qr-style-badge">${styleBadge}</div>
+                <div class="qr-card ${code.locked?'locked':''}" data-id="${code.id}">
+                    <div class="qr-style-badge">${styleLabels[code.qrStyle]||'⬛ Regular'}</div>
                     <div class="qr-header">
-                        <div class="qr-label">${escapeHtml(code.label)}</div>
-                        <div class="lock-icon" onclick="toggleLock('${code.id}')" title="${code.locked ? 'Unlock' : 'Lock'}">
-                            ${code.locked ? '🔒' : '🔓'}
-                        </div>
+                        <div class="qr-label">${esc(code.label)}</div>
+                        <div class="lock-icon" onclick="toggleLock('${code.id}')">${code.locked?'🔒':'🔓'}</div>
                     </div>
                     <div class="qr-image-container">
-                        <img src="${code.qrImageUrl}" alt="${escapeHtml(code.label)}" style="max-width:280px;">
+                        <img src="${code.qrImageUrl}" alt="${esc(code.label)}" style="max-width:100%;height:auto;">
                     </div>
                     <div class="qr-stats">
-                        <div class="qr-stat">
-                            <div class="qr-stat-label">Scans</div>
-                            <div class="qr-stat-value">${code.scanCount || 0}</div>
-                        </div>
-                        <div class="qr-stat">
-                            <div class="qr-stat-label">Last Scan</div>
-                            <div class="qr-stat-value" style="font-size:0.75rem;">${lastScanned === 'Never' ? lastScanned : lastScanned.split(',')[0]}</div>
-                        </div>
+                        <div class="qr-stat"><div class="qr-stat-label">Scans</div><div class="qr-stat-value">${code.scanCount||0}</div></div>
+                        <div class="qr-stat"><div class="qr-stat-label">Last Scan</div><div class="qr-stat-value" style="font-size:0.75rem;">${lastScanned==='Never'?lastScanned:lastScanned.split(',')[0]}</div></div>
                     </div>
                     <div style="margin-bottom:1rem;padding:0.75rem;background:var(--bg-tertiary);font-size:0.75rem;word-break:break-all;">
                         <div style="color:var(--text-secondary);margin-bottom:0.25rem;">SCAN URL:</div>
@@ -1164,109 +869,64 @@
                     </div>
                     <div class="qr-actions">
                         <button class="btn-action btn-download" onclick="downloadQR('${code.id}')">Download</button>
-                        <button class="btn-action btn-delete" onclick="deleteQR('${code.id}')" ${code.locked ? 'disabled' : ''}>
-                            ${code.locked ? 'Locked' : 'Delete'}
-                        </button>
+                        <button class="btn-action btn-delete" onclick="deleteQR('${code.id}')" ${code.locked?'disabled':''}>${code.locked?'Locked':'Delete'}</button>
                     </div>
-                </div>
-            `;
+                </div>`;
         }).join('');
     }
 
     function updateStats() {
         const codes = Object.values(qrCodes);
-        totalCodes.textContent = codes.length;
-        totalScans.textContent = codes.reduce((s, c) => s + (c.scanCount || 0), 0);
-        lockedCodes.textContent = codes.filter(c => c.locked).length;
+        document.getElementById('totalCodes').textContent = codes.length;
+        document.getElementById('totalScans').textContent = codes.reduce((s,c)=>s+(c.scanCount||0),0);
+        document.getElementById('lockedCodes').textContent = codes.filter(c=>c.locked).length;
     }
 
-    window.toggleLock = async (id) => {
-        const code = qrCodes[id];
-        if (!code) return;
-        try {
-            await update(ref(database, `users/${currentUser.uid}/qrcodes/${id}`), { locked: !code.locked });
-        } catch (e) { alert('Failed to toggle lock'); }
+    window.toggleLock = async id => {
+        const code = qrCodes[id]; if (!code) return;
+        try { await update(ref(db,`users/${currentUser.uid}/qrcodes/${id}`),{locked:!code.locked}); }
+        catch(e) { alert('Failed to toggle lock'); }
     };
 
-    window.deleteQR = async (id) => {
-        const code = qrCodes[id];
-        if (!code) return;
-        if (code.locked) { alert('Cannot delete locked QR code. Unlock it first.'); return; }
-        if (!confirm(`Delete QR code "${code.label}"?`)) return;
-        try {
-            await remove(ref(database, `users/${currentUser.uid}/qrcodes/${id}`));
-        } catch (e) { alert('Failed to delete QR code'); }
+    window.deleteQR = async id => {
+        const code = qrCodes[id]; if (!code) return;
+        if (code.locked) { alert('Unlock first.'); return; }
+        if (!confirm(`Delete "${code.label}"?`)) return;
+        try { await remove(ref(db,`users/${currentUser.uid}/qrcodes/${id}`)); }
+        catch(e) { alert('Failed to delete'); }
     };
 
-    window.downloadQR = async (id) => {
-        const code = qrCodes[id];
-        if (!code) return;
+    window.downloadQR = async id => {
+        const code = qrCodes[id]; if (!code) return;
         try {
-            let blobUrl;
-            if (code.qrImageUrl.startsWith('data:')) {
-                // Convert data URL to blob
-                const res = await fetch(code.qrImageUrl);
-                const blob = await res.blob();
-                blobUrl = URL.createObjectURL(blob);
-            } else {
-                const res = await fetch(code.qrImageUrl);
-                const blob = await res.blob();
-                blobUrl = URL.createObjectURL(blob);
-            }
+            const res = await fetch(code.qrImageUrl);
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = blobUrl;
-            a.download = `${code.label.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_qr.png`;
-            document.body.appendChild(a);
-            a.click();
-            URL.revokeObjectURL(blobUrl);
-            document.body.removeChild(a);
-        } catch (e) { alert('Failed to download QR code'); }
+            a.href = url; a.download = `${code.label.replace(/[^a-z0-9]/gi,'_').toLowerCase()}_qr.png`;
+            document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); document.body.removeChild(a);
+        } catch(e) { alert('Download failed'); }
     };
 
-    function escapeHtml(text) {
-        const map = { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' };
-        return text.replace(/[&<>"']/g, m => map[m]);
-    }
+    function esc(t) { return t.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
 
-    // ============================================
-    // SCAN HANDLING
-    // ============================================
     async function handlePublicScan(userId, qrId) {
-        authContainer.style.display = 'none';
-        dashboard.classList.remove('active');
-        scanContainer.classList.add('active');
-
+        authContainer.style.display='none'; dashboard.classList.remove('active'); scanContainer.classList.add('active');
         const iconEl = document.getElementById('scanSuccessIcon');
-
         try {
-            const qrRef = ref(database, `users/${userId}/qrcodes/${qrId}`);
-            const snapshot = await get(qrRef);
-
-            if (!snapshot.exists()) {
-                iconEl.classList.remove('loading');
-                iconEl.textContent = '✗';
-                document.getElementById('scanLabel').textContent = 'QR Code Not Found';
-                return;
-            }
-
-            const qrData = snapshot.val();
-            const newScanCount = (qrData.scanCount || 0) + 1;
-            await update(qrRef, { scanCount: newScanCount, lastScanned: Date.now() });
-
-            iconEl.classList.remove('loading');
-            iconEl.textContent = '✓';
+            const qrRef = ref(db, `users/${userId}/qrcodes/${qrId}`);
+            const snap = await get(qrRef);
+            if (!snap.exists()) { iconEl.classList.remove('loading'); iconEl.textContent='✗'; document.getElementById('scanLabel').textContent='QR Code Not Found'; return; }
+            const qrData = snap.val();
+            await update(qrRef, { scanCount:(qrData.scanCount||0)+1, lastScanned:Date.now() });
+            iconEl.classList.remove('loading'); iconEl.textContent='✓';
             document.getElementById('scanLabel').textContent = qrData.label;
-
             setTimeout(() => { window.location.href = qrData.url; }, 1000);
-        } catch (error) {
-            console.error('Error handling scan:', error);
-            iconEl.classList.remove('loading');
-            iconEl.textContent = '✗';
-            document.getElementById('scanLabel').textContent = 'Error Processing Scan';
+        } catch(e) {
+            iconEl.classList.remove('loading'); iconEl.textContent='✗';
+            document.getElementById('scanLabel').textContent='Error Processing Scan';
         }
     }
-
-    authPassword.addEventListener('keypress', (e) => { if (e.key === 'Enter') btnLogin.click(); });
 </script>
 </body>
 </html>
