@@ -488,6 +488,7 @@ window.FOOTPRINT_B64 = '/9j/4AAQSkZJRgABAg=='; // placeholder - not used in this
 
 window.generateFootshapeQR = function(scanUrl) {
     return new Promise(function(resolve) {
+        // ── Step 1: Sample the QR matrix at high resolution ──
         var SAMPLE = 4100;
         var div = document.createElement('div');
         div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;';
@@ -507,6 +508,7 @@ window.generateFootshapeQR = function(scanUrl) {
                 y=Math.round(Math.min(Math.max(y,0),SW-1));
                 return spx[(y*SW+x)*4]<128;
             }
+            // Find QR grid boundaries
             var ql=0; outer1: for(var x=0;x<SW/2;x++) for(var y=SW*.1;y<SW*.9;y++) if(sd(x,y)){ql=x;break outer1;}
             var qt=0; outer2: for(var y=0;y<SW/2;y++) for(var x=SW*.1;x<SW*.9;x++) if(sd(x,y)){qt=y;break outer2;}
             var qr=SW-1; outer3: for(var x=SW-1;x>SW/2;x--) for(var y=SW*.1;y<SW*.9;y++) if(sd(x,y)){qr=x;break outer3;}
@@ -517,73 +519,141 @@ window.generateFootshapeQR = function(scanUrl) {
             var mat=[];
             for(var r=0;r<N;r++){mat[r]=[];for(var c=0;c<N;c++) mat[r][c]=sd(ql+(c+.5)*mp, qt+(r+.5)*mp);}
 
-            var CELL=18, Q=3;
-            var GW=(N+Q*2)*CELL;
-            var PAD=CELL*4;
-            var CS=GW+PAD*2;
+            // ── Step 2: Set up output canvas ──
+            // The footprint shape is TALLER than wide (roughly 1.3:1 height:width ratio
+            // based on the reference image). We place the QR grid in the LOWER portion
+            // (the "heel" area), which is the widest part. The toes fan upward.
+            //
+            // Canvas layout (all coordinates are fractions of canvasW):
+            //   - Canvas is square: canvasW x canvasW
+            //   - QR grid occupies a region we call the "heel zone"
+            //   - The footprint extends ABOVE the QR grid with toes
+            //
+            // Key insight: the QR grid must be FULLY INSIDE the heel of the footprint.
+            // We make the canvas tall enough that toes have room above the QR grid.
 
-            var out=document.createElement('canvas');
-            out.width=CS; out.height=CS;
-            var ctx=out.getContext('2d');
-            ctx.fillStyle='#fff';
-            ctx.fillRect(0,0,CS,CS);
+            var CELL = 16;   // pixels per QR module
+            var QUIET = 2;   // quiet zone in modules
 
-            function ox(c){return PAD+(Q+c)*CELL;}
-            function oy(r){return PAD+(Q+r)*CELL;}
+            // QR grid pixel dimensions
+            var qrPx = (N + QUIET*2) * CELL;
 
-            var x0=ox(0), y0=oy(0);
-            var xN=ox(N), yN=oy(N);
-            var gw=xN-x0, gh=yN-y0;
-            function gp(fx,fy){return [x0+fx*gw, y0+fy*gh];}
+            // Canvas is wider to give the footprint natural proportions.
+            // The heel (containing the QR) sits in the bottom 62% of the canvas.
+            // Toes occupy the top 38% + some overlap into the heel.
+            var HPAD = Math.round(qrPx * 0.18);  // horizontal padding each side
+            var canvasW = qrPx + HPAD * 2;
+            var canvasH = Math.round(canvasW * 1.42); // footprint height:width ~1.42
 
-            var p=new Path2D();
-            p.moveTo(...gp(0.50, 1.04));
-            p.bezierCurveTo(...gp(0.68,1.04),...gp(0.83,0.98),...gp(0.85,0.87));
-            p.bezierCurveTo(...gp(0.87,0.79),...gp(0.82,0.71),...gp(0.76,0.67));
-            p.bezierCurveTo(...gp(0.81,0.62),...gp(0.83,0.55),...gp(0.81,0.48));
-            p.bezierCurveTo(...gp(0.79,0.41),...gp(0.76,0.33),...gp(0.73,0.24));
-            p.bezierCurveTo(...gp(0.71,0.17),...gp(0.69,0.10),...gp(0.68,0.05));
-            p.bezierCurveTo(...gp(0.67,0.01),...gp(0.65,-0.01),...gp(0.63,-0.01));
-            p.bezierCurveTo(...gp(0.61,-0.01),...gp(0.59,0.01),...gp(0.58,0.05));
-            p.bezierCurveTo(...gp(0.57,0.11),...gp(0.56,0.19),...gp(0.55,0.27));
-            p.bezierCurveTo(...gp(0.54,0.34),...gp(0.53,0.41),...gp(0.52,0.46));
-            p.bezierCurveTo(...gp(0.51,0.50),...gp(0.50,0.52),...gp(0.48,0.52));
-            p.bezierCurveTo(...gp(0.46,0.52),...gp(0.44,0.50),...gp(0.43,0.46));
-            p.bezierCurveTo(...gp(0.42,0.41),...gp(0.41,0.33),...gp(0.40,0.24));
-            p.bezierCurveTo(...gp(0.39,0.15),...gp(0.38,0.07),...gp(0.37,0.02));
-            p.bezierCurveTo(...gp(0.36,-0.02),...gp(0.34,-0.04),...gp(0.32,-0.04));
-            p.bezierCurveTo(...gp(0.30,-0.04),...gp(0.28,-0.02),...gp(0.27,0.03));
-            p.bezierCurveTo(...gp(0.26,0.08),...gp(0.25,0.16),...gp(0.24,0.25));
-            p.bezierCurveTo(...gp(0.23,0.33),...gp(0.22,0.40),...gp(0.21,0.46));
-            p.bezierCurveTo(...gp(0.20,0.50),...gp(0.19,0.52),...gp(0.17,0.52));
-            p.bezierCurveTo(...gp(0.15,0.52),...gp(0.13,0.49),...gp(0.12,0.45));
-            p.bezierCurveTo(...gp(0.10,0.40),...gp(0.07,0.34),...gp(0.04,0.28));
-            p.bezierCurveTo(...gp(0.01,0.22),...gp(-0.02,0.15),...gp(-0.04,0.10));
-            p.bezierCurveTo(...gp(-0.06,0.06),...gp(-0.07,0.02),...gp(-0.06,0.00));
-            p.bezierCurveTo(...gp(-0.05,-0.02),...gp(-0.03,-0.03),...gp(-0.01,-0.01));
-            p.bezierCurveTo(...gp(0.01,0.01),...gp(0.04,0.05),...gp(0.07,0.10));
-            p.bezierCurveTo(...gp(0.10,0.16),...gp(0.12,0.23),...gp(0.14,0.30));
-            p.bezierCurveTo(...gp(0.15,0.36),...gp(0.16,0.42),...gp(0.17,0.47));
-            p.bezierCurveTo(...gp(0.17,0.54),...gp(0.16,0.61),...gp(0.14,0.68));
-            p.bezierCurveTo(...gp(0.12,0.77),...gp(0.12,0.85),...gp(0.14,0.92));
-            p.bezierCurveTo(...gp(0.18,1.01),...gp(0.30,1.05),...gp(0.50,1.04));
+            var out = document.createElement('canvas');
+            out.width = canvasW;
+            out.height = canvasH;
+            var ctx = out.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvasW, canvasH);
+
+            // QR grid top-left corner: horizontally centered, bottom-aligned with some margin
+            var qrLeft = HPAD + QUIET * CELL;
+            var qrTop  = canvasH - qrPx - Math.round(CELL * 2.5); // 2.5 module gap from bottom
+
+            function ox(c){ return qrLeft + c * CELL; }
+            function oy(r){ return qrTop  + r * CELL; }
+
+            // ── Step 3: Build the footprint Path2D ──
+            //
+            // The reference image shows (when oriented naturally):
+            //   - A large rounded HEEL PAD at the bottom-center
+            //   - LEFT TOE:   longest, sweeps hard to upper-left
+            //   - CENTER TOE: second longest, points mostly upward
+            //   - RIGHT TOE:  slightly shorter, angles upper-right
+            //
+            // We define the path in absolute canvas pixels.
+            // The heel wraps around the QR grid. Coordinates are designed so
+            // the entire QR bounding box (including quiet zone) is inside.
+            //
+            // We work in fractions of canvasW (horizontal) and canvasH (vertical).
+            function P(fx, fy){ return [fx * canvasW, fy * canvasH]; }
+
+            // Heel pad: wide oval occupying bottom ~38% of canvas, full width
+            // The three toes fan upward from the top of the heel pad (~y=0.62)
+
+            var p = new Path2D();
+
+            // Start at bottom-center of heel
+            p.moveTo(...P(0.50, 0.97));
+
+            // ── Bottom-right curve of heel ──
+            p.bezierCurveTo(...P(0.72,0.97), ...P(0.88,0.93), ...P(0.90,0.83));
+            p.bezierCurveTo(...P(0.92,0.74), ...P(0.86,0.66), ...P(0.78,0.63));
+
+            // ── RIGHT TOE (angles upper-right, medium length) ──
+            // Base of right toe connects from right side of heel top
+            p.bezierCurveTo(...P(0.84,0.60), ...P(0.88,0.54), ...P(0.87,0.46));
+            p.bezierCurveTo(...P(0.86,0.38), ...P(0.82,0.33), ...P(0.80,0.28));
+            // Tip of right toe
+            p.bezierCurveTo(...P(0.79,0.24), ...P(0.78,0.20), ...P(0.79,0.17));
+            p.bezierCurveTo(...P(0.80,0.14), ...P(0.82,0.13), ...P(0.83,0.15));
+            p.bezierCurveTo(...P(0.84,0.17), ...P(0.84,0.21), ...P(0.83,0.26));
+            // Back down inner edge of right toe
+            p.bezierCurveTo(...P(0.82,0.31), ...P(0.80,0.37), ...P(0.79,0.44));
+            p.bezierCurveTo(...P(0.78,0.50), ...P(0.76,0.55), ...P(0.72,0.58));
+
+            // ── CENTER TOE (points mostly upward, slightly left) ──
+            p.bezierCurveTo(...P(0.68,0.57), ...P(0.64,0.53), ...P(0.62,0.46));
+            p.bezierCurveTo(...P(0.60,0.38), ...P(0.59,0.28), ...P(0.58,0.20));
+            // Tip of center toe
+            p.bezierCurveTo(...P(0.57,0.13), ...P(0.56,0.07), ...P(0.57,0.04));
+            p.bezierCurveTo(...P(0.58,0.01), ...P(0.60,0.00), ...P(0.62,0.01));
+            p.bezierCurveTo(...P(0.64,0.02), ...P(0.65,0.06), ...P(0.65,0.11));
+            // Back down inner edge of center toe
+            p.bezierCurveTo(...P(0.65,0.18), ...P(0.64,0.27), ...P(0.63,0.35));
+            p.bezierCurveTo(...P(0.62,0.42), ...P(0.61,0.49), ...P(0.59,0.54));
+
+            // ── LEFT TOE (sweeps hard upper-left, longest toe) ──
+            p.bezierCurveTo(...P(0.56,0.54), ...P(0.52,0.52), ...P(0.49,0.47));
+            p.bezierCurveTo(...P(0.46,0.41), ...P(0.43,0.33), ...P(0.39,0.25));
+            p.bezierCurveTo(...P(0.35,0.17), ...P(0.30,0.10), ...P(0.26,0.06));
+            // Tip of left toe (upper-left corner area)
+            p.bezierCurveTo(...P(0.23,0.03), ...P(0.20,0.02), ...P(0.18,0.04));
+            p.bezierCurveTo(...P(0.16,0.06), ...P(0.16,0.10), ...P(0.18,0.14));
+            p.bezierCurveTo(...P(0.20,0.18), ...P(0.24,0.22), ...P(0.28,0.28));
+            // Back down inner edge of left toe
+            p.bezierCurveTo(...P(0.32,0.34), ...P(0.36,0.40), ...P(0.38,0.47));
+            p.bezierCurveTo(...P(0.40,0.52), ...P(0.40,0.58), ...P(0.38,0.63));
+
+            // ── Left side of heel ──
+            p.bezierCurveTo(...P(0.33,0.67), ...P(0.25,0.70), ...P(0.18,0.76));
+            p.bezierCurveTo(...P(0.11,0.82), ...P(0.08,0.89), ...P(0.10,0.93));
+            p.bezierCurveTo(...P(0.13,0.97), ...P(0.30,0.99), ...P(0.50,0.97));
+
             p.closePath();
 
-            var mc=document.createElement('canvas');
-            mc.width=CS; mc.height=CS;
-            var mctx=mc.getContext('2d');
-            mctx.fillStyle='#000';
+            // ── Step 4: Build pixel mask for inside-footprint test ──
+            var mc = document.createElement('canvas');
+            mc.width = canvasW; mc.height = canvasH;
+            var mctx = mc.getContext('2d');
+            mctx.fillStyle = '#000';
             mctx.fill(p);
-            var mpxa=mctx.getImageData(0,0,CS,CS).data;
-            function inFoot(px,py){
-                var ix=Math.round(Math.min(Math.max(px,0),CS-1));
-                var iy=Math.round(Math.min(Math.max(py,0),CS-1));
-                return mpxa[(iy*CS+ix)*4+3]>64;
+            var mpxa = mctx.getImageData(0, 0, canvasW, canvasH).data;
+            function inFoot(px, py){
+                var ix = Math.round(Math.min(Math.max(px, 0), canvasW-1));
+                var iy = Math.round(Math.min(Math.max(py, 0), canvasH-1));
+                return mpxa[(iy * canvasW + ix) * 4 + 3] > 64;
             }
 
-            ctx.fillStyle='#f0f0f0';
+            // ── Step 5: Draw footprint silhouette background ──
+            ctx.fillStyle = '#e8e8e8';
+            ctx.fill(p);
+            // Subtle inner highlight
+            ctx.fillStyle = 'rgba(255,255,255,0.18)';
             ctx.fill(p);
 
+            // ── Step 6: Clip ALL drawing to the footprint shape ──
+            // This guarantees nothing — including finder squares — can escape
+            ctx.save();
+            ctx.clip(p);
+
+            // Structural zone helpers
             function isFinder(r,c){ return (r<7&&c<7)||(r<7&&c>=N-7)||(r>=N-7&&c<7); }
             function isSep(r,c){
                 if(r===7&&c<=7||c===7&&r<=7) return true;
@@ -596,25 +666,29 @@ window.generateFootshapeQR = function(scanUrl) {
             function isAlign(r,c){ var a=N-7; return Math.abs(r-a)<=2&&Math.abs(c-a)<=2; }
             function isStruct(r,c){ return isFinder(r,c)||isSep(r,c)||isTiming(r,c)||isFmt(r,c)||isAlign(r,c); }
 
+            // Draw a white backing rectangle for the QR area so it reads cleanly
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(ox(0) - CELL, oy(0) - CELL, N*CELL + CELL*2, N*CELL + CELL*2);
+
+            // Draw ALL modules — structural as solid squares, data as solid squares
+            // Both get drawn inside the clip; finder squares can't exceed the footprint
             for(var r=0;r<N;r++){
                 for(var c=0;c<N;c++){
-                    if(isStruct(r,c)||!mat[r][c]) continue;
-                    if(inFoot(ox(c)+CELL/2, oy(r)+CELL/2)){
-                        ctx.fillStyle='#000';
-                        ctx.fillRect(ox(c),oy(r),CELL,CELL);
+                    if(isStruct(r,c)){
+                        ctx.fillStyle = mat[r][c] ? '#000000' : '#ffffff';
+                        ctx.fillRect(ox(c), oy(r), CELL, CELL);
+                    } else if(mat[r][c]){
+                        ctx.fillStyle = '#000000';
+                        ctx.fillRect(ox(c), oy(r), CELL, CELL);
                     }
                 }
             }
-            for(var r=0;r<N;r++){
-                for(var c=0;c<N;c++){
-                    if(!isStruct(r,c)) continue;
-                    ctx.fillStyle=mat[r][c]?'#000':'#fff';
-                    ctx.fillRect(ox(c),oy(r),CELL,CELL);
-                }
-            }
 
-            ctx.strokeStyle='#000';
-            ctx.lineWidth=2;
+            ctx.restore(); // end clip
+
+            // ── Step 7: Draw outline of footprint on top ──
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3;
             ctx.stroke(p);
 
             resolve(out.toDataURL('image/png'));
