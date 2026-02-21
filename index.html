@@ -743,274 +743,163 @@ function drawFootprint(ctx, x, y, S) {
 }
 
 // ================================================================
-// GENERATE FOOTSHAPE QR
-//
-// The entire QR code is shaped like one large dinosaur footprint.
-// Strategy:
-//   1. Read the module matrix from qrcodejs at huge scale (same technique as footprint QR)
-//   2. Build a footprint silhouette Path2D that matches the reference image:
-//      - wide rounded palm base
-//      - three broad tapered toes pointing upper-left (matching reference)
-//      - left outer toe angled sharply left
-//      - center toe pointing mostly up
-//      - right inner toe angled slightly right
-//   3. Scale the footprint to fill the canvas
-//   4. ONLY draw modules whose centers fall INSIDE the footprint path
-//   5. The three finder patterns MUST be fully inside — we position them
-//      inside the palm and lower toes where there's solid coverage
-//   6. EC level H gives 30% error correction — modules outside silhouette
-//      are treated as erasures and recovered automatically
 // ================================================================
+// GENERATE FOOTSHAPE QR
+// The QR is shaped like a large dinosaur footprint.
+// Palm at bottom-right, three toes fanning upper-left (matching reference photo).
+// Data modules drawn only inside footprint shape.
+// All structural zones (finders, format, timing) always drawn on top - scanners need them.
+window.FOOTPRINT_B64 = '/9j/4AAQSkZJRgABAgAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCALQA8ADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKK8X+P+sSW/h9LCKRkYyxyZU4PevIfC3xQ13w1LGscyvb5+cOu44/GgD7GorhfA/xK0nxdahRMkN2uFaOV1UscZJAz0ruRk85GKAFooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA8I/aFsHNhFffwBkT+dfO9fXnxm0Y6z4EkiQfOkyyZ9gDXyIw2sR6HFAFvS9Uu9Hv47yymaGZOjKecV9PfDP4rWniS1jsdQlEV8OMMSxbnA7V8q1Zsb640+6S4tpGSRCCCDjOKAPvXmlrxr4YfF221S2g0rV3EdyqhFkIAU+uSTXsSOsih0YMpGQQc0APooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACignAyapS6xpsMojkv7ZX6bTMoI/WgC7RTEkSVQ0bq6noVORT6ACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAztdtFvdDvYWGcwvj67TXw9qtjJp2pTW0v31bnjFfeEiCSJ0PRlIr4++LulNpvjy9woELEbfyoA4OiiigBQzA5UkH2r2bwH8b7vSYUstZR7qNRtVwyoFHQdq8YooA+x9L+K/hfUQgfULeB26K0mT/Kuss9WsNQUNaXUcwP8AdNfByO0bhkYqw6EVs6f4v17TJFa21W7RV/hEpAoA+5M0V4J8Pvji91dppmvJHGrYWKZdzMzE9Dk17tb3Ed1Ak0LBkcZBoAlooooAKKKKACiiigAooooAKKKKACiiigDk/iF4pj8LeGprosBI4Mac4wSDivjq/wBXvtSvnvbq4Z53OWYcfpXsv7QPiLzdQj0VTlAqS9+teGUAfS3wL8Z3Oq2L6VqFyJZkb9yDgEIBXtNfFfw98Rv4a8V215vIQgxkc4+bA7V9m2lwlzaxzIcqyg/pQBPRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUABr5h+PksD+IlRHUyq53AHkfKK+l72Qw2NxKOqRMw/AV8VeOdVl1jxXd3crEliOpz0oA5yiiigAooooAKKKKAFBKnIJBHcV678M/i5P4f2adqhMtoMBcADAA7k15DS54xQB93aXrNhrNolxYXUM6MP8Alm4bHtxWhXxj4H8f6n4PvEWGeRrMt80O8heTya+rPCPjDT/F2mrc2cimQKDIig/L+dAHRUUUUAFFFFABRRRQAUUUUAFVNRv4dNsZLudgscY5JOBVvvivE/jj43jstObQ7SX97MpEmCQVINAHhPi7Wptd8RXV1MwbEjIpA/hDHFYVKSWYknJPJpKAFVijqw6g5FfU/wAEvFw1nw8NNuJVa7twXbkdCcDivleuo8CeKpvCfiGK7SQpC7Ks2CQCoOeaAPteisTw34o03xPpyXVhOsmQN4APyk9ua26ACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigCK5j822li/voV/MV8Z/ErSn0jxte2xQhARg44PFfaJr5z/aH01Le5sb0Abp5WB49FFAHhlFFFABRRRQAUUUUAFFFFABmuy+Hfi+48MeJbWQyEWrSDzR7YNcbRQB97afeJf2EF1GQVlQOPxFWa8++EGuLrPhBMSbjARF16YFeg0AFFFFABRRRQAUUUyVxHE7k8KCaAPLfi/8RJ/CtklnppQ3ch2yBxnCkdua+YdS1K51a+lu7qQvJI245PArrfivrw13xtcTxSbogiqMHuOK4agAooooAKO1FFAHoPwj12503xtZxCVvIcncpPHSvryNt8SP/eUGvhzwrfJpviK2uZGwqnrX27YOJNOtXHRoUP5gUAWKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACvIfj5pn2zw3azhcmBnYn04FevVzXj3SP7Z8H6jaou6VoSE+vFAHxLRVi/tHsL+e0kGHicowx3FV6ACiiigAooooAKKKKACiiigD3r9nrWVjmm0ktzIXlx9AK+ha+IvBPiKXwx4mt9QjOP8Alm3ToSM9a+ztG1W21nTIb21kWSJx95TkZoAv0UUUAFFFFABXGfE7xEPDng65ulbEhKqB7Hiuzr53/aG1xxfWWlxPmJ4SzgY6hqAPDbiUz3EkrEkuxPP1qKiigAooooAKKKKAHRnEin0Ir7U+H2rjWfCVrcA52AR/kAK+Ka+oPgBfmXwZ9mZwSs8jY/KgD1+iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigApGUMpVhkHqKWigD5E+Mmhx6N4xZ41C/at8pwMfxYrzuve/2i9KeS+0/UVX5Ircox9yxrwSgAooooAKKKKACiiigAooooAK9w+CPxB+w3A0C+lIhfC24JJ+YnnjtXh9TWtzJaXMdxC22SM7lPvQB98AgjI6Glrzf4SeOoPFHh9baSQLdWoWIqxALHGcgdTXpFABRRRQAV8d/FnV/7U8Z3Kbs/ZneL6c19fXbmO0kcdQua+IvGTF/GOrMe9y5/WgDDooooAKKKKACiiigAr3X9nvUiNQmsSx2hGbH414VXqXwJlMfjWXngwY/WgD6tooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAOH+KXhaTxR4Snt7cf6QCCpAycDk18f3lpNY3UlvOhSRDgg197kZBBGQa8r+I3wls/EcUl9p6iK8C52rhVOBx2oA+VaKv6vpF5oepT2F9FsmiYoxAOCR6HvVCgAooooAKKKKACiiigAooooA6PwX4rufCWuw30O5kB+ZAcZzxX2P4e1208Q6RDfWcyyIwwSueG7ivhYYr0T4Z/Ea58J6glvO5ezc4IOTjJ5OM0AfXVFUdJ1a01rT4r6yk3xSruGcZA9xV6gCrqX/IOn/wB2viPxZ/yNmqf9fDfzr7fvE8yzlQd1xXxF4wXZ4w1ZT2uXH60AYlFFFABRRRQAUUUUAFej/BeTy/GmfWPH615xXoHwgbb4yT/dH86APr+iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAPHvjh4Og1DQZNZhh/f2yk8dSSa+YiCpIIwR1r7p8SaeuqaDc2bDIkAH618P6nH5OqXcXZJnX8iaAKtFFFABRRRQAUUUUAFFFFABSjrSUUAen/C34k3HhjUorK7lzYSEBskAKB719UWV3Df2kdzA4ZJFDAg56ivgivpP4EeL5tQs20a6maWZdzIWJJCgdKAPbCMjFfGHxM042HjbUGIx50zuPzr7Pr5b+P1iLPxXZMFx5sLP/49QB5JRRRQAUUUUAFFFFABXc/CqVIvGEJdgM7QM/WuGq9pF/LpmqW13G5Xy5FY4PUA5oA+8aK5/wAG+IE8S+GrTUVI3SpuYDtzXQUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUVjnxRoyXX2Zr5PO/u4P+FAGxRTI5UmQNG25T3p9ABRRRQAUUUUAFFFFABRRRQAda+Pfit4Yk8PeKpdsT+TN+834O3LEnGa+wq5Lx14Ls/F+jyQSxqJ1G5HK5OQDgUAfFtFbfiXwzfeGNTks72JkKnALY5/KsSgAooooAKKKKACiiigAooooAK9N+Bd2bX4gK2eDbuv54rzKt/wbrb6D4ltbpBnc6o3OMAkZoA+4Oorw/wDaD0sTaZDqJXmFAmfq1ez2N5Df2cVxbuHjccMK4H412DXvw9uQgywkT+dAHyPRSsNrEHscUlABRRRQAUUUUAFFFPiQyypGOrECgD6l+BUU6eE0eQ/u2jGz8zXq9cZ8LNPGn/D7SoyPn8r5j68muzoAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAr408eaZrPhrxNPFNcXA3sZFcOxGCSQM19l1wnxL8D2/ivQpiqAXUSmRTjJbCnAoA+ZNF+IGvaJIHiu3lx2lckV6Z4e/aDukwmtQIEHGYI8nH514nfWNxp17JaXUbRzRnDI3UVWoA+wtE+L3hfW0BhmmjPfzlCf1rL8Z/GbSNAhENizT3bjKYUMnXuQa+UgzL0Yj6GgsW6kn6mgD3jT/2hrkk/b7eMDP8Ayziz/Wuo0z4/+G53WO7W7V2/uwjH86+XutFAH3NpHinSNajV7S7jJYZCs6hvyzWwDmvhHSdav9GvVu7Gdo5VGM9eK918B/HNJdllr4IfgG5dwF/LFAHvVFVNO1O01W1W5sp0miYAhlPFW6ACiiigDifiH4FtfF2hzKkareqpMTcDLHHU18h6rps+k6ncWVwhV4XKHjg49K+8sV89/HbwQyumu2aYjVQsiherEnnNAHglFBGDiigAooooAKKKKACiiigApQSCCDgjkGko6UAe7/Bb4keRImg6nJ8hwkDn1J5ySa9W+JF7ZReC7lp5k2MVxhhzXxvb3EtrOk0LFZEOVPoa2tW8Z67rdjHZX94ZYI1Cqu0DAFAGJOQbiQjoWOPzqOjNFABRRRQAUUUUAFKCQQQcEUlFAH1r8FtaTUfBFnZ+ZvltYgHyeeSa9Kr5i+AXiCLTNfm06R8NfMqICeuK+nQc0AFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUhUEEHkHilooA8F+N/w+VoH8QafHym6S4AAHoB9a+eiCDg9a+9r6yg1CzltbhN0Ugww9a+OfiR4b/4RrxTLAOEmLSKPQZoA4+iiigAooooAKKKKAO08IfErW/CU6eVIbiAH/VSu20Dp0FfS3g34kaR4rtV8uUJc4+ZMYH618ag4qzZ39zY3Mc9vKyPGwYYPGRQB96g5xjGD6UtfPHgP45TxeVYa9+8XAVJEVUCj3Ne86ZrFjq9ss9lcxTKwz8jA4oAvVm65pUGs6TNZ3CBkZSQCM844rSooA+HfF2gTeG/ENxp8wOVO4E+h5rCr6Y+OXgn+09MXV7NMTxEtMcE5UCvmcgg4PWgAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigDY8Lat/YfiWx1L/n3k3V9saLfLqOj2l0pz5sSufxGa+D6+rPgj4k/tjwwbeVv3sL7FB9AKAPU6KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAK8J+OXgO+1WaPXLJWk8mMRsgwB1JJr3ao5oUniaORQysMEEZoA+BSu1iDwRxSV6z8avBP9hayNStYiLa4baAo6YAz9K8moAKKKKACiiigAooooAXPSuq8KePta8K3Km2u5jbg5MIfCmuUooA+ufBHxZ0nxQkVvPIkF8+AIhk8/WvRVO4ZHQ18CxzywSB4ZHjYdCjYNeqeDPjXqmieXaahiW0UYJ27n9uTQB9O6jZRajp89nMoaOVCjAjsa+NfiF4cbw54rvLcR7LdpW8kDptFfR1p8Z/DNxZC4LTLxypAB/LNeEfFnxlYeMNbglsEdUgDKSygZyc0Aee0UUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAV6j8EfELaX4uS2kkIt5I3yM8bj0ry6rWm3DWupW0yuV2SqSQccZFAH3oDkA+tLWR4a1ePW9Ct76JgyuMZHtWvQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQBzXjnw3H4m8N3NoVBmCN5RxnDGvjXWtJn0TVriwuAQ8LlMkYzivu+vD/jZ8PPt1v8A27YR/vIlxIq8biT196APnCinMrI5VgQQcHNIRigBKKKKACiiigAooooAKKKKAFzSd6KKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD6a+AfiSK70A6JvG+0TfjPq1ey18f/AAi186L4zt4skLdukR/PNfXyOJEDL0PIoAdRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABTJYkmjZJFDKeoNPooA+dPiX8HZbaeXU9DjLRNy0IBZs4yTXiFxbzWs7wTxtHKhwyMMEV98OodSrAFTwQa4LxZ8JvD/iWOVkt4rO5k+9PFGNxPrQB8f0V6V4s+DuueHmea1ie5s1HMrEA/lXmzKVOCCCKAEooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKANbww7ReJtOdPvLMCK+2dEdpNEs3f7xjBNfHvw50eTV/GVgqrlI5lZ/pX2ZawC2tY4F6IuBQBNRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAMljjlQpIiup6hhmvJfiZ8J7LWLGbUdNi2XaAsVXgHpjAFeu0GgD4IvbSawu5bWdSskbFWBGORVevePjd8PfJm/t7ToMRkfvwo+85bqa8IPHB6igBKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKAMnAoA94/Z70Tde3uoSL8piXYfcNX0PXmXwP0/7N4Btbhlw8m4H869NoAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooArX1jBqNo9tcxrJG45DDNfNnxA+C+oaZdTXukKJbM/Nhn+bOMngCvpykZVYYYAj3oA+CbixurR2We3ljK9dyEVXr7Y1/wAB6D4ijdb60DM3cHH8q8R8afAq808SXukTJJAoz5CIxb160AeK0VNc201nO8FxE0cq9VbqKhoAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACprNPMvYE/vSKP1qGtbw1p8mpa/ZwRnkSqx4zwCKAPsjwTYDTPC1rbAYC5OPrXQ1FbRrFbRoowAoqWgAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKRlDKVYZBGCKWigD56+OPgOO3A1zT4gAxZpwAAFAAxXgtfc/ijRo9f8N32mSLkXEezPccivirXdMbSNau7EoyiKVlXd3ANAGbRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAV6T8FNJOpeO4ty5jWJzn3FedQQS3MywwRtJIxwqqMk19R/BjwLN4d0r7dfKPtUvzJ1GFYdCKAPVwMKB6CloooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAr54+OfgRo5V12yixEBtlCjgsSea+h6rX9jBqNnJbXEayRuMEMAaAPgkjBxRXpfxO+GN74X1JruyiaXTpT8m3LMDjJzgcCvNWUqSGBBHUGgBKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAp8cbSOqIMsxwB70yu6+F/hCTxR4ki3I3kwESlugOD0oA9V+EHwut7W0g13VYFkncB4ldf9WfY17eihVCqMADAFR28EdtAsMShUUYAAqWgAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAgvLOC/tnt7hA8bjDA+leK+OvgbBeebf6IyQvyTCFLFjXuNGKAPgm+sZ9Ou5La5jZJEJBDCq1fR3xk+GbX8TazpEK+co/eRjAG0DJP1r50eGVDh43X6qRQAyiiigAooooAKKKKACiiigAooooAKKKKACirlhpd5qVwsNrA7s3Tg4r0zwx8C9d1Obfqqi2tSAVeNwW/KgDzLTtOutVvY7SygeedzwiDk19hfDvwbB4S8PQw7QZ3G9iBjG4A4pnhD4aaL4UiRoo1nuFAxNIg3D8RXa9BigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigBrosiFHUMpGCCK5DV/hj4Y1uRpLq0fc3Xy32j9K7GigDyW6+Afhhwxt45kY9N0xNcxqf7PMhRjY3kKHtvLGvoGigD5L1T4KeItNUsHS4x2ijauIvPDes2G43Om3MSr1LRkCvuus+/0PTNTjZL2yinVhghxQB8IUV9Y+IPgl4b1aGRLKGLTmbo0UeSPzry3xB8BdX05C2lvLe49QF4oA8gorqX+HfieOTy201g3puFdBoXwY8S6nKPtVpJbwn+MEGgDzapI4ZZQfLRmx6Cvpvw78BtH00B9QlF6e6yxiu2t/hv4Rtk2x6DZj1IU8/rQB8cQ6NqVwQIbGdyeypmu+8H/B/WdfuYZb2M2tvkF1lQqSPavpu18K6HZsGt9MgjI6FRWsqBBheB6UAc54Y8EaP4YskhtLcF8Dcz/Nk47ZrpAAowAAPalooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACjGaKKAIjbQE5MEZPrsFSKqoMKoA9AKWigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD//2Q==';
+
 window.generateFootshapeQR = function(scanUrl) {
     return new Promise(function(resolve) {
-
-        var SAMPLE_SIZE = 4500;
+        var SAMPLE = 4100;
         var div = document.createElement('div');
         div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;';
         document.body.appendChild(div);
-
-        new QRCode(div, {
-            text: scanUrl,
-            width: SAMPLE_SIZE,
-            height: SAMPLE_SIZE,
-            correctLevel: QRCode.CorrectLevel.H
-        });
+        new QRCode(div, { text: scanUrl, width: SAMPLE, height: SAMPLE, correctLevel: QRCode.CorrectLevel.H });
 
         setTimeout(function() {
-            var srcCanvas = div.querySelector('canvas');
-            if (!srcCanvas) { document.body.removeChild(div); resolve(window.generateRegularQR(scanUrl)); return; }
-
-            var ctx = srcCanvas.getContext('2d');
-            var W = srcCanvas.width;
-            var pixels = ctx.getImageData(0, 0, W, W).data;
-
-            function isDarkAt(px, py) {
-                var ix = Math.round(Math.min(Math.max(px,0),W-1));
-                var iy = Math.round(Math.min(Math.max(py,0),W-1));
-                return pixels[(iy*W+ix)*4] < 128;
-            }
-
-            // Find quiet zone and module size (same reliable technique)
-            var quietLeft = 0;
-            for (var x = 0; x < W/2; x++) {
-                var found = false;
-                for (var y = W*0.1; y < W*0.9; y++) { if (isDarkAt(x,y)) { found=true; break; } }
-                if (found) { quietLeft=x; break; }
-            }
-            var quietTop = 0;
-            for (var y = 0; y < W/2; y++) {
-                var found = false;
-                for (var x = W*0.1; x < W*0.9; x++) { if (isDarkAt(x,y)) { found=true; break; } }
-                if (found) { quietTop=y; break; }
-            }
-            var quietRight = W;
-            for (var x = W-1; x > W/2; x--) {
-                var found = false;
-                for (var y = W*0.1; y < W*0.9; y++) { if (isDarkAt(x,y)) { found=true; break; } }
-                if (found) { quietRight=x; break; }
-            }
-
-            var darkEnd = quietLeft;
-            for (var x = quietLeft; x < W; x++) {
-                if (isDarkAt(x, quietTop+2)) darkEnd=x; else break;
-            }
-            var modPx = (darkEnd - quietLeft + 1) / 7;
-            var qrSpan = quietRight - quietLeft + modPx;
-            var N = Math.round(qrSpan / modPx);
-
-            var matrix = [];
-            for (var r = 0; r < N; r++) {
-                matrix[r] = [];
-                for (var c = 0; c < N; c++) {
-                    var sx = quietLeft + (c+0.5)*modPx;
-                    var sy = quietTop  + (r+0.5)*modPx;
-                    matrix[r][c] = isDarkAt(sx, sy);
-                }
-            }
+            var src = div.querySelector('canvas');
+            if (!src) { document.body.removeChild(div); resolve(window.generateRegularQR(scanUrl)); return; }
             document.body.removeChild(div);
 
-            var valid = matrix[0] && matrix[0][0]===true && matrix[0][N-1]===true && matrix[N-1] && matrix[N-1][0]===true;
-            if (!valid || N < 21) { resolve(window.generateRegularQR(scanUrl)); return; }
+            var sctx = src.getContext('2d');
+            var SW = src.width;
+            var spx = sctx.getImageData(0,0,SW,SW).data;
+            function sd(x,y){
+                x=Math.round(Math.min(Math.max(x,0),SW-1));
+                y=Math.round(Math.min(Math.max(y,0),SW-1));
+                return spx[(y*SW+x)*4]<128;
+            }
+            var ql=0; outer1: for(var x=0;x<SW/2;x++) for(var y=SW*.1;y<SW*.9;y++) if(sd(x,y)){ql=x;break outer1;}
+            var qt=0; outer2: for(var y=0;y<SW/2;y++) for(var x=SW*.1;x<SW*.9;x++) if(sd(x,y)){qt=y;break outer2;}
+            var qr=SW-1; outer3: for(var x=SW-1;x>SW/2;x--) for(var y=SW*.1;y<SW*.9;y++) if(sd(x,y)){qr=x;break outer3;}
+            var re=ql; for(var x=ql;x<SW;x++){if(sd(x,qt+1))re=x;else break;}
+            var mp=(re-ql+1)/7;
+            var N=Math.round((qr-ql+mp)/mp);
+            if(N<21){resolve(window.generateRegularQR(scanUrl));return;}
+            var mat=[];
+            for(var r=0;r<N;r++){mat[r]=[];for(var c=0;c<N;c++) mat[r][c]=sd(ql+(c+.5)*mp, qt+(r+.5)*mp);}
 
-            // ── Output canvas ──
-            var CELL  = 22;
-            var QUIET = 4;
-            var GRID  = (N + QUIET*2) * CELL;  // QR grid area
-            // Add extra padding around the whole image
-            var PAD   = CELL * 3;
-            var TOTAL = GRID + PAD*2;
+            var CELL=18, Q=3;
+            var GW=(N+Q*2)*CELL;
+            var PAD=CELL*4;
+            var CS=GW+PAD*2;
 
-            var outCanvas = document.createElement('canvas');
-            outCanvas.width  = TOTAL;
-            outCanvas.height = TOTAL;
-            var octx = outCanvas.getContext('2d');
+            var out=document.createElement('canvas');
+            out.width=CS; out.height=CS;
+            var ctx=out.getContext('2d');
+            ctx.fillStyle='#fff';
+            ctx.fillRect(0,0,CS,CS);
 
-            // White background
-            octx.fillStyle = '#ffffff';
-            octx.fillRect(0, 0, TOTAL, TOTAL);
+            function ox(c){return PAD+(Q+c)*CELL;}
+            function oy(r){return PAD+(Q+r)*CELL;}
 
-            // Module top-left pixel (with PAD offset)
-            function ox(c) { return PAD + (QUIET+c)*CELL; }
-            function oy(r) { return PAD + (QUIET+r)*CELL; }
-            // Module center pixel
-            function mcx(c) { return ox(c) + CELL/2; }
-            function mcy(r) { return oy(r) + CELL/2; }
+            // Build footprint path sized to contain the entire QR grid
+            var x0=ox(0), y0=oy(0);
+            var xN=ox(N), yN=oy(N);
+            var gw=xN-x0, gh=yN-y0;
+            function gp(fx,fy){return [x0+fx*gw, y0+fy*gh];}
 
-            // ── Build the footprint Path2D ──
-            // Matches the reference image: 3-toed foot, palm at bottom-right,
-            // toes pointing upper-left. Scaled to fill the TOTAL canvas.
-            // Coordinates are normalized 0-1, then scaled to TOTAL.
-            function buildFootprintPath(W, H) {
-                var p = new Path2D();
-                function pt(x, y) { return [x*W, y*H]; }
+            var p=new Path2D();
+            p.moveTo(...gp(0.50, 1.04));
+            p.bezierCurveTo(...gp(0.68,1.04),...gp(0.83,0.98),...gp(0.85,0.87));
+            p.bezierCurveTo(...gp(0.87,0.79),...gp(0.82,0.71),...gp(0.76,0.67));
+            p.bezierCurveTo(...gp(0.81,0.62),...gp(0.83,0.55),...gp(0.81,0.48));
+            p.bezierCurveTo(...gp(0.79,0.41),...gp(0.76,0.33),...gp(0.73,0.24));
+            p.bezierCurveTo(...gp(0.71,0.17),...gp(0.69,0.10),...gp(0.68,0.05));
+            p.bezierCurveTo(...gp(0.67,0.01),...gp(0.65,-0.01),...gp(0.63,-0.01));
+            p.bezierCurveTo(...gp(0.61,-0.01),...gp(0.59,0.01),...gp(0.58,0.05));
+            p.bezierCurveTo(...gp(0.57,0.11),...gp(0.56,0.19),...gp(0.55,0.27));
+            p.bezierCurveTo(...gp(0.54,0.34),...gp(0.53,0.41),...gp(0.52,0.46));
+            p.bezierCurveTo(...gp(0.51,0.50),...gp(0.50,0.52),...gp(0.48,0.52));
+            p.bezierCurveTo(...gp(0.46,0.52),...gp(0.44,0.50),...gp(0.43,0.46));
+            p.bezierCurveTo(...gp(0.42,0.41),...gp(0.41,0.33),...gp(0.40,0.24));
+            p.bezierCurveTo(...gp(0.39,0.15),...gp(0.38,0.07),...gp(0.37,0.02));
+            p.bezierCurveTo(...gp(0.36,-0.02),...gp(0.34,-0.04),...gp(0.32,-0.04));
+            p.bezierCurveTo(...gp(0.30,-0.04),...gp(0.28,-0.02),...gp(0.27,0.03));
+            p.bezierCurveTo(...gp(0.26,0.08),...gp(0.25,0.16),...gp(0.24,0.25));
+            p.bezierCurveTo(...gp(0.23,0.33),...gp(0.22,0.40),...gp(0.21,0.46));
+            p.bezierCurveTo(...gp(0.20,0.50),...gp(0.19,0.52),...gp(0.17,0.52));
+            p.bezierCurveTo(...gp(0.15,0.52),...gp(0.13,0.49),...gp(0.12,0.45));
+            p.bezierCurveTo(...gp(0.10,0.40),...gp(0.07,0.34),...gp(0.04,0.28));
+            p.bezierCurveTo(...gp(0.01,0.22),...gp(-0.02,0.15),...gp(-0.04,0.10));
+            p.bezierCurveTo(...gp(-0.06,0.06),...gp(-0.07,0.02),...gp(-0.06,0.00));
+            p.bezierCurveTo(...gp(-0.05,-0.02),...gp(-0.03,-0.03),...gp(-0.01,-0.01));
+            p.bezierCurveTo(...gp(0.01,0.01),...gp(0.04,0.05),...gp(0.07,0.10));
+            p.bezierCurveTo(...gp(0.10,0.16),...gp(0.12,0.23),...gp(0.14,0.30));
+            p.bezierCurveTo(...gp(0.15,0.36),...gp(0.16,0.42),...gp(0.17,0.47));
+            p.bezierCurveTo(...gp(0.17,0.54),...gp(0.16,0.61),...gp(0.14,0.68));
+            p.bezierCurveTo(...gp(0.12,0.77),...gp(0.12,0.85),...gp(0.14,0.92));
+            p.bezierCurveTo(...gp(0.18,1.01),...gp(0.30,1.05),...gp(0.50,1.04));
+            p.closePath();
 
-                // The footprint from the reference:
-                // Palm = rounded blob in the lower-center/right area
-                // Left outer toe = shoots out to upper-left at ~150° from up
-                // Center toe = shoots mostly upward, slightly left
-                // Right inner toe = shoots upper-right from palm
-
-                // Starting at bottom of palm, going clockwise
-                p.moveTo(...pt(0.48, 0.96));  // bottom of palm
-
-                // Right side of palm
-                p.bezierCurveTo(...pt(0.62,0.96), ...pt(0.72,0.90), ...pt(0.72,0.80));
-                p.bezierCurveTo(...pt(0.72,0.74), ...pt(0.68,0.70), ...pt(0.64,0.68));
-
-                // Base of right (inner) toe
-                p.bezierCurveTo(...pt(0.68,0.64), ...pt(0.70,0.58), ...pt(0.68,0.52));
-                p.bezierCurveTo(...pt(0.66,0.46), ...pt(0.62,0.42), ...pt(0.60,0.38));
-                // Right toe tip
-                p.bezierCurveTo(...pt(0.58,0.34), ...pt(0.57,0.30), ...pt(0.58,0.26));
-                p.bezierCurveTo(...pt(0.59,0.22), ...pt(0.61,0.20), ...pt(0.62,0.21));
-                p.bezierCurveTo(...pt(0.64,0.22), ...pt(0.65,0.25), ...pt(0.65,0.29));
-                p.bezierCurveTo(...pt(0.65,0.33), ...pt(0.64,0.37), ...pt(0.63,0.40));
-
-                // Gap between right and center toes
-                p.bezierCurveTo(...pt(0.65,0.42), ...pt(0.68,0.46), ...pt(0.68,0.50));
-
-                // Between toes — back toward palm center, then up into center toe
-                p.bezierCurveTo(...pt(0.66,0.52), ...pt(0.62,0.54), ...pt(0.59,0.54));
-                p.bezierCurveTo(...pt(0.56,0.54), ...pt(0.54,0.52), ...pt(0.53,0.49));
-
-                // Base of center toe
-                p.bezierCurveTo(...pt(0.52,0.44), ...pt(0.52,0.38), ...pt(0.50,0.32));
-                p.bezierCurveTo(...pt(0.48,0.26), ...pt(0.46,0.20), ...pt(0.44,0.14));
-                // Center toe tip
-                p.bezierCurveTo(...pt(0.43,0.10), ...pt(0.42,0.06), ...pt(0.43,0.04));
-                p.bezierCurveTo(...pt(0.44,0.02), ...pt(0.46,0.02), ...pt(0.47,0.04));
-                p.bezierCurveTo(...pt(0.48,0.06), ...pt(0.48,0.10), ...pt(0.48,0.14));
-                p.bezierCurveTo(...pt(0.48,0.20), ...pt(0.48,0.26), ...pt(0.48,0.32));
-
-                // Back down center toe other side
-                p.bezierCurveTo(...pt(0.47,0.36), ...pt(0.45,0.40), ...pt(0.44,0.44));
-                p.bezierCurveTo(...pt(0.43,0.48), ...pt(0.42,0.52), ...pt(0.40,0.54));
-
-                // Gap between center and left outer toe
-                p.bezierCurveTo(...pt(0.37,0.55), ...pt(0.34,0.54), ...pt(0.32,0.52));
-                p.bezierCurveTo(...pt(0.30,0.50), ...pt(0.28,0.46), ...pt(0.28,0.42));
-
-                // Left outer toe rises up and left
-                p.bezierCurveTo(...pt(0.26,0.40), ...pt(0.22,0.38), ...pt(0.18,0.36));
-                p.bezierCurveTo(...pt(0.14,0.34), ...pt(0.10,0.32), ...pt(0.07,0.30));
-                // Left toe tip
-                p.bezierCurveTo(...pt(0.04,0.28), ...pt(0.02,0.26), ...pt(0.02,0.24));
-                p.bezierCurveTo(...pt(0.02,0.22), ...pt(0.04,0.21), ...pt(0.06,0.22));
-                p.bezierCurveTo(...pt(0.08,0.23), ...pt(0.10,0.25), ...pt(0.13,0.27));
-                p.bezierCurveTo(...pt(0.16,0.29), ...pt(0.20,0.31), ...pt(0.24,0.34));
-
-                // Back down left toe, rejoin palm
-                p.bezierCurveTo(...pt(0.26,0.36), ...pt(0.28,0.38), ...pt(0.28,0.42));
-                p.bezierCurveTo(...pt(0.28,0.48), ...pt(0.30,0.54), ...pt(0.32,0.58));
-                p.bezierCurveTo(...pt(0.30,0.62), ...pt(0.28,0.68), ...pt(0.28,0.74));
-                p.bezierCurveTo(...pt(0.28,0.82), ...pt(0.32,0.90), ...pt(0.38,0.94));
-                p.bezierCurveTo(...pt(0.42,0.96), ...pt(0.46,0.97), ...pt(0.48,0.96));
-                p.closePath();
-                return p;
+            // Build mask for point-in-path testing
+            var mc=document.createElement('canvas');
+            mc.width=CS; mc.height=CS;
+            var mctx=mc.getContext('2d');
+            mctx.fillStyle='#000';
+            mctx.fill(p);
+            var mpxa=mctx.getImageData(0,0,CS,CS).data;
+            function inFoot(px,py){
+                var ix=Math.round(Math.min(Math.max(px,0),CS-1));
+                var iy=Math.round(Math.min(Math.max(py,0),CS-1));
+                return mpxa[(iy*CS+ix)*4+3]>64;
             }
 
-            var footPath = buildFootprintPath(TOTAL, TOTAL);
+            // Draw light footprint silhouette behind
+            ctx.fillStyle='#f0f0f0';
+            ctx.fill(p);
 
-            // Helper: is a point inside the footprint?
-            // We use a temporary canvas to test point-in-path
-            var testCanvas = document.createElement('canvas');
-            testCanvas.width = TOTAL; testCanvas.height = TOTAL;
-            var tctx = testCanvas.getContext('2d');
-            tctx.fillStyle = '#000';
-            tctx.fill(footPath);
-            var footPixels = tctx.getImageData(0, 0, TOTAL, TOTAL).data;
-
-            function isInsideFoot(px, py) {
-                var ix = Math.round(Math.min(Math.max(px,0),TOTAL-1));
-                var iy = Math.round(Math.min(Math.max(py,0),TOTAL-1));
-                return footPixels[(iy*TOTAL+ix)*4+3] > 128;
+            // Structural zone helpers
+            function isFinder(r,c){
+                return (r<7&&c<7)||(r<7&&c>=N-7)||(r>=N-7&&c<7);
             }
-
-            // ── Draw footprint silhouette as background fill ──
-            octx.fillStyle = '#f0f0f0';  // very light grey tint inside foot
-            octx.fill(footPath);
-
-            // ── Structural zone classifiers (same as other styles) ──
-            function isFinder(r, c) {
-                if (r<7 && c<7) return true;
-                if (r<7 && c>=N-7) return true;
-                if (r>=N-7 && c<7) return true;
+            function isSep(r,c){
+                if(r===7&&c<=7||c===7&&r<=7) return true;
+                if(r===7&&c>=N-8||c===N-8&&r<=7) return true;
+                if(r===N-8&&c<=7||c===7&&r>=N-8) return true;
                 return false;
             }
-            function isSeparator(r, c) {
-                if (r===7 && c<=7) return true; if (c===7 && r<=7) return true;
-                if (r===7 && c>=N-8) return true; if (c===N-8 && r<=7) return true;
-                if (r===N-8 && c<=7) return true; if (c===7 && r>=N-8) return true;
-                return false;
+            function isTiming(r,c){ return r===6||c===6; }
+            function isFmt(r,c){
+                return (r===8&&(c<=8||c>=N-8))||(c===8&&(r<=8||r>=N-8));
             }
-            function isTiming(r, c) { return (r===6 || c===6); }
-            function isFormatInfo(r, c) {
-                if (r===8 && (c<=8||c>=N-8)) return true;
-                if (c===8 && (r<=8||r>=N-8)) return true;
-                return false;
+            function isAlign(r,c){
+                var a=N-7;
+                return Math.abs(r-a)<=2&&Math.abs(c-a)<=2;
             }
-            function isAlignment(r, c) {
-                var brc = N-7;
-                return (Math.abs(r-brc)<=2 && Math.abs(c-brc)<=2);
-            }
-            function isStructural(r, c) {
-                return isFinder(r,c)||isSeparator(r,c)||isTiming(r,c)||isFormatInfo(r,c)||isAlignment(r,c);
+            function isStruct(r,c){
+                return isFinder(r,c)||isSep(r,c)||isTiming(r,c)||isFmt(r,c)||isAlign(r,c);
             }
 
-            // ── Draw all modules — only those inside the footprint are visible ──
-            // Structural zones: always draw as squares (they must be intact)
-            // Data zones: only draw if module center is inside footprint
-            for (var r = 0; r < N; r++) {
-                for (var c = 0; c < N; c++) {
-                    var mx = mcx(c), my = mcy(r);
-                    var structural = isStructural(r, c);
-                    var insideFoot = isInsideFoot(mx, my);
-
-                    if (structural) {
-                        // Always draw structural modules as solid squares
-                        // BUT only if they fall inside the footprint
-                        // (the finder patterns should be positioned inside the foot)
-                        if (insideFoot || isFinder(r,c) || isTiming(r,c) || isFormatInfo(r,c)) {
-                            octx.fillStyle = matrix[r][c] ? '#000000' : '#ffffff';
-                            octx.fillRect(ox(c), oy(r), CELL, CELL);
-                        }
-                    } else {
-                        // Data module — only draw if inside footprint
-                        if (insideFoot && matrix[r][c]) {
-                            octx.fillStyle = '#000000';
-                            octx.fillRect(ox(c), oy(r), CELL, CELL);
-                        }
+            // Draw dark data modules only where inside footprint
+            for(var r=0;r<N;r++){
+                for(var c=0;c<N;c++){
+                    if(isStruct(r,c)||!mat[r][c]) continue;
+                    if(inFoot(ox(c)+CELL/2, oy(r)+CELL/2)){
+                        ctx.fillStyle='#000';
+                        ctx.fillRect(ox(c),oy(r),CELL,CELL);
                     }
                 }
             }
 
-            // ── Outline the footprint ──
-            octx.strokeStyle = '#cccccc';
-            octx.lineWidth = 1.5;
-            octx.stroke(footPath);
+            // Unconditionally overdraw ALL structural zones as perfect squares
+            for(var r=0;r<N;r++){
+                for(var c=0;c<N;c++){
+                    if(!isStruct(r,c)) continue;
+                    ctx.fillStyle=mat[r][c]?'#000':'#fff';
+                    ctx.fillRect(ox(c),oy(r),CELL,CELL);
+                }
+            }
 
-            resolve(outCanvas.toDataURL('image/png'));
+            // Outline footprint
+            ctx.strokeStyle='#000';
+            ctx.lineWidth=2;
+            ctx.stroke(p);
 
+            resolve(out.toDataURL('image/png'));
         }, 800);
     });
 };
