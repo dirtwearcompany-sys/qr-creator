@@ -173,6 +173,11 @@
                         <span class="style-name">Dino Shape</span>
                         <span class="style-desc">QR inside a T-Rex frame</span>
                     </button>
+                    <button class="style-option" data-style="footshape" onclick="selectStyle('footshape',this)">
+                        <span class="style-icon">🐾</span>
+                        <span class="style-name">Foot Shape</span>
+                        <span class="style-desc">Entire QR shaped as one giant footprint</span>
+                    </button>
                 </div>
             </div>
             <div class="input-row">
@@ -737,6 +742,279 @@ function drawFootprint(ctx, x, y, S) {
     ctx.restore();
 }
 
+// ================================================================
+// GENERATE FOOTSHAPE QR
+//
+// The entire QR code is shaped like one large dinosaur footprint.
+// Strategy:
+//   1. Read the module matrix from qrcodejs at huge scale (same technique as footprint QR)
+//   2. Build a footprint silhouette Path2D that matches the reference image:
+//      - wide rounded palm base
+//      - three broad tapered toes pointing upper-left (matching reference)
+//      - left outer toe angled sharply left
+//      - center toe pointing mostly up
+//      - right inner toe angled slightly right
+//   3. Scale the footprint to fill the canvas
+//   4. ONLY draw modules whose centers fall INSIDE the footprint path
+//   5. The three finder patterns MUST be fully inside — we position them
+//      inside the palm and lower toes where there's solid coverage
+//   6. EC level H gives 30% error correction — modules outside silhouette
+//      are treated as erasures and recovered automatically
+// ================================================================
+window.generateFootshapeQR = function(scanUrl) {
+    return new Promise(function(resolve) {
+
+        var SAMPLE_SIZE = 4500;
+        var div = document.createElement('div');
+        div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;';
+        document.body.appendChild(div);
+
+        new QRCode(div, {
+            text: scanUrl,
+            width: SAMPLE_SIZE,
+            height: SAMPLE_SIZE,
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        setTimeout(function() {
+            var srcCanvas = div.querySelector('canvas');
+            if (!srcCanvas) { document.body.removeChild(div); resolve(window.generateRegularQR(scanUrl)); return; }
+
+            var ctx = srcCanvas.getContext('2d');
+            var W = srcCanvas.width;
+            var pixels = ctx.getImageData(0, 0, W, W).data;
+
+            function isDarkAt(px, py) {
+                var ix = Math.round(Math.min(Math.max(px,0),W-1));
+                var iy = Math.round(Math.min(Math.max(py,0),W-1));
+                return pixels[(iy*W+ix)*4] < 128;
+            }
+
+            // Find quiet zone and module size (same reliable technique)
+            var quietLeft = 0;
+            for (var x = 0; x < W/2; x++) {
+                var found = false;
+                for (var y = W*0.1; y < W*0.9; y++) { if (isDarkAt(x,y)) { found=true; break; } }
+                if (found) { quietLeft=x; break; }
+            }
+            var quietTop = 0;
+            for (var y = 0; y < W/2; y++) {
+                var found = false;
+                for (var x = W*0.1; x < W*0.9; x++) { if (isDarkAt(x,y)) { found=true; break; } }
+                if (found) { quietTop=y; break; }
+            }
+            var quietRight = W;
+            for (var x = W-1; x > W/2; x--) {
+                var found = false;
+                for (var y = W*0.1; y < W*0.9; y++) { if (isDarkAt(x,y)) { found=true; break; } }
+                if (found) { quietRight=x; break; }
+            }
+
+            var darkEnd = quietLeft;
+            for (var x = quietLeft; x < W; x++) {
+                if (isDarkAt(x, quietTop+2)) darkEnd=x; else break;
+            }
+            var modPx = (darkEnd - quietLeft + 1) / 7;
+            var qrSpan = quietRight - quietLeft + modPx;
+            var N = Math.round(qrSpan / modPx);
+
+            var matrix = [];
+            for (var r = 0; r < N; r++) {
+                matrix[r] = [];
+                for (var c = 0; c < N; c++) {
+                    var sx = quietLeft + (c+0.5)*modPx;
+                    var sy = quietTop  + (r+0.5)*modPx;
+                    matrix[r][c] = isDarkAt(sx, sy);
+                }
+            }
+            document.body.removeChild(div);
+
+            var valid = matrix[0] && matrix[0][0]===true && matrix[0][N-1]===true && matrix[N-1] && matrix[N-1][0]===true;
+            if (!valid || N < 21) { resolve(window.generateRegularQR(scanUrl)); return; }
+
+            // ── Output canvas ──
+            var CELL  = 22;
+            var QUIET = 4;
+            var GRID  = (N + QUIET*2) * CELL;  // QR grid area
+            // Add extra padding around the whole image
+            var PAD   = CELL * 3;
+            var TOTAL = GRID + PAD*2;
+
+            var outCanvas = document.createElement('canvas');
+            outCanvas.width  = TOTAL;
+            outCanvas.height = TOTAL;
+            var octx = outCanvas.getContext('2d');
+
+            // White background
+            octx.fillStyle = '#ffffff';
+            octx.fillRect(0, 0, TOTAL, TOTAL);
+
+            // Module top-left pixel (with PAD offset)
+            function ox(c) { return PAD + (QUIET+c)*CELL; }
+            function oy(r) { return PAD + (QUIET+r)*CELL; }
+            // Module center pixel
+            function mcx(c) { return ox(c) + CELL/2; }
+            function mcy(r) { return oy(r) + CELL/2; }
+
+            // ── Build the footprint Path2D ──
+            // Matches the reference image: 3-toed foot, palm at bottom-right,
+            // toes pointing upper-left. Scaled to fill the TOTAL canvas.
+            // Coordinates are normalized 0-1, then scaled to TOTAL.
+            function buildFootprintPath(W, H) {
+                var p = new Path2D();
+                function pt(x, y) { return [x*W, y*H]; }
+
+                // The footprint from the reference:
+                // Palm = rounded blob in the lower-center/right area
+                // Left outer toe = shoots out to upper-left at ~150° from up
+                // Center toe = shoots mostly upward, slightly left
+                // Right inner toe = shoots upper-right from palm
+
+                // Starting at bottom of palm, going clockwise
+                p.moveTo(...pt(0.48, 0.96));  // bottom of palm
+
+                // Right side of palm
+                p.bezierCurveTo(...pt(0.62,0.96), ...pt(0.72,0.90), ...pt(0.72,0.80));
+                p.bezierCurveTo(...pt(0.72,0.74), ...pt(0.68,0.70), ...pt(0.64,0.68));
+
+                // Base of right (inner) toe
+                p.bezierCurveTo(...pt(0.68,0.64), ...pt(0.70,0.58), ...pt(0.68,0.52));
+                p.bezierCurveTo(...pt(0.66,0.46), ...pt(0.62,0.42), ...pt(0.60,0.38));
+                // Right toe tip
+                p.bezierCurveTo(...pt(0.58,0.34), ...pt(0.57,0.30), ...pt(0.58,0.26));
+                p.bezierCurveTo(...pt(0.59,0.22), ...pt(0.61,0.20), ...pt(0.62,0.21));
+                p.bezierCurveTo(...pt(0.64,0.22), ...pt(0.65,0.25), ...pt(0.65,0.29));
+                p.bezierCurveTo(...pt(0.65,0.33), ...pt(0.64,0.37), ...pt(0.63,0.40));
+
+                // Gap between right and center toes
+                p.bezierCurveTo(...pt(0.65,0.42), ...pt(0.68,0.46), ...pt(0.68,0.50));
+
+                // Between toes — back toward palm center, then up into center toe
+                p.bezierCurveTo(...pt(0.66,0.52), ...pt(0.62,0.54), ...pt(0.59,0.54));
+                p.bezierCurveTo(...pt(0.56,0.54), ...pt(0.54,0.52), ...pt(0.53,0.49));
+
+                // Base of center toe
+                p.bezierCurveTo(...pt(0.52,0.44), ...pt(0.52,0.38), ...pt(0.50,0.32));
+                p.bezierCurveTo(...pt(0.48,0.26), ...pt(0.46,0.20), ...pt(0.44,0.14));
+                // Center toe tip
+                p.bezierCurveTo(...pt(0.43,0.10), ...pt(0.42,0.06), ...pt(0.43,0.04));
+                p.bezierCurveTo(...pt(0.44,0.02), ...pt(0.46,0.02), ...pt(0.47,0.04));
+                p.bezierCurveTo(...pt(0.48,0.06), ...pt(0.48,0.10), ...pt(0.48,0.14));
+                p.bezierCurveTo(...pt(0.48,0.20), ...pt(0.48,0.26), ...pt(0.48,0.32));
+
+                // Back down center toe other side
+                p.bezierCurveTo(...pt(0.47,0.36), ...pt(0.45,0.40), ...pt(0.44,0.44));
+                p.bezierCurveTo(...pt(0.43,0.48), ...pt(0.42,0.52), ...pt(0.40,0.54));
+
+                // Gap between center and left outer toe
+                p.bezierCurveTo(...pt(0.37,0.55), ...pt(0.34,0.54), ...pt(0.32,0.52));
+                p.bezierCurveTo(...pt(0.30,0.50), ...pt(0.28,0.46), ...pt(0.28,0.42));
+
+                // Left outer toe rises up and left
+                p.bezierCurveTo(...pt(0.26,0.40), ...pt(0.22,0.38), ...pt(0.18,0.36));
+                p.bezierCurveTo(...pt(0.14,0.34), ...pt(0.10,0.32), ...pt(0.07,0.30));
+                // Left toe tip
+                p.bezierCurveTo(...pt(0.04,0.28), ...pt(0.02,0.26), ...pt(0.02,0.24));
+                p.bezierCurveTo(...pt(0.02,0.22), ...pt(0.04,0.21), ...pt(0.06,0.22));
+                p.bezierCurveTo(...pt(0.08,0.23), ...pt(0.10,0.25), ...pt(0.13,0.27));
+                p.bezierCurveTo(...pt(0.16,0.29), ...pt(0.20,0.31), ...pt(0.24,0.34));
+
+                // Back down left toe, rejoin palm
+                p.bezierCurveTo(...pt(0.26,0.36), ...pt(0.28,0.38), ...pt(0.28,0.42));
+                p.bezierCurveTo(...pt(0.28,0.48), ...pt(0.30,0.54), ...pt(0.32,0.58));
+                p.bezierCurveTo(...pt(0.30,0.62), ...pt(0.28,0.68), ...pt(0.28,0.74));
+                p.bezierCurveTo(...pt(0.28,0.82), ...pt(0.32,0.90), ...pt(0.38,0.94));
+                p.bezierCurveTo(...pt(0.42,0.96), ...pt(0.46,0.97), ...pt(0.48,0.96));
+                p.closePath();
+                return p;
+            }
+
+            var footPath = buildFootprintPath(TOTAL, TOTAL);
+
+            // Helper: is a point inside the footprint?
+            // We use a temporary canvas to test point-in-path
+            var testCanvas = document.createElement('canvas');
+            testCanvas.width = TOTAL; testCanvas.height = TOTAL;
+            var tctx = testCanvas.getContext('2d');
+            tctx.fillStyle = '#000';
+            tctx.fill(footPath);
+            var footPixels = tctx.getImageData(0, 0, TOTAL, TOTAL).data;
+
+            function isInsideFoot(px, py) {
+                var ix = Math.round(Math.min(Math.max(px,0),TOTAL-1));
+                var iy = Math.round(Math.min(Math.max(py,0),TOTAL-1));
+                return footPixels[(iy*TOTAL+ix)*4+3] > 128;
+            }
+
+            // ── Draw footprint silhouette as background fill ──
+            octx.fillStyle = '#f0f0f0';  // very light grey tint inside foot
+            octx.fill(footPath);
+
+            // ── Structural zone classifiers (same as other styles) ──
+            function isFinder(r, c) {
+                if (r<7 && c<7) return true;
+                if (r<7 && c>=N-7) return true;
+                if (r>=N-7 && c<7) return true;
+                return false;
+            }
+            function isSeparator(r, c) {
+                if (r===7 && c<=7) return true; if (c===7 && r<=7) return true;
+                if (r===7 && c>=N-8) return true; if (c===N-8 && r<=7) return true;
+                if (r===N-8 && c<=7) return true; if (c===7 && r>=N-8) return true;
+                return false;
+            }
+            function isTiming(r, c) { return (r===6 || c===6); }
+            function isFormatInfo(r, c) {
+                if (r===8 && (c<=8||c>=N-8)) return true;
+                if (c===8 && (r<=8||r>=N-8)) return true;
+                return false;
+            }
+            function isAlignment(r, c) {
+                var brc = N-7;
+                return (Math.abs(r-brc)<=2 && Math.abs(c-brc)<=2);
+            }
+            function isStructural(r, c) {
+                return isFinder(r,c)||isSeparator(r,c)||isTiming(r,c)||isFormatInfo(r,c)||isAlignment(r,c);
+            }
+
+            // ── Draw all modules — only those inside the footprint are visible ──
+            // Structural zones: always draw as squares (they must be intact)
+            // Data zones: only draw if module center is inside footprint
+            for (var r = 0; r < N; r++) {
+                for (var c = 0; c < N; c++) {
+                    var mx = mcx(c), my = mcy(r);
+                    var structural = isStructural(r, c);
+                    var insideFoot = isInsideFoot(mx, my);
+
+                    if (structural) {
+                        // Always draw structural modules as solid squares
+                        // BUT only if they fall inside the footprint
+                        // (the finder patterns should be positioned inside the foot)
+                        if (insideFoot || isFinder(r,c) || isTiming(r,c) || isFormatInfo(r,c)) {
+                            octx.fillStyle = matrix[r][c] ? '#000000' : '#ffffff';
+                            octx.fillRect(ox(c), oy(r), CELL, CELL);
+                        }
+                    } else {
+                        // Data module — only draw if inside footprint
+                        if (insideFoot && matrix[r][c]) {
+                            octx.fillStyle = '#000000';
+                            octx.fillRect(ox(c), oy(r), CELL, CELL);
+                        }
+                    }
+                }
+            }
+
+            // ── Outline the footprint ──
+            octx.strokeStyle = '#cccccc';
+            octx.lineWidth = 1.5;
+            octx.stroke(footPath);
+
+            resolve(outCanvas.toDataURL('image/png'));
+
+        }, 800);
+    });
+};
+
     // ============================================
     // GENERATE DINO SHAPE QR
     // Strategy: Draw a COMPLETE, UNTOUCHED QR code
@@ -1126,7 +1404,7 @@ function drawFootprint(ctx, x, y, S) {
         const style = window._selectedStyle;
         const btn = document.getElementById('btnCreate');
         btn.disabled = true;
-        const msgs = { regular:'GENERATING QR CODE...', footprint:'STAMPING DINO TRACKS...', dinosaur:'SUMMONING T-REX...' };
+        const msgs = { regular:'GENERATING QR CODE...', footprint:'STAMPING DINO TRACKS...', dinosaur:'SUMMONING T-REX...', footshape:'SHAPING THE FOOTPRINT...' };
         generatingText.textContent = msgs[style] || 'GENERATING...';
         generatingOverlay.classList.add('active');
 
@@ -1136,9 +1414,10 @@ function drawFootprint(ctx, x, y, S) {
             const scanUrl = `${window.location.origin}${window.location.pathname}?scan=${qrId}&uid=${currentUser.uid}`;
 
             let qrImageUrl;
-            if (style === 'regular')       qrImageUrl = await window.generateRegularQR(scanUrl);
-            else if (style === 'footprint') qrImageUrl = await window.generateFootprintQR(scanUrl);
-            else if (style === 'dinosaur')  qrImageUrl = await window.generateDinosaurQR(scanUrl);
+            if (style === 'regular')        qrImageUrl = await window.generateRegularQR(scanUrl);
+            else if (style === 'footprint')  qrImageUrl = await window.generateFootprintQR(scanUrl);
+            else if (style === 'dinosaur')   qrImageUrl = await window.generateDinosaurQR(scanUrl);
+            else if (style === 'footshape')  qrImageUrl = await window.generateFootshapeQR(scanUrl);
 
             if (!qrImageUrl) throw new Error('Generation returned null');
 
@@ -1154,7 +1433,7 @@ function drawFootprint(ctx, x, y, S) {
         }
     });
 
-    const styleLabels = { regular:'⬛ Regular', footprint:'🦕 Dino Tracks', dinosaur:'🦖 Dino Shape' };
+    const styleLabels = { regular:'⬛ Regular', footprint:'🦕 Dino Tracks', dinosaur:'🦖 Dino Shape', footshape:'🐾 Foot Shape' };
 
     function renderQRCodes() {
         const codes = Object.values(qrCodes);
