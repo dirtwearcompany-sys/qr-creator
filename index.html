@@ -352,97 +352,185 @@ window.generateFootprintQR = function(scanUrl) {
 };
 
 // ================================================================
-// BOOT PRINTS — each dark module drawn as a boot sole
+// HIKING BOOT PRINT — each dark module drawn as a realistic
+// hiking boot sole viewed from below, oriented toe-up.
 //
-// A hiking/work boot sole viewed from below:
-//   - Thick rounded toe cap at the top (~30% of height)
-//   - Narrow waist / arch cutout in the middle
-//   - Wide heel block at the bottom (~30% of height)
-//   - Horizontal tread grooves across toe and heel
-//   - Two lug knobs on each side of the waist
-// The whole shape sits with slight angle (boot points upper-right,
-// heel lower-left) so a row of stamps looks like natural footsteps.
+// Sole anatomy (top → bottom):
+//   1. TOE ZONE  (y 0.02–0.30): rounded toe, 3 diagonal lug bars
+//   2. FOREFOOT  (y 0.30–0.56): 4 rows of staggered brick-shaped lugs
+//      with narrow gaps — left 2 + right 2 per row, alternating offset
+//   3. ARCH BRIDGE (y 0.56–0.68): narrow waist, smooth — no tread
+//   4. HEEL BLOCK  (y 0.68–0.98): wide block, 3 diagonal chevron lugs
+//
+// The overall silhouette is drawn first (filled black), then the
+// gaps / grooves are cut back in white so the lugs stand out.
 // ================================================================
 function drawBootPrint(ctx, x, y, S) {
     ctx.save();
     ctx.beginPath(); ctx.rect(x, y, S, S); ctx.clip();
+
+    // Work in a local 0..1 coordinate space, then scale to S
+    // Helper: fill a rounded rect in S-scaled coords
+    function rr(lx, ly, lw, lh, lr) {
+        lr = Math.min(lr, lw/2, lh/2);
+        ctx.beginPath();
+        ctx.moveTo(lx+lr, ly);
+        ctx.lineTo(lx+lw-lr, ly);       ctx.arcTo(lx+lw, ly,    lx+lw, ly+lh,   lr);
+        ctx.lineTo(lx+lw, ly+lh-lr);    ctx.arcTo(lx+lw, ly+lh, lx,    ly+lh,   lr);
+        ctx.lineTo(lx+lr, ly+lh);       ctx.arcTo(lx,    ly+lh, lx,    ly,      lr);
+        ctx.lineTo(lx, ly+lr);          ctx.arcTo(lx,    ly,    lx+lw, ly,      lr);
+        ctx.closePath();
+        ctx.fill();
+    }
+    // Parallelogram lug: draws a slanted bar (like a chevron arm)
+    // cx,cy = centre, w = width, h = height, slant = x-offset of top vs bottom
+    function para(lcx, lcy, lw, lh, slant) {
+        var hw = lw/2, hh = lh/2;
+        ctx.beginPath();
+        ctx.moveTo(lcx - hw + slant, lcy - hh);
+        ctx.lineTo(lcx + hw + slant, lcy - hh);
+        ctx.lineTo(lcx + hw - slant, lcy + hh);
+        ctx.lineTo(lcx - hw - slant, lcy + hh);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    // Scale factor: all coords below are 0..1, multiply by S and offset by x,y
+    function sc(v) { return v * S; }
+    function sx(v) { return x + v * S; }
+    function sy(v) { return y + v * S; }
+
+    // ── 1. FULL SOLE SILHOUETTE ──
+    // Outer shape: wide at toe & heel, narrow at arch
+    // Draw as a single filled path
     ctx.fillStyle = '#000000';
+    var sw = 0.58;   // max sole width
+    var sl = (1-sw)/2; // left edge
+    var sr = sl+sw;    // right edge
+    var aw = 0.36;   // arch width (narrower)
+    var al = (1-aw)/2;
+    var ar = al+aw;
 
-    // Rotate the whole print ~20° so alternating left/right stamps
-    // look like walking. We rotate around the cell centre.
-    var cx = x + S*0.5, cy = y + S*0.5;
-    ctx.translate(cx, cy);
-    ctx.rotate(0.32); // ~18 degrees
-    ctx.translate(-S*0.5, -S*0.5); // work in 0..S space
-
-    var pw = S * 0.54;  // sole width
-    var px = (S - pw) / 2; // left edge of sole
-
-    // ── TOE CAP: wide rounded rectangle ──
-    var toeTop    = S * 0.04;
-    var toeBot    = S * 0.34;
-    var toeH      = toeBot - toeTop;
-    var toeR      = pw * 0.42; // large radius → rounded front
     ctx.beginPath();
-    ctx.moveTo(px + toeR, toeTop);
-    ctx.arcTo(px+pw, toeTop, px+pw, toeBot, toeR*0.5);
-    ctx.arcTo(px+pw, toeBot, px,    toeBot, toeR*0.5);
-    ctx.arcTo(px,    toeBot, px,    toeTop, toeR*0.5);
-    ctx.arcTo(px,    toeTop, px+pw, toeTop, toeR);
+    // Toe (top): rounded
+    ctx.moveTo(sx(sl+0.10), sy(0.02));
+    ctx.bezierCurveTo(sx(sl), sy(0.02), sx(sl), sy(0.14), sx(sl), sy(0.22));
+    // Left side down to arch
+    ctx.lineTo(sx(sl), sy(0.30));
+    ctx.bezierCurveTo(sx(sl), sy(0.48), sx(al), sy(0.54), sx(al), sy(0.62));
+    // Left heel
+    ctx.bezierCurveTo(sx(al), sy(0.70), sx(sl), sy(0.72), sx(sl), sy(0.80));
+    ctx.lineTo(sx(sl), sy(0.90));
+    ctx.bezierCurveTo(sx(sl), sy(0.97), sx(sl+0.07), sy(0.99), sx(sl+0.14), sy(0.99));
+    // Heel bottom
+    ctx.lineTo(sx(sr-0.14), sy(0.99));
+    ctx.bezierCurveTo(sx(sr-0.07), sy(0.99), sx(sr), sy(0.97), sx(sr), sy(0.90));
+    ctx.lineTo(sx(sr), sy(0.80));
+    // Right heel up to arch
+    ctx.bezierCurveTo(sx(sr), sy(0.72), sx(ar), sy(0.70), sx(ar), sy(0.62));
+    ctx.bezierCurveTo(sx(ar), sy(0.54), sx(sr), sy(0.48), sx(sr), sy(0.30));
+    // Right side up to toe
+    ctx.lineTo(sx(sr), sy(0.22));
+    ctx.bezierCurveTo(sx(sr), sy(0.14), sx(sr), sy(0.02), sx(sr-0.10), sy(0.02));
     ctx.closePath();
     ctx.fill();
 
-    // Tread grooves on toe (cut out lighter lines)
+    // ── 2. CUT ARCH HOLLOW (white inset on each side of arch) ──
+    // Gives the classic "arch cutout" look
     ctx.fillStyle = '#ffffff';
-    for (var gi = 0; gi < 3; gi++) {
-        var gy = toeTop + toeH * (0.30 + gi * 0.22);
-        var gw = pw * (0.85 - gi * 0.06);
-        var gx = px + (pw - gw) / 2;
-        ctx.fillRect(gx, gy, gw, S * 0.025);
-    }
-    ctx.fillStyle = '#000000';
-
-    // ── WAIST / ARCH: narrow connector ──
-    var waistTop   = S * 0.34;
-    var waistBot   = S * 0.60;
-    var waistW     = pw * 0.52;
-    var waistX     = px + (pw - waistW) / 2;
-    ctx.fillRect(waistX, waistTop, waistW, waistBot - waistTop);
-
-    // Lug knobs on each side of the arch
-    var knobW = pw * 0.18, knobH = S * 0.08;
-    var knobY1 = S * 0.38, knobY2 = S * 0.50;
-    // Left knobs
-    ctx.beginPath(); ctx.ellipse(px - knobW*0.3, knobY1, knobW*0.5, knobH*0.5, 0.3, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(px - knobW*0.3, knobY2, knobW*0.5, knobH*0.5, 0.3, 0, Math.PI*2); ctx.fill();
-    // Right knobs
-    ctx.beginPath(); ctx.ellipse(px+pw + knobW*0.3, knobY1, knobW*0.5, knobH*0.5, -0.3, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(px+pw + knobW*0.3, knobY2, knobW*0.5, knobH*0.5, -0.3, 0, Math.PI*2); ctx.fill();
-
-    // ── HEEL BLOCK: wide rounded rectangle ──
-    var heelTop = S * 0.60;
-    var heelBot = S * 0.96;
-    var heelH   = heelBot - heelTop;
-    var heelW   = pw * 0.92;
-    var heelX   = px + (pw - heelW) / 2;
-    var heelR   = heelW * 0.22;
+    // Left arch hollow
     ctx.beginPath();
-    ctx.moveTo(heelX + heelR, heelTop);
-    ctx.arcTo(heelX+heelW, heelTop, heelX+heelW, heelBot, heelR*0.4);
-    ctx.arcTo(heelX+heelW, heelBot, heelX,        heelBot, heelR);
-    ctx.arcTo(heelX,        heelBot, heelX,        heelTop, heelR);
-    ctx.arcTo(heelX,        heelTop, heelX+heelW,  heelTop, heelR*0.4);
+    ctx.moveTo(sx(sl-0.01), sy(0.31));
+    ctx.bezierCurveTo(sx(sl-0.01), sy(0.46), sx(al+0.04), sy(0.53), sx(al+0.04), sy(0.62));
+    ctx.bezierCurveTo(sx(al+0.04), sy(0.69), sx(sl+0.02), sy(0.71), sx(sl+0.02), sy(0.79));
+    ctx.lineTo(sx(al-0.02), sy(0.79));
+    ctx.bezierCurveTo(sx(al-0.02), sy(0.71), sx(al+0.04), sy(0.68), sx(al+0.04), sy(0.62)); // retrace
+    ctx.bezierCurveTo(sx(al+0.08), sy(0.54), sx(sl+0.06), sy(0.47), sx(sl+0.06), sy(0.32));
+    ctx.closePath();
+    ctx.fill();
+    // Right arch hollow
+    ctx.beginPath();
+    ctx.moveTo(sx(sr+0.01), sy(0.31));
+    ctx.bezierCurveTo(sx(sr+0.01), sy(0.46), sx(ar-0.04), sy(0.53), sx(ar-0.04), sy(0.62));
+    ctx.bezierCurveTo(sx(ar-0.04), sy(0.69), sx(sr-0.02), sy(0.71), sx(sr-0.02), sy(0.79));
+    ctx.lineTo(sx(ar+0.02), sy(0.79));
+    ctx.bezierCurveTo(sx(ar+0.02), sy(0.71), sx(ar-0.04), sy(0.68), sx(ar-0.04), sy(0.62));
+    ctx.bezierCurveTo(sx(ar-0.08), sy(0.54), sx(sr-0.06), sy(0.47), sx(sr-0.06), sy(0.32));
     ctx.closePath();
     ctx.fill();
 
-    // Tread grooves on heel
+    // ── 3. TOE ZONE LUGS: 3 diagonal bars across the toe ──
+    // Bars angle slightly (like Vibram toe lugs) — left end higher than right
     ctx.fillStyle = '#ffffff';
-    for (var hi = 0; hi < 2; hi++) {
-        var hy = heelTop + heelH * (0.28 + hi * 0.32);
-        var hw = heelW * (0.78 - hi * 0.04);
-        var hx = heelX + (heelW - hw) / 2;
-        ctx.fillRect(hx, hy, hw, S * 0.025);
-    }
+    var toeBarData = [
+        { cy:0.09, w:sw*0.82, h:0.022, slant: 0.025 },
+        { cy:0.16, w:sw*0.88, h:0.022, slant: 0.020 },
+        { cy:0.23, w:sw*0.84, h:0.022, slant: 0.018 },
+    ];
+    toeBarData.forEach(function(b) {
+        ctx.save();
+        ctx.translate(sx(0.5), sy(b.cy));
+        ctx.beginPath();
+        ctx.moveTo(-sc(b.w/2) + sc(b.slant), -sc(b.h/2));
+        ctx.lineTo( sc(b.w/2) + sc(b.slant), -sc(b.h/2));
+        ctx.lineTo( sc(b.w/2) - sc(b.slant),  sc(b.h/2));
+        ctx.lineTo(-sc(b.w/2) - sc(b.slant),  sc(b.h/2));
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    });
+
+    // ── 4. FOREFOOT LUGS: staggered brick pattern ──
+    // 4 rows; each row has 3 brick lugs. Odd rows offset by half a brick.
+    ctx.fillStyle = '#ffffff';
+    var lugW = 0.155, lugH = 0.040, lugGap = 0.012, lugR = 0.008;
+    var rowYs = [0.315, 0.362, 0.409, 0.456, 0.503];
+    rowYs.forEach(function(ry, ri) {
+        // 3 lugs per row, with half-brick offset on odd rows
+        var offset = (ri % 2 === 0) ? 0 : lugW/2 + lugGap/2;
+        for (var li = -1; li <= 1; li++) {
+            var lcx = 0.5 + li*(lugW + lugGap) + offset;
+            // Only draw if within sole width
+            if (lcx - lugW/2 > sl + 0.03 && lcx + lugW/2 < sr - 0.03) {
+                rr(sx(lcx - lugW/2), sy(ry - lugH/2), sc(lugW), sc(lugH), sc(lugR));
+            }
+        }
+    });
+
+    // ── 5. HEEL CHEVRON LUGS ──
+    // 3 V-shaped (chevron) lugs. Each chevron = two angled arms.
+    // Drawn as white cuts across the black heel block.
+    ctx.fillStyle = '#ffffff';
+    var chevData = [
+        { cy: 0.74 },
+        { cy: 0.82 },
+        { cy: 0.90 },
+    ];
+    var armW = sw * 0.38, armH = 0.022, armSlant = 0.038;
+    chevData.forEach(function(ch) {
+        // Left arm (tilts: left end down, right end up → /)
+        ctx.save();
+        ctx.translate(sx(0.5 - 0.01), sy(ch.cy));
+        ctx.beginPath();
+        ctx.moveTo(-sc(armW/2) - sc(armSlant), -sc(armH/2));
+        ctx.lineTo(sc(0.02),                   -sc(armH/2) + sc(armSlant*0.6));
+        ctx.lineTo(sc(0.02),                    sc(armH/2) + sc(armSlant*0.6));
+        ctx.lineTo(-sc(armW/2) - sc(armSlant),  sc(armH/2));
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+        // Right arm (tilts: \ )
+        ctx.save();
+        ctx.translate(sx(0.5 + 0.01), sy(ch.cy));
+        ctx.beginPath();
+        ctx.moveTo(sc(armW/2) + sc(armSlant),  -sc(armH/2));
+        ctx.lineTo(-sc(0.02),                  -sc(armH/2) + sc(armSlant*0.6));
+        ctx.lineTo(-sc(0.02),                   sc(armH/2) + sc(armSlant*0.6));
+        ctx.lineTo(sc(armW/2) + sc(armSlant),   sc(armH/2));
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    });
 
     ctx.restore();
 }
