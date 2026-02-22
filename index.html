@@ -6,103 +6,139 @@
     <title>QR Code Manager</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg-primary:#0a0a0a;--bg-secondary:#151515;--bg-tertiary:#1f1f1f;--text-primary:#e0e0e0;--text-secondary:#a0a0a0;--accent:#00ff88;--accent-dim:#00aa55;--border:#2a2a2a;--danger:#ff4444;--warning:#ffaa00; }
-        *{margin:0;padding:0;box-sizing:border-box;}
-        body{font-family:'Space Mono',monospace;background:var(--bg-primary);color:var(--text-primary);line-height:1.6;overflow-x:hidden;}
-        .auth-container{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;background:radial-gradient(circle at 20% 50%,rgba(0,255,136,.05) 0%,transparent 50%),radial-gradient(circle at 80% 50%,rgba(0,255,136,.03) 0%,transparent 50%);}
-        .auth-box{background:var(--bg-secondary);border:2px solid var(--border);padding:3rem;max-width:400px;width:100%;position:relative;}
-        .auth-box::before{content:'';position:absolute;top:-2px;left:-2px;right:-2px;height:2px;background:linear-gradient(90deg,var(--accent),transparent);animation:shimmer 2s infinite;}
-        @keyframes shimmer{0%,100%{opacity:.5}50%{opacity:1}}
-        h1{font-family:'JetBrains Mono',monospace;font-size:2rem;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:2px;}
-        .subtitle{color:var(--text-secondary);font-size:.85rem;margin-bottom:2rem;text-transform:uppercase;letter-spacing:1px;}
-        .input-group{margin-bottom:1.5rem;}
-        label{display:block;margin-bottom:.5rem;font-size:.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);}
-        input{width:100%;padding:.75rem;background:var(--bg-tertiary);border:1px solid var(--border);color:var(--text-primary);font-family:'Space Mono',monospace;font-size:.9rem;transition:all .3s;}
-        input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,255,136,.1);}
-        button{width:100%;padding:.75rem;background:var(--accent);color:var(--bg-primary);border:none;font-family:'JetBrains Mono',monospace;font-weight:700;text-transform:uppercase;letter-spacing:2px;cursor:pointer;transition:all .3s;}
-        button:hover{background:var(--accent-dim);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,255,136,.3);}
-        button:active{transform:translateY(0);}
-        button:disabled{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
-        .error-message{color:var(--danger);font-size:.85rem;margin-top:1rem;padding:.5rem;background:rgba(255,68,68,.1);border-left:2px solid var(--danger);}
-        .dashboard{display:none;min-height:100vh;}
-        .dashboard.active{display:block;}
-        .header{background:var(--bg-secondary);border-bottom:2px solid var(--border);padding:1.5rem 2rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
-        .header h1{font-size:1.5rem;margin:0;}
-        .user-info{display:flex;align-items:center;gap:1rem;}
-        .user-email{font-size:.85rem;color:var(--text-secondary);}
-        .btn-logout{padding:.5rem 1rem;background:transparent;border:1px solid var(--border);color:var(--text-primary);width:auto;}
-        .btn-logout:hover{background:var(--bg-tertiary);border-color:var(--accent);transform:none;box-shadow:none;}
-        .main-content{padding:2rem;max-width:1400px;margin:0 auto;}
-        .style-selector{display:flex;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap;}
-        .style-option{flex:1;min-width:140px;padding:1rem;background:var(--bg-tertiary);border:2px solid var(--border);color:var(--text-secondary);cursor:pointer;text-align:center;transition:all .3s;font-family:'Space Mono',monospace;font-size:.8rem;text-transform:uppercase;letter-spacing:1px;display:flex;flex-direction:column;align-items:center;gap:.5rem;width:auto;}
-        .style-option:hover{border-color:var(--accent);color:var(--text-primary);background:var(--bg-secondary);transform:none;box-shadow:none;}
-        .style-option.selected{border-color:var(--accent);background:rgba(0,255,136,.08);color:var(--accent);transform:none;box-shadow:0 0 12px rgba(0,255,136,.2);}
-        .style-option .style-icon{font-size:2rem;line-height:1;}
-        .style-option .style-name{font-weight:700;}
-        .style-option .style-desc{font-size:.7rem;color:var(--text-secondary);line-height:1.3;}
-        .controls{display:grid;gap:1rem;margin-bottom:2rem;padding:1.5rem;background:var(--bg-secondary);border:1px solid var(--border);}
-        .input-row{display:grid;grid-template-columns:2fr 1fr auto;gap:1rem;align-items:end;}
-        .btn-create{padding:.75rem 1.5rem;width:auto;}
-        .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem;}
-        .stat-card{background:var(--bg-secondary);border:1px solid var(--border);padding:1.5rem;position:relative;overflow:hidden;}
-        .stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);transform:scaleX(0);transition:transform .5s;}
-        .stat-card:hover::after{transform:scaleX(1);}
-        .stat-label{font-size:.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);margin-bottom:.5rem;}
-        .stat-value{font-family:'JetBrains Mono',monospace;font-size:2rem;font-weight:700;color:var(--accent);}
-        .qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem;}
-        .qr-card{background:var(--bg-secondary);border:1px solid var(--border);padding:1.5rem;transition:all .3s;animation:slideIn .3s ease-out;}
-        @keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-        .qr-card:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,255,136,.1);}
-        .qr-card.locked{border-color:var(--warning);}
-        .qr-style-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.65rem;text-transform:uppercase;letter-spacing:1px;padding:.2rem .5rem;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);color:var(--accent);margin-bottom:.75rem;}
-        .qr-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
-        .qr-label{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.1rem;word-break:break-word;}
-        .lock-icon{cursor:pointer;font-size:1.2rem;transition:all .3s;}
-        .lock-icon:hover{color:var(--accent);transform:rotate(15deg);}
-        .qr-image-container{background:white;padding:1rem;margin-bottom:1rem;display:flex;justify-content:center;align-items:center;min-height:160px;}
-        .qr-image-container img{max-width:100%;height:auto;display:block;}
-        .qr-stats{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;padding:1rem;background:var(--bg-tertiary);border-left:2px solid var(--accent);}
-        .qr-stat{display:flex;flex-direction:column;}
-        .qr-stat-label{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);margin-bottom:.25rem;}
-        .qr-stat-value{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.2rem;color:var(--accent);}
-        .qr-actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
-        .btn-action{padding:.5rem;font-size:.85rem;width:100%;}
-        .btn-delete{background:var(--danger);}
-        .btn-delete:hover{background:#cc0000;box-shadow:none;}
-        .btn-download{background:transparent;border:1px solid var(--accent);color:var(--accent);}
-        .btn-download:hover{background:var(--accent);color:var(--bg-primary);box-shadow:none;}
-        .empty-state{text-align:center;padding:4rem 2rem;color:var(--text-secondary);}
-        .empty-state-icon{font-size:4rem;margin-bottom:1rem;opacity:.3;}
-        .scan-container{display:none;min-height:100vh;padding:2rem;align-items:center;justify-content:center;flex-direction:column;}
-        .scan-container.active{display:flex;}
-        .scan-result{background:var(--bg-secondary);border:2px solid var(--border);padding:3rem;max-width:500px;width:100%;text-align:center;}
-        .scan-success{font-size:4rem;color:var(--accent);margin-bottom:1rem;}
-        .scan-success.loading{animation:pulse 1.5s ease-in-out infinite;}
-        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.1)}}
-        .scan-label{font-family:'JetBrains Mono',monospace;font-size:1.5rem;margin-bottom:1rem;}
-        .loading{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        .generating-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:1rem;font-family:'JetBrains Mono',monospace;color:var(--accent);font-size:1.1rem;letter-spacing:2px;text-align:center;padding:2rem;}
-        .generating-overlay.active{display:flex;}
-        .generating-overlay .big-spin{width:60px;height:60px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
-        @media(max-width:768px){.header{flex-direction:column;gap:1rem;align-items:flex-start;}.input-row{grid-template-columns:1fr;}.qr-grid{grid-template-columns:1fr;}.style-selector{flex-direction:column;}}
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #151515;
+            --bg-tertiary: #1f1f1f;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent: #00ff88;
+            --accent-dim: #00aa55;
+            --border: #2a2a2a;
+            --danger: #ff4444;
+            --warning: #ffaa00;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Mono', monospace; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; overflow-x: hidden; }
+        .auth-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; background: radial-gradient(circle at 20% 50%, rgba(0,255,136,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(0,255,136,0.03) 0%, transparent 50%); }
+        .auth-box { background: var(--bg-secondary); border: 2px solid var(--border); padding: 3rem; max-width: 400px; width: 100%; position: relative; }
+        .auth-box::before { content: ''; position: absolute; top: -2px; left: -2px; right: -2px; height: 2px; background: linear-gradient(90deg, var(--accent), transparent); animation: shimmer 2s infinite; }
+        @keyframes shimmer { 0%,100%{opacity:.5}50%{opacity:1} }
+        h1 { font-family: 'JetBrains Mono', monospace; font-size: 2rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 2px; }
+        .subtitle { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 1px; }
+        .input-group { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: 0.5rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); }
+        input { width: 100%; padding: 0.75rem; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text-primary); font-family: 'Space Mono', monospace; font-size: 0.9rem; transition: all 0.3s; }
+        input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,255,136,0.1); }
+        button { width: 100%; padding: 0.75rem; background: var(--accent); color: var(--bg-primary); border: none; font-family: 'JetBrains Mono', monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: all 0.3s; }
+        button:hover { background: var(--accent-dim); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,255,136,0.3); }
+        button:active { transform: translateY(0); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+        .error-message { color: var(--danger); font-size: 0.85rem; margin-top: 1rem; padding: 0.5rem; background: rgba(255,68,68,0.1); border-left: 2px solid var(--danger); }
+        .dashboard { display: none; min-height: 100vh; }
+        .dashboard.active { display: block; }
+        .header { background: var(--bg-secondary); border-bottom: 2px solid var(--border); padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .header h1 { font-size: 1.5rem; margin: 0; }
+        .user-info { display: flex; align-items: center; gap: 1rem; }
+        .user-email { font-size: 0.85rem; color: var(--text-secondary); }
+        .btn-logout { padding: 0.5rem 1rem; background: transparent; border: 1px solid var(--border); color: var(--text-primary); width: auto; }
+        .btn-logout:hover { background: var(--bg-tertiary); border-color: var(--accent); transform: none; box-shadow: none; }
+        .main-content { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+        .style-selector { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .style-option { flex: 1; min-width: 140px; padding: 1rem; background: var(--bg-tertiary); border: 2px solid var(--border); color: var(--text-secondary); cursor: pointer; text-align: center; transition: all 0.3s; font-family: 'Space Mono', monospace; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; width: auto; }
+        .style-option:hover { border-color: var(--accent); color: var(--text-primary); background: var(--bg-secondary); transform: none; box-shadow: none; }
+        .style-option.selected { border-color: var(--accent); background: rgba(0,255,136,0.08); color: var(--accent); transform: none; box-shadow: 0 0 12px rgba(0,255,136,0.2); }
+        .style-option .style-icon { font-size: 2rem; line-height: 1; }
+        .style-option .style-name { font-weight: 700; }
+        .style-option .style-desc { font-size: 0.7rem; color: var(--text-secondary); line-height: 1.3; }
+        .controls { display: grid; gap: 1rem; margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-secondary); border: 1px solid var(--border); }
+        .input-row { display: grid; grid-template-columns: 2fr 1fr auto; gap: 1rem; align-items: end; }
+        .btn-create { padding: 0.75rem 1.5rem; width: auto; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--bg-secondary); border: 1px solid var(--border); padding: 1.5rem; position: relative; overflow: hidden; }
+        .stat-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent); transform: scaleX(0); transition: transform 0.5s; }
+        .stat-card:hover::after { transform: scaleX(1); }
+        .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 0.5rem; }
+        .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 700; color: var(--accent); }
+        .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+        .qr-card { background: var(--bg-secondary); border: 1px solid var(--border); padding: 1.5rem; transition: all 0.3s; animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .qr-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,255,136,0.1); }
+        .qr-card.locked { border-color: var(--warning); }
+        .qr-style-badge { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; padding: 0.2rem 0.5rem; background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); color: var(--accent); margin-bottom: 0.75rem; }
+        .qr-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .qr-label { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1.1rem; word-break: break-word; }
+        .lock-icon { cursor: pointer; font-size: 1.2rem; transition: all 0.3s; }
+        .lock-icon:hover { color: var(--accent); transform: rotate(15deg); }
+        .qr-image-container { background: white; padding: 1rem; margin-bottom: 1rem; display: flex; justify-content: center; align-items: center; min-height: 160px; }
+        .qr-image-container img { max-width: 100%; height: auto; display: block; }
+        .qr-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; padding: 1rem; background: var(--bg-tertiary); border-left: 2px solid var(--accent); }
+        .qr-stat { display: flex; flex-direction: column; }
+        .qr-stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 0.25rem; }
+        .qr-stat-value { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1.2rem; color: var(--accent); }
+        .qr-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+        .btn-action { padding: 0.5rem; font-size: 0.85rem; width: 100%; }
+        .btn-delete { background: var(--danger); }
+        .btn-delete:hover { background: #cc0000; box-shadow: none; }
+        .btn-download { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+        .btn-download:hover { background: var(--accent); color: var(--bg-primary); box-shadow: none; }
+        .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-secondary); }
+        .empty-state-icon { font-size: 4rem; margin-bottom: 1rem; opacity: 0.3; }
+        .scan-container { display: none; min-height: 100vh; padding: 2rem; align-items: center; justify-content: center; flex-direction: column; }
+        .scan-container.active { display: flex; }
+        .scan-result { background: var(--bg-secondary); border: 2px solid var(--border); padding: 3rem; max-width: 500px; width: 100%; text-align: center; }
+        .scan-success { font-size: 4rem; color: var(--accent); margin-bottom: 1rem; }
+        .scan-success.loading { animation: pulse 1.5s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.1)} }
+        .scan-label { font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; margin-bottom: 1rem; }
+        .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        .generating-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 999; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 1.1rem; letter-spacing: 2px; text-align: center; padding: 2rem; }
+        .generating-overlay.active { display: flex; }
+        .generating-overlay .big-spin { width: 60px; height: 60px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+            .input-row { grid-template-columns: 1fr; }
+            .qr-grid { grid-template-columns: 1fr; }
+            .style-selector { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
-<div class="generating-overlay" id="generatingOverlay"><div class="big-spin"></div><div id="generatingText">GENERATING QR CODE...</div></div>
+
+<div class="generating-overlay" id="generatingOverlay">
+    <div class="big-spin"></div>
+    <div id="generatingText">GENERATING QR CODE...</div>
+</div>
+
 <div id="authContainer" class="auth-container">
     <div class="auth-box">
         <h1>QR Manager</h1>
         <p class="subtitle">Secure Access Portal</p>
-        <div class="input-group"><label for="authEmail">Email</label><input type="email" id="authEmail" placeholder="user@example.com"></div>
-        <div class="input-group"><label for="authPassword">Password</label><input type="password" id="authPassword" placeholder="••••••••"></div>
+        <div class="input-group">
+            <label for="authEmail">Email</label>
+            <input type="email" id="authEmail" placeholder="user@example.com">
+        </div>
+        <div class="input-group">
+            <label for="authPassword">Password</label>
+            <input type="password" id="authPassword" placeholder="••••••••">
+        </div>
         <button id="btnLogin">Login</button>
-        <p style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);color:var(--text-secondary);font-size:0.85rem;text-align:center;">New signups require admin approval.<br>Contact the administrator for access.</p>
+        <p style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);color:var(--text-secondary);font-size:0.85rem;text-align:center;">
+            New signups require admin approval.<br>Contact the administrator for access.
+        </p>
         <div id="authError" class="error-message" style="display:none;"></div>
     </div>
 </div>
+
 <div id="dashboard" class="dashboard">
-    <div class="header"><h1>QR Code Manager</h1><div class="user-info"><span class="user-email" id="userEmail"></span><button class="btn-logout" id="btnLogout">Logout</button></div></div>
+    <div class="header">
+        <h1>QR Code Manager</h1>
+        <div class="user-info">
+            <span class="user-email" id="userEmail"></span>
+            <button class="btn-logout" id="btnLogout">Logout</button>
+        </div>
+    </div>
     <div class="main-content">
         <div class="stats">
             <div class="stat-card"><div class="stat-label">Total QR Codes</div><div class="stat-value" id="totalCodes">0</div></div>
@@ -111,85 +147,395 @@
         </div>
         <div class="controls">
             <div>
-                <label style="margin-bottom:.75rem;display:block;">QR Code Style</label>
+                <label style="margin-bottom:0.75rem;display:block;">QR Code Style</label>
                 <div class="style-selector">
-                    <button class="style-option selected" data-style="regular" onclick="selectStyle('regular',this)"><span class="style-icon">⬛</span><span class="style-name">Regular</span><span class="style-desc">Classic square QR code</span></button>
-                    <button class="style-option" data-style="footprint" onclick="selectStyle('footprint',this)"><span class="style-icon">🦕</span><span class="style-name">Dino Tracks</span><span class="style-desc">Modules as dino footprints</span></button>
-                    <button class="style-option" data-style="dinosaur" onclick="selectStyle('dinosaur',this)"><span class="style-icon">🦖</span><span class="style-name">Dino Shape</span><span class="style-desc">QR inside a T-Rex frame</span></button>
-                    <button class="style-option" data-style="footshape" onclick="selectStyle('footshape',this)"><span class="style-icon">🐾</span><span class="style-name">Foot Shape</span><span class="style-desc">Entire QR shaped as one giant footprint</span></button>
+                    <button class="style-option selected" data-style="regular" onclick="selectStyle('regular',this)">
+                        <span class="style-icon">⬛</span>
+                        <span class="style-name">Regular</span>
+                        <span class="style-desc">Classic square QR code</span>
+                    </button>
+                    <button class="style-option" data-style="footprint" onclick="selectStyle('footprint',this)">
+                        <span class="style-icon">🦕</span>
+                        <span class="style-name">Dino Tracks</span>
+                        <span class="style-desc">QR with dino tracks icon</span>
+                    </button>
+                    <button class="style-option" data-style="dinosaur" onclick="selectStyle('dinosaur',this)">
+                        <span class="style-icon">🦖</span>
+                        <span class="style-name">Dino Shape</span>
+                        <span class="style-desc">QR with T-Rex icon</span>
+                    </button>
+                    <button class="style-option" data-style="footshape" onclick="selectStyle('footshape',this)">
+                        <span class="style-icon">🐾</span>
+                        <span class="style-name">Foot Print</span>
+                        <span class="style-desc">QR with paw print icon</span>
+                    </button>
                 </div>
             </div>
             <div class="input-row">
-                <div class="input-group" style="margin:0;"><label for="qrUrl">Target URL</label><input type="text" id="qrUrl" placeholder="https://example.com"></div>
-                <div class="input-group" style="margin:0;"><label for="qrLabel">Label</label><input type="text" id="qrLabel" placeholder="My QR Code"></div>
+                <div class="input-group" style="margin:0;">
+                    <label for="qrUrl">Target URL</label>
+                    <input type="text" id="qrUrl" placeholder="https://example.com">
+                </div>
+                <div class="input-group" style="margin:0;">
+                    <label for="qrLabel">Label</label>
+                    <input type="text" id="qrLabel" placeholder="My QR Code">
+                </div>
                 <button class="btn-create" id="btnCreate">Create QR</button>
             </div>
         </div>
-        <div id="qrGrid" class="qr-grid"><div class="empty-state"><div class="empty-state-icon">⊞</div><p>No QR codes yet. Create your first one above.</p></div></div>
+        <div id="qrGrid" class="qr-grid">
+            <div class="empty-state"><div class="empty-state-icon">⊞</div><p>No QR codes yet. Create your first one above.</p></div>
+        </div>
     </div>
 </div>
+
 <div id="scanContainer" class="scan-container">
     <div class="scan-result">
         <div class="scan-success loading" id="scanSuccessIcon">⏳</div>
         <div class="scan-label" id="scanLabel">Processing scan...</div>
-        <p style="margin:1rem 0;color:var(--text-secondary);font-size:.9rem;">Redirecting...</p>
+        <p style="margin:1rem 0;color:var(--text-secondary);font-size:0.9rem;">Redirecting...</p>
     </div>
 </div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <script>
-window._selectedStyle='regular';
-window.selectStyle=function(style,el){window._selectedStyle=style;document.querySelectorAll('.style-option').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');};
+// ================================================================
+// STYLE SELECTION
+// ================================================================
+window._selectedStyle = 'regular';
+window.selectStyle = function(style, el) {
+    window._selectedStyle = style;
+    document.querySelectorAll('.style-option').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+};
 
-window.generateRegularQR=function(scanUrl){return Promise.resolve('https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(scanUrl));};
+// Style configuration: each non-regular style gets an emoji icon
+// drawn in the centre of the QR code over a white circle.
+// Using H (high) error correction means up to 30% of the QR can be
+// obscured and it will still scan — the icon sits within that budget.
+const STYLE_CONFIG = {
+    regular:   { icon: null },
+    footprint: { icon: '🦕', label: 'Dino Tracks' },
+    dinosaur:  { icon: '🦖', label: 'T-Rex'       },
+    footshape: { icon: '🐾', label: 'Paw Print'   }
+};
 
-// Footprint-module QR
-window.generateFootprintQR=function(scanUrl){return new Promise(function(resolve){var SAMPLE_SIZE=4500;var div=document.createElement('div');div.style.cssText='position:fixed;left:-9999px;top:0;background:white;';document.body.appendChild(div);new QRCode(div,{text:scanUrl,width:SAMPLE_SIZE,height:SAMPLE_SIZE,correctLevel:QRCode.CorrectLevel.H});setTimeout(function(){var srcCanvas=div.querySelector('canvas');if(!srcCanvas){document.body.removeChild(div);resolve(window.generateRegularQR(scanUrl));return;}var ctx=srcCanvas.getContext('2d');var W=srcCanvas.width;var pixels=ctx.getImageData(0,0,W,W).data;function isDarkAt(px,py){var ix=Math.round(Math.min(Math.max(px,0),W-1));var iy=Math.round(Math.min(Math.max(py,0),W-1));return pixels[(iy*W+ix)*4]<128;}var quietLeft=0;for(var x=0;x<W/2;x++){var foundInCol=false;for(var y=W*.1;y<W*.9;y++){if(isDarkAt(x,y)){foundInCol=true;break;}}if(foundInCol){quietLeft=x;break;}}var quietTop=0;for(var y=0;y<W/2;y++){var foundInRow=false;for(var x=W*.1;x<W*.9;x++){if(isDarkAt(x,y)){foundInRow=true;break;}}if(foundInRow){quietTop=y;break;}}var quietRight=W;for(var x=W-1;x>W/2;x--){var foundInCol=false;for(var y=W*.1;y<W*.9;y++){if(isDarkAt(x,y)){foundInCol=true;break;}}if(foundInCol){quietRight=x;break;}}var darkEnd=quietLeft;for(var x=quietLeft;x<W;x++){if(isDarkAt(x,quietTop+2))darkEnd=x;else break;}var modPx=(darkEnd-quietLeft+1)/7;var qrSpan=quietRight-quietLeft+modPx;var N=Math.round(qrSpan/modPx);var matrix=[];for(var r=0;r<N;r++){matrix[r]=[];for(var c=0;c<N;c++){var sampleX=quietLeft+(c+.5)*modPx;var sampleY=quietTop+(r+.5)*modPx;matrix[r][c]=isDarkAt(sampleX,sampleY);}}document.body.removeChild(div);var valid=matrix[0]&&matrix[0][0]===true&&matrix[0][N-1]===true&&matrix[N-1]&&matrix[N-1][0]===true;if(!valid||N<21){resolve(window.generateRegularQR(scanUrl));return;}var CELL=28;var QUIET=4;var TOTAL=(N+QUIET*2)*CELL;var outCanvas=document.createElement('canvas');outCanvas.width=TOTAL;outCanvas.height=TOTAL;var octx=outCanvas.getContext('2d');octx.fillStyle='#ffffff';octx.fillRect(0,0,TOTAL,TOTAL);function ox(c){return(QUIET+c)*CELL;}function oy(r){return(QUIET+r)*CELL;}function isFinder(r,c){if(r<7&&c<7)return true;if(r<7&&c>=N-7)return true;if(r>=N-7&&c<7)return true;return false;}function isSeparator(r,c){if(r===7&&c<=7)return true;if(c===7&&r<=7)return true;if(r===7&&c>=N-8)return true;if(c===N-8&&r<=7)return true;if(r===N-8&&c<=7)return true;if(c===7&&r>=N-8)return true;return false;}function isTiming(r,c){return(r===6||c===6);}function isFormatInfo(r,c){if(r===8&&c<=8)return true;if(r===8&&c>=N-8)return true;if(c===8&&r<=8)return true;if(c===8&&r>=N-8)return true;return false;}function isAlignment(r,c){var brc=N-7;return(Math.abs(r-brc)<=2&&Math.abs(c-brc)<=2);}function isStructural(r,c){return isFinder(r,c)||isSeparator(r,c)||isTiming(r,c)||isFormatInfo(r,c)||isAlignment(r,c);}for(var r=0;r<N;r++){for(var c=0;c<N;c++){if(!isStructural(r,c))continue;octx.fillStyle=matrix[r][c]?'#000000':'#ffffff';octx.fillRect(ox(c),oy(r),CELL,CELL);}}for(var r=0;r<N;r++){for(var c=0;c<N;c++){if(isStructural(r,c))continue;if(matrix[r][c]){drawFootprint(octx,ox(c),oy(r),CELL);}}}resolve(outCanvas.toDataURL('image/png'));},800);});};
+// ================================================================
+// CORE: Generate QR + optional emoji overlay
+// ================================================================
+window.generateQRWithIcon = function(scanUrl, style) {
+    return new Promise(function(resolve) {
+        var SIZE = 400; // output canvas size in px
 
-function drawFootprint(ctx,x,y,S){ctx.save();ctx.beginPath();ctx.rect(x,y,S,S);ctx.clip();ctx.fillStyle='#000000';var cx=x+S*.50;ctx.beginPath();ctx.ellipse(cx,y+S*.76,S*.32,S*.20,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(cx-S*.03,y+S*.43,S*.095,S*.26,-.10,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(cx-S*.06,y+S*.12,S*.058,S*.10,-.20,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(x+S*.22,y+S*.46,S*.085,S*.25,-.90,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(x+S*.065,y+S*.20,S*.052,S*.095,-.90,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(x+S*.74,y+S*.50,S*.085,S*.21,.70,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(x+S*.895,y+S*.28,S*.052,S*.085,.70,0,Math.PI*2);ctx.fill();ctx.restore();}
+        // Render a hidden QR at high resolution using H error-correction
+        var div = document.createElement('div');
+        div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;';
+        document.body.appendChild(div);
 
-// ── FIXED HELPER ──────────────────────────────────────────────
-function getDarkBoundingBox(imageData,width,height){var bL=width,bR=0,bT=height,bB=0;var data=imageData.data;for(var y=0;y<height;y++){for(var x=0;x<width;x++){var i=(y*width+x)*4;var brightness=(data[i]+data[i+1]+data[i+2])/3;if(brightness<128){if(x<bL)bL=x;if(x>bR)bR=x;if(y<bT)bT=y;if(y>bB)bB=y;}}}return{left:bL,right:bR,top:bT,bottom:bB,width:bR-bL,height:bB-bT};}
+        new QRCode(div, {
+            text: scanUrl,
+            width: SIZE,
+            height: SIZE,
+            correctLevel: QRCode.CorrectLevel.H  // 30% recoverable — gives room for icon
+        });
 
-// ── FIXED: generateFootshapeQR ─────────────────────────────────
-window.generateFootshapeQR=function(scanUrl){return new Promise(function(resolve){if(!window.FOOTPRINT_DATA_URI){resolve(window.generateRegularQR(scanUrl));return;}var fpImg=new Image();fpImg.onload=function(){var QR_SIZE=600;var div=document.createElement('div');div.style.cssText='position:fixed;left:-9999px;top:0;background:white;';document.body.appendChild(div);new QRCode(div,{text:scanUrl,width:QR_SIZE,height:QR_SIZE,correctLevel:QRCode.CorrectLevel.H});setTimeout(function(){var qrCanvas=div.querySelector('canvas');if(!qrCanvas){document.body.removeChild(div);resolve(window.generateRegularQR(scanUrl));return;}document.body.removeChild(div);var OUT=900;var mc=document.createElement('canvas');mc.width=OUT;mc.height=OUT;var mctx=mc.getContext('2d');mctx.fillStyle='#fff';mctx.fillRect(0,0,OUT,OUT);var scale=Math.min(OUT/fpImg.width,OUT/fpImg.height)*.90;var fpW=Math.round(fpImg.width*scale);var fpH=Math.round(fpImg.height*scale);var fpOffX=Math.round((OUT-fpW)/2);var fpOffY=Math.round((OUT-fpH)/2);mctx.drawImage(fpImg,fpOffX,fpOffY,fpW,fpH);var imgData=mctx.getImageData(0,0,OUT,OUT);var bbox=getDarkBoundingBox(imgData,OUT,OUT);if(bbox.width<10||bbox.height<10){resolve(window.generateRegularQR(scanUrl));return;}var PADDING=Math.round(Math.min(bbox.width,bbox.height)*.12);var availW=bbox.width-PADDING*2;var availH=bbox.height-PADDING*2;var fitSize=Math.min(availW,availH);var qrX=Math.round(bbox.left+PADDING+(availW-fitSize)/2);var qrY=Math.round(bbox.top+PADDING+(availH-fitSize)/2);var out=document.createElement('canvas');out.width=OUT;out.height=OUT;var ctx=out.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,OUT,OUT);ctx.drawImage(fpImg,fpOffX,fpOffY,fpW,fpH);var whitePad=6;ctx.fillStyle='#fff';ctx.fillRect(qrX-whitePad,qrY-whitePad,fitSize+whitePad*2,fitSize+whitePad*2);ctx.drawImage(qrCanvas,qrX,qrY,fitSize,fitSize);resolve(out.toDataURL('image/png'));},800);};fpImg.onerror=function(){resolve(window.generateRegularQR(scanUrl));};fpImg.src=window.FOOTPRINT_DATA_URI;});};
+        setTimeout(function() {
+            var srcCanvas = div.querySelector('canvas');
+            if (!srcCanvas) {
+                document.body.removeChild(div);
+                resolve(null);
+                return;
+            }
 
-// ── FIXED: generateDinosaurQR ──────────────────────────────────
-window.generateDinosaurQR=function(scanUrl){return new Promise(function(resolve){if(!window.DINOOUTLINE_DATA_URI){resolve(window.generateRegularQR(scanUrl));return;}var dinoImg=new Image();dinoImg.onload=function(){var QR_SIZE=600;var div=document.createElement('div');div.style.cssText='position:fixed;left:-9999px;top:0;background:white;';document.body.appendChild(div);new QRCode(div,{text:scanUrl,width:QR_SIZE,height:QR_SIZE,correctLevel:QRCode.CorrectLevel.H});setTimeout(function(){var qrCanvas=div.querySelector('canvas');if(!qrCanvas){document.body.removeChild(div);resolve(window.generateRegularQR(scanUrl));return;}document.body.removeChild(div);var OUT=900;var mc=document.createElement('canvas');mc.width=OUT;mc.height=OUT;var mctx=mc.getContext('2d');mctx.fillStyle='#fff';mctx.fillRect(0,0,OUT,OUT);var scale=Math.min(OUT/dinoImg.width,OUT/dinoImg.height)*.90;var dW=Math.round(dinoImg.width*scale);var dH=Math.round(dinoImg.height*scale);var dX=Math.round((OUT-dW)/2);var dY=Math.round((OUT-dH)/2);mctx.drawImage(dinoImg,dX,dY,dW,dH);var imgData=mctx.getImageData(0,0,OUT,OUT);var bbox=getDarkBoundingBox(imgData,OUT,OUT);if(bbox.width<10||bbox.height<10){resolve(window.generateRegularQR(scanUrl));return;}var bodyL=bbox.left+Math.round(bbox.width*.25);var bodyR=bbox.right-Math.round(bbox.width*.22);var bodyT=bbox.top+Math.round(bbox.height*.12);var bodyB=bbox.bottom-Math.round(bbox.height*.30);var bodyW=bodyR-bodyL;var bodyH=bodyB-bodyT;var PADDING=Math.round(Math.min(bodyW,bodyH)*.08);var fitSize=Math.min(bodyW,bodyH)-PADDING*2;var qrX=Math.round(bodyL+(bodyW-fitSize)/2);var qrY=Math.round(bodyT+(bodyH-fitSize)/2);var out=document.createElement('canvas');out.width=OUT;out.height=OUT;var ctx=out.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,OUT,OUT);ctx.drawImage(dinoImg,dX,dY,dW,dH);var whitePad=6;ctx.fillStyle='#fff';ctx.fillRect(qrX-whitePad,qrY-whitePad,fitSize+whitePad*2,fitSize+whitePad*2);ctx.drawImage(qrCanvas,qrX,qrY,fitSize,fitSize);resolve(out.toDataURL('image/png'));},800);};dinoImg.onerror=function(){resolve(window.generateRegularQR(scanUrl));};dinoImg.src=window.DINOOUTLINE_DATA_URI;});};
+            var cfg = STYLE_CONFIG[style] || STYLE_CONFIG.regular;
+
+            // If no icon needed, just return the canvas data URL directly
+            if (!cfg.icon) {
+                var dataUrl = srcCanvas.toDataURL('image/png');
+                document.body.removeChild(div);
+                resolve(dataUrl);
+                return;
+            }
+
+            // --- Draw icon overlay ---
+            var out = document.createElement('canvas');
+            out.width = SIZE;
+            out.height = SIZE;
+            var ctx = out.getContext('2d');
+
+            // 1. Copy the QR code
+            ctx.drawImage(srcCanvas, 0, 0, SIZE, SIZE);
+
+            document.body.removeChild(div);
+
+            // 2. Compute icon region — 22% of QR size, centred
+            var iconFraction = 0.22;
+            var iconSize = Math.round(SIZE * iconFraction);
+            var cx = SIZE / 2;
+            var cy = SIZE / 2;
+
+            // 3. White circle background with a thin border so the icon
+            //    lifts cleanly off the QR pattern
+            var circleR = iconSize * 0.58;
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy, circleR + 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.stroke();
+            ctx.restore();
+
+            // 4. Draw the emoji centred inside the circle
+            ctx.save();
+            ctx.font = iconSize + 'px serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(cfg.icon, cx, cy);
+            ctx.restore();
+
+            resolve(out.toDataURL('image/png'));
+        }, 600);
+    });
+};
+
+// Keep old named functions pointing at the unified generator
+// so any legacy references still work
+window.generateRegularQR = function(url)   { return window.generateQRWithIcon(url, 'regular');   };
+window.generateFootprintQR = function(url) { return window.generateQRWithIcon(url, 'footprint'); };
+window.generateDinosaurQR  = function(url) { return window.generateQRWithIcon(url, 'dinosaur');  };
+window.generateFootshapeQR = function(url) { return window.generateQRWithIcon(url, 'footshape'); };
 </script>
-<script>
-// ── BASE64 IMAGE DATA (paste your originals here) ──────────────
-// Replace the placeholder strings below with your actual base64 data URIs
-window.FOOTPRINT_DATA_URI = 'PASTE_YOUR_FOOTPRINT_BASE64_HERE';
-window.DINOOUTLINE_DATA_URI = 'PASTE_YOUR_DINOOUTLINE_BASE64_HERE';
-</script>
+
 <script type="module">
-    import{initializeApp}from'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import{getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut}from'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-    import{getDatabase,ref,set,onValue,remove,update,push,serverTimestamp,get}from'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-    const firebaseConfig={apiKey:"AIzaSyD4UGL6xY4WaUctzhBrY0_0aisBYsY5RYE",authDomain:"trails-qr-tracker.firebaseapp.com",databaseURL:"https://trails-qr-tracker-default-rtdb.firebaseio.com",projectId:"trails-qr-tracker",storageBucket:"trails-qr-tracker.firebasestorage.app",messagingSenderId:"712760332585",appId:"1:712760332585:web:318373bb1359360de16738",measurementId:"G-0XXHDT6ZHQ"};
-    const app=initializeApp(firebaseConfig);const auth=getAuth(app);const db=getDatabase(app);
-    const urlParams=new URLSearchParams(window.location.search);const scanIdParam=urlParams.get('scan');const userIdParam=urlParams.get('uid');
-    if(scanIdParam&&userIdParam){document.getElementById('authContainer').style.display='none';document.getElementById('scanContainer').classList.add('active');}
-    let currentUser=null;let qrCodes={};
-    const authContainer=document.getElementById('authContainer');const dashboard=document.getElementById('dashboard');const scanContainer=document.getElementById('scanContainer');const generatingOverlay=document.getElementById('generatingOverlay');const generatingText=document.getElementById('generatingText');
-    onAuthStateChanged(auth,user=>{const p=new URLSearchParams(window.location.search);const sid=p.get('scan'),uid=p.get('uid');if(sid&&uid){handlePublicScan(uid,sid);return;}if(user){currentUser=user;document.getElementById('userEmail').textContent=user.email;showDashboard();loadQRCodes();}else{currentUser=null;showAuth();}});
-    document.getElementById('btnLogin').addEventListener('click',async()=>{const email=document.getElementById('authEmail').value.trim();const password=document.getElementById('authPassword').value;if(!email||!password){showError('Please enter email and password');return;}const btn=document.getElementById('btnLogin');btn.disabled=true;btn.innerHTML='<span class="loading"></span>';try{await signInWithEmailAndPassword(auth,email,password);}catch(e){showError(getErrMsg(e.code));}finally{btn.disabled=false;btn.textContent='Login';}});
-    document.getElementById('btnLogout').addEventListener('click',()=>signOut(auth));
-    document.getElementById('authPassword').addEventListener('keypress',e=>{if(e.key==='Enter')document.getElementById('btnLogin').click();});
-    function showError(msg){const el=document.getElementById('authError');el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',5000);}
-    function getErrMsg(code){return{'auth/invalid-email':'Invalid email','auth/user-disabled':'Account disabled','auth/user-not-found':'No account found','auth/wrong-password':'Incorrect password','auth/network-request-failed':'Network error','auth/too-many-requests':'Too many attempts'}[code]||'Authentication error';}
-    function showAuth(){authContainer.style.display='flex';dashboard.classList.remove('active');scanContainer.classList.remove('active');}
-    function showDashboard(){authContainer.style.display='none';dashboard.classList.add('active');scanContainer.classList.remove('active');}
-    function loadQRCodes(){onValue(ref(db,`users/${currentUser.uid}/qrcodes`),snap=>{qrCodes=snap.val()||{};renderQRCodes();updateStats();});}
-    document.getElementById('btnCreate').addEventListener('click',async()=>{const url=document.getElementById('qrUrl').value.trim();const label=document.getElementById('qrLabel').value.trim();if(!url){alert('Please enter a URL');return;}if(!label){alert('Please enter a label');return;}const style=window._selectedStyle;const btn=document.getElementById('btnCreate');btn.disabled=true;const msgs={regular:'GENERATING QR CODE...',footprint:'STAMPING DINO TRACKS...',dinosaur:'SUMMONING T-REX...',footshape:'SHAPING THE FOOTPRINT...'};generatingText.textContent=msgs[style]||'GENERATING...';generatingOverlay.classList.add('active');try{const newRef=push(ref(db,`users/${currentUser.uid}/qrcodes`));const qrId=newRef.key;const scanUrl=`${window.location.origin}${window.location.pathname}?scan=${qrId}&uid=${currentUser.uid}`;let qrImageUrl;if(style==='regular')qrImageUrl=await window.generateRegularQR(scanUrl);else if(style==='footprint')qrImageUrl=await window.generateFootprintQR(scanUrl);else if(style==='dinosaur')qrImageUrl=await window.generateDinosaurQR(scanUrl);else if(style==='footshape')qrImageUrl=await window.generateFootshapeQR(scanUrl);if(!qrImageUrl)throw new Error('Generation returned null');await set(newRef,{id:qrId,label,url,qrImageUrl,qrStyle:style,scanCount:0,locked:false,createdAt:serverTimestamp(),lastScanned:null});document.getElementById('qrUrl').value='';document.getElementById('qrLabel').value='';}catch(e){console.error(e);alert('Failed to create QR code: '+e.message);}finally{btn.disabled=false;generatingOverlay.classList.remove('active');}});
-    const styleLabels={regular:'⬛ Regular',footprint:'🦕 Dino Tracks',dinosaur:'🦖 Dino Shape',footshape:'🐾 Foot Shape'};
-    function renderQRCodes(){const codes=Object.values(qrCodes);const grid=document.getElementById('qrGrid');if(!codes.length){grid.innerHTML=`<div class="empty-state"><div class="empty-state-icon">⊞</div><p>No QR codes yet. Create your first one above.</p></div>`;return;}codes.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));grid.innerHTML=codes.map(code=>{const scanUrl=`${window.location.origin}${window.location.pathname}?scan=${code.id}&uid=${currentUser.uid}`;const lastScanned=code.lastScanned?new Date(code.lastScanned).toLocaleString():'Never';return`<div class="qr-card ${code.locked?'locked':''}" data-id="${code.id}"><div class="qr-style-badge">${styleLabels[code.qrStyle]||'⬛ Regular'}</div><div class="qr-header"><div class="qr-label">${esc(code.label)}</div><div class="lock-icon" onclick="toggleLock('${code.id}')">${code.locked?'🔒':'🔓'}</div></div><div class="qr-image-container"><img src="${code.qrImageUrl}" alt="${esc(code.label)}" style="max-width:100%;height:auto;"></div><div class="qr-stats"><div class="qr-stat"><div class="qr-stat-label">Scans</div><div class="qr-stat-value">${code.scanCount||0}</div></div><div class="qr-stat"><div class="qr-stat-label">Last Scan</div><div class="qr-stat-value" style="font-size:.75rem;">${lastScanned==='Never'?lastScanned:lastScanned.split(',')[0]}</div></div></div><div style="margin-bottom:1rem;padding:.75rem;background:var(--bg-tertiary);font-size:.75rem;word-break:break-all;"><div style="color:var(--text-secondary);margin-bottom:.25rem;">SCAN URL:</div><a href="${scanUrl}" target="_blank" style="color:var(--accent);text-decoration:none;">${scanUrl}</a></div><div class="qr-actions"><button class="btn-action btn-download" onclick="downloadQR('${code.id}')">Download</button><button class="btn-action btn-delete" onclick="deleteQR('${code.id}')" ${code.locked?'disabled':''}>${code.locked?'Locked':'Delete'}</button></div></div>`;}).join('');}
-    function updateStats(){const codes=Object.values(qrCodes);document.getElementById('totalCodes').textContent=codes.length;document.getElementById('totalScans').textContent=codes.reduce((s,c)=>s+(c.scanCount||0),0);document.getElementById('lockedCodes').textContent=codes.filter(c=>c.locked).length;}
-    window.toggleLock=async id=>{const code=qrCodes[id];if(!code)return;try{await update(ref(db,`users/${currentUser.uid}/qrcodes/${id}`),{locked:!code.locked});}catch(e){alert('Failed to toggle lock');}};
-    window.deleteQR=async id=>{const code=qrCodes[id];if(!code)return;if(code.locked){alert('Unlock first.');return;}if(!confirm(`Delete "${code.label}"?`))return;try{await remove(ref(db,`users/${currentUser.uid}/qrcodes/${id}`));}catch(e){alert('Failed to delete');}};
-    window.downloadQR=async id=>{const code=qrCodes[id];if(!code)return;try{const res=await fetch(code.qrImageUrl);const blob=await res.blob();const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`${code.label.replace(/[^a-z0-9]/gi,'_').toLowerCase()}_qr.png`;document.body.appendChild(a);a.click();URL.revokeObjectURL(url);document.body.removeChild(a);}catch(e){alert('Download failed');}};
-    function esc(t){return t.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
-    async function handlePublicScan(userId,qrId){authContainer.style.display='none';dashboard.classList.remove('active');scanContainer.classList.add('active');const iconEl=document.getElementById('scanSuccessIcon');try{const qrRef=ref(db,`users/${userId}/qrcodes/${qrId}`);const snap=await get(qrRef);if(!snap.exists()){iconEl.classList.remove('loading');iconEl.textContent='✗';document.getElementById('scanLabel').textContent='QR Code Not Found';return;}const qrData=snap.val();await update(qrRef,{scanCount:(qrData.scanCount||0)+1,lastScanned:Date.now()});iconEl.classList.remove('loading');iconEl.textContent='✓';document.getElementById('scanLabel').textContent=qrData.label;setTimeout(()=>{window.location.href=qrData.url;},1000);}catch(e){iconEl.classList.remove('loading');iconEl.textContent='✗';document.getElementById('scanLabel').textContent='Error Processing Scan';}}
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getDatabase, ref, set, onValue, remove, update, push, serverTimestamp, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyD4UGL6xY4WaUctzhBrY0_0aisBYsY5RYE",
+        authDomain: "trails-qr-tracker.firebaseapp.com",
+        databaseURL: "https://trails-qr-tracker-default-rtdb.firebaseio.com",
+        projectId: "trails-qr-tracker",
+        storageBucket: "trails-qr-tracker.firebasestorage.app",
+        messagingSenderId: "712760332585",
+        appId: "1:712760332585:web:318373bb1359360de16738",
+        measurementId: "G-0XXHDT6ZHQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const scanIdParam = urlParams.get('scan');
+    const userIdParam = urlParams.get('uid');
+    if (scanIdParam && userIdParam) {
+        document.getElementById('authContainer').style.display = 'none';
+        document.getElementById('scanContainer').classList.add('active');
+    }
+
+    let currentUser = null;
+    let qrCodes = {};
+
+    const authContainer = document.getElementById('authContainer');
+    const dashboard = document.getElementById('dashboard');
+    const scanContainer = document.getElementById('scanContainer');
+    const generatingOverlay = document.getElementById('generatingOverlay');
+    const generatingText = document.getElementById('generatingText');
+
+    onAuthStateChanged(auth, user => {
+        const p = new URLSearchParams(window.location.search);
+        const sid = p.get('scan'), uid = p.get('uid');
+        if (sid && uid) { handlePublicScan(uid, sid); return; }
+        if (user) { currentUser = user; document.getElementById('userEmail').textContent = user.email; showDashboard(); loadQRCodes(); }
+        else { currentUser = null; showAuth(); }
+    });
+
+    document.getElementById('btnLogin').addEventListener('click', async () => {
+        const email = document.getElementById('authEmail').value.trim();
+        const password = document.getElementById('authPassword').value;
+        if (!email || !password) { showError('Please enter email and password'); return; }
+        const btn = document.getElementById('btnLogin');
+        btn.disabled = true; btn.innerHTML = '<span class="loading"></span>';
+        try { await signInWithEmailAndPassword(auth, email, password); }
+        catch(e) { showError(getErrMsg(e.code)); }
+        finally { btn.disabled = false; btn.textContent = 'Login'; }
+    });
+
+    document.getElementById('btnLogout').addEventListener('click', () => signOut(auth));
+    document.getElementById('authPassword').addEventListener('keypress', e => { if(e.key==='Enter') document.getElementById('btnLogin').click(); });
+
+    function showError(msg) { const el = document.getElementById('authError'); el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display='none', 5000); }
+    function getErrMsg(code) { return {'auth/invalid-email':'Invalid email','auth/user-disabled':'Account disabled','auth/user-not-found':'No account found','auth/wrong-password':'Incorrect password','auth/network-request-failed':'Network error','auth/too-many-requests':'Too many attempts'}[code] || 'Authentication error'; }
+    function showAuth() { authContainer.style.display='flex'; dashboard.classList.remove('active'); scanContainer.classList.remove('active'); }
+    function showDashboard() { authContainer.style.display='none'; dashboard.classList.add('active'); scanContainer.classList.remove('active'); }
+
+    function loadQRCodes() {
+        onValue(ref(db, `users/${currentUser.uid}/qrcodes`), snap => {
+            qrCodes = snap.val() || {};
+            renderQRCodes(); updateStats();
+        });
+    }
+
+    document.getElementById('btnCreate').addEventListener('click', async () => {
+        const url = document.getElementById('qrUrl').value.trim();
+        const label = document.getElementById('qrLabel').value.trim();
+        if (!url) { alert('Please enter a URL'); return; }
+        if (!label) { alert('Please enter a label'); return; }
+
+        const style = window._selectedStyle;
+        const btn = document.getElementById('btnCreate');
+        btn.disabled = true;
+
+        const msgs = {
+            regular:   'GENERATING QR CODE...',
+            footprint: 'ADDING DINO TRACKS...',
+            dinosaur:  'SUMMONING T-REX...',
+            footshape: 'STAMPING PAW PRINT...'
+        };
+        generatingText.textContent = msgs[style] || 'GENERATING...';
+        generatingOverlay.classList.add('active');
+
+        try {
+            const newRef = push(ref(db, `users/${currentUser.uid}/qrcodes`));
+            const qrId = newRef.key;
+            const scanUrl = `${window.location.origin}${window.location.pathname}?scan=${qrId}&uid=${currentUser.uid}`;
+
+            // Unified generator — works for all styles
+            const qrImageUrl = await window.generateQRWithIcon(scanUrl, style);
+            if (!qrImageUrl) throw new Error('QR generation returned null');
+
+            await set(newRef, {
+                id: qrId,
+                label,
+                url,
+                qrImageUrl,
+                qrStyle: style,
+                scanCount: 0,
+                locked: false,
+                createdAt: serverTimestamp(),
+                lastScanned: null
+            });
+
+            document.getElementById('qrUrl').value = '';
+            document.getElementById('qrLabel').value = '';
+        } catch(e) {
+            console.error(e);
+            alert('Failed to create QR code: ' + e.message);
+        } finally {
+            btn.disabled = false;
+            generatingOverlay.classList.remove('active');
+        }
+    });
+
+    const styleLabels = {
+        regular:   '⬛ Regular',
+        footprint: '🦕 Dino Tracks',
+        dinosaur:  '🦖 T-Rex',
+        footshape: '🐾 Paw Print'
+    };
+
+    function renderQRCodes() {
+        const codes = Object.values(qrCodes);
+        const grid = document.getElementById('qrGrid');
+        if (!codes.length) {
+            grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⊞</div><p>No QR codes yet. Create your first one above.</p></div>`;
+            return;
+        }
+        codes.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+        grid.innerHTML = codes.map(code => {
+            const scanUrl = `${window.location.origin}${window.location.pathname}?scan=${code.id}&uid=${currentUser.uid}`;
+            const lastScanned = code.lastScanned ? new Date(code.lastScanned).toLocaleString() : 'Never';
+            return `
+                <div class="qr-card ${code.locked ? 'locked' : ''}" data-id="${code.id}">
+                    <div class="qr-style-badge">${styleLabels[code.qrStyle] || '⬛ Regular'}</div>
+                    <div class="qr-header">
+                        <div class="qr-label">${esc(code.label)}</div>
+                        <div class="lock-icon" onclick="toggleLock('${code.id}')">${code.locked ? '🔒' : '🔓'}</div>
+                    </div>
+                    <div class="qr-image-container">
+                        <img src="${code.qrImageUrl}" alt="${esc(code.label)}" style="max-width:100%;height:auto;">
+                    </div>
+                    <div class="qr-stats">
+                        <div class="qr-stat"><div class="qr-stat-label">Scans</div><div class="qr-stat-value">${code.scanCount || 0}</div></div>
+                        <div class="qr-stat"><div class="qr-stat-label">Last Scan</div><div class="qr-stat-value" style="font-size:0.75rem;">${lastScanned === 'Never' ? lastScanned : lastScanned.split(',')[0]}</div></div>
+                    </div>
+                    <div style="margin-bottom:1rem;padding:0.75rem;background:var(--bg-tertiary);font-size:0.75rem;word-break:break-all;">
+                        <div style="color:var(--text-secondary);margin-bottom:0.25rem;">SCAN URL:</div>
+                        <a href="${scanUrl}" target="_blank" style="color:var(--accent);text-decoration:none;">${scanUrl}</a>
+                    </div>
+                    <div class="qr-actions">
+                        <button class="btn-action btn-download" onclick="downloadQR('${code.id}')">Download</button>
+                        <button class="btn-action btn-delete" onclick="deleteQR('${code.id}')" ${code.locked ? 'disabled' : ''}>${code.locked ? 'Locked' : 'Delete'}</button>
+                    </div>
+                </div>`;
+        }).join('');
+    }
+
+    function updateStats() {
+        const codes = Object.values(qrCodes);
+        document.getElementById('totalCodes').textContent = codes.length;
+        document.getElementById('totalScans').textContent = codes.reduce((s,c) => s + (c.scanCount || 0), 0);
+        document.getElementById('lockedCodes').textContent = codes.filter(c => c.locked).length;
+    }
+
+    window.toggleLock = async id => {
+        const code = qrCodes[id]; if (!code) return;
+        try { await update(ref(db, `users/${currentUser.uid}/qrcodes/${id}`), { locked: !code.locked }); }
+        catch(e) { alert('Failed to toggle lock'); }
+    };
+
+    window.deleteQR = async id => {
+        const code = qrCodes[id]; if (!code) return;
+        if (code.locked) { alert('Unlock first.'); return; }
+        if (!confirm(`Delete "${code.label}"?`)) return;
+        try { await remove(ref(db, `users/${currentUser.uid}/qrcodes/${id}`)); }
+        catch(e) { alert('Failed to delete'); }
+    };
+
+    window.downloadQR = async id => {
+        const code = qrCodes[id]; if (!code) return;
+        try {
+            const res = await fetch(code.qrImageUrl);
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${code.label.replace(/[^a-z0-9]/gi,'_').toLowerCase()}_qr.png`;
+            document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); document.body.removeChild(a);
+        } catch(e) { alert('Download failed'); }
+    };
+
+    function esc(t) {
+        return t.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    }
+
+    async function handlePublicScan(userId, qrId) {
+        authContainer.style.display = 'none';
+        dashboard.classList.remove('active');
+        scanContainer.classList.add('active');
+        const iconEl = document.getElementById('scanSuccessIcon');
+        try {
+            const qrRef = ref(db, `users/${userId}/qrcodes/${qrId}`);
+            const snap = await get(qrRef);
+            if (!snap.exists()) {
+                iconEl.classList.remove('loading'); iconEl.textContent = '✗';
+                document.getElementById('scanLabel').textContent = 'QR Code Not Found';
+                return;
+            }
+            const qrData = snap.val();
+            await update(qrRef, { scanCount: (qrData.scanCount || 0) + 1, lastScanned: Date.now() });
+            iconEl.classList.remove('loading'); iconEl.textContent = '✓';
+            document.getElementById('scanLabel').textContent = qrData.label;
+            setTimeout(() => { window.location.href = qrData.url; }, 1000);
+        } catch(e) {
+            iconEl.classList.remove('loading'); iconEl.textContent = '✗';
+            document.getElementById('scanLabel').textContent = 'Error Processing Scan';
+        }
+    }
 </script>
 </body>
 </html>
