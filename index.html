@@ -1,712 +1,886 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Manager</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --bg-primary:#0a0a0a; --bg-secondary:#151515; --bg-tertiary:#1f1f1f; --text-primary:#e0e0e0; --text-secondary:#a0a0a0; --accent:#00ff88; --accent-dim:#00aa55; --border:#2a2a2a; --danger:#ff4444; --warning:#ffaa00; }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Space Mono',monospace; background:var(--bg-primary); color:var(--text-primary); line-height:1.6; overflow-x:hidden; }
-        .auth-container { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; background:radial-gradient(circle at 20% 50%,rgba(0,255,136,0.05) 0%,transparent 50%),radial-gradient(circle at 80% 50%,rgba(0,255,136,0.03) 0%,transparent 50%); }
-        .auth-box { background:var(--bg-secondary); border:2px solid var(--border); padding:3rem; max-width:400px; width:100%; position:relative; }
-        .auth-box::before { content:''; position:absolute; top:-2px; left:-2px; right:-2px; height:2px; background:linear-gradient(90deg,var(--accent),transparent); animation:shimmer 2s infinite; }
-        @keyframes shimmer { 0%,100%{opacity:.5}50%{opacity:1} }
-        h1 { font-family:'JetBrains Mono',monospace; font-size:2rem; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:2px; }
-        .subtitle { color:var(--text-secondary); font-size:0.85rem; margin-bottom:2rem; text-transform:uppercase; letter-spacing:1px; }
-        .input-group { margin-bottom:1.5rem; }
-        label { display:block; margin-bottom:0.5rem; font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-secondary); }
-        input { width:100%; padding:0.75rem; background:var(--bg-tertiary); border:1px solid var(--border); color:var(--text-primary); font-family:'Space Mono',monospace; font-size:0.9rem; transition:all 0.3s; }
-        input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(0,255,136,0.1); }
-        button { width:100%; padding:0.75rem; background:var(--accent); color:var(--bg-primary); border:none; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; letter-spacing:2px; cursor:pointer; transition:all 0.3s; }
-        button:hover { background:var(--accent-dim); transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,255,136,0.3); }
-        button:active { transform:translateY(0); }
-        button:disabled { opacity:0.5; cursor:not-allowed; transform:none !important; box-shadow:none !important; }
-        .error-message { color:var(--danger); font-size:0.85rem; margin-top:1rem; padding:0.5rem; background:rgba(255,68,68,0.1); border-left:2px solid var(--danger); }
-        .dashboard { display:none; min-height:100vh; }
-        .dashboard.active { display:block; }
-        .header { background:var(--bg-secondary); border-bottom:2px solid var(--border); padding:1.5rem 2rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
-        .header h1 { font-size:1.5rem; margin:0; }
-        .user-info { display:flex; align-items:center; gap:1rem; }
-        .user-email { font-size:0.85rem; color:var(--text-secondary); }
-        .btn-logout { padding:0.5rem 1rem; background:transparent; border:1px solid var(--border); color:var(--text-primary); width:auto; }
-        .btn-logout:hover { background:var(--bg-tertiary); border-color:var(--accent); transform:none; box-shadow:none; }
-        .main-content { padding:2rem; max-width:1400px; margin:0 auto; }
-        .style-selector { display:flex; gap:0.75rem; margin-bottom:1.5rem; flex-wrap:wrap; }
-        .style-option { flex:1; min-width:130px; padding:1rem; background:var(--bg-tertiary); border:2px solid var(--border); color:var(--text-secondary); cursor:pointer; text-align:center; transition:all 0.3s; font-family:'Space Mono',monospace; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; display:flex; flex-direction:column; align-items:center; gap:0.5rem; width:auto; }
-        .style-option:hover { border-color:var(--accent); color:var(--text-primary); background:var(--bg-secondary); transform:none; box-shadow:none; }
-        .style-option.selected { border-color:var(--accent); background:rgba(0,255,136,0.08); color:var(--accent); transform:none; box-shadow:0 0 12px rgba(0,255,136,0.2); }
-        .style-icon-img { width:48px; height:48px; object-fit:contain; display:block; margin:0 auto; filter:invert(1) brightness(2); }
-        .style-option.selected .style-icon-img { filter:invert(1) sepia(1) saturate(5) hue-rotate(90deg); }
-        .style-icon-emoji { font-size:2rem; line-height:1; }
-        .style-name { font-weight:700; }
-        .style-desc { font-size:0.7rem; color:var(--text-secondary); line-height:1.3; }
-        .controls { display:grid; gap:1rem; margin-bottom:2rem; padding:1.5rem; background:var(--bg-secondary); border:1px solid var(--border); }
-        .input-row { display:grid; grid-template-columns:2fr 1fr auto; gap:1rem; align-items:end; }
-        .btn-create { padding:0.75rem 1.5rem; width:auto; }
-        .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:2rem; }
-        .stat-card { background:var(--bg-secondary); border:1px solid var(--border); padding:1.5rem; position:relative; overflow:hidden; }
-        .stat-card::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--accent); transform:scaleX(0); transition:transform 0.5s; }
-        .stat-card:hover::after { transform:scaleX(1); }
-        .stat-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-secondary); margin-bottom:0.5rem; }
-        .stat-value { font-family:'JetBrains Mono',monospace; font-size:2rem; font-weight:700; color:var(--accent); }
-        .qr-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:1.5rem; }
-        .qr-card { background:var(--bg-secondary); border:1px solid var(--border); padding:1.5rem; transition:all 0.3s; animation:slideIn 0.3s ease-out; }
-        @keyframes slideIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-        .qr-card:hover { border-color:var(--accent); transform:translateY(-4px); box-shadow:0 8px 24px rgba(0,255,136,0.1); }
-        .qr-card.locked { border-color:var(--warning); }
-        .qr-style-badge { display:inline-flex; align-items:center; gap:0.3rem; font-size:0.65rem; text-transform:uppercase; letter-spacing:1px; padding:0.2rem 0.5rem; background:rgba(0,255,136,0.1); border:1px solid rgba(0,255,136,0.3); color:var(--accent); margin-bottom:0.75rem; }
-        .qr-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
-        .qr-label { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.1rem; word-break:break-word; }
-        .lock-icon { cursor:pointer; font-size:1.2rem; transition:all 0.3s; }
-        .lock-icon:hover { color:var(--accent); transform:rotate(15deg); }
-        .qr-image-container { background:white; padding:1rem; margin-bottom:1rem; display:flex; justify-content:center; align-items:center; min-height:160px; }
-        .qr-image-container img { max-width:100%; height:auto; display:block; }
-        .qr-stats { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; padding:1rem; background:var(--bg-tertiary); border-left:2px solid var(--accent); }
-        .qr-stat { display:flex; flex-direction:column; }
-        .qr-stat-label { font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-secondary); margin-bottom:0.25rem; }
-        .qr-stat-value { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.2rem; color:var(--accent); }
-        .qr-actions { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
-        .btn-action { padding:0.5rem; font-size:0.85rem; width:100%; }
-        .btn-delete { background:var(--danger); }
-        .btn-delete:hover { background:#cc0000; box-shadow:none; }
-        .btn-download { background:transparent; border:1px solid var(--accent); color:var(--accent); }
-        .btn-download:hover { background:var(--accent); color:var(--bg-primary); box-shadow:none; }
-        .empty-state { text-align:center; padding:4rem 2rem; color:var(--text-secondary); }
-        .empty-state-icon { font-size:4rem; margin-bottom:1rem; opacity:0.3; }
-        .scan-container { display:none; min-height:100vh; padding:2rem; align-items:center; justify-content:center; flex-direction:column; }
-        .scan-container.active { display:flex; }
-        .scan-result { background:var(--bg-secondary); border:2px solid var(--border); padding:3rem; max-width:500px; width:100%; text-align:center; }
-        .scan-success { font-size:4rem; color:var(--accent); margin-bottom:1rem; }
-        .scan-success.loading { animation:pulse 1.5s ease-in-out infinite; }
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.1)} }
-        .scan-label { font-family:'JetBrains Mono',monospace; font-size:1.5rem; margin-bottom:1rem; }
-        .loading { display:inline-block; width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
-        @keyframes spin { to{transform:rotate(360deg)} }
-        .generating-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82); z-index:999; align-items:center; justify-content:center; flex-direction:column; gap:1rem; font-family:'JetBrains Mono',monospace; color:var(--accent); font-size:1.1rem; letter-spacing:2px; text-align:center; padding:2rem; }
-        .generating-overlay.active { display:flex; }
-        .generating-overlay .big-spin { width:60px; height:60px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
-        @media (max-width:768px) { .header{flex-direction:column;gap:1rem;align-items:flex-start;} .input-row{grid-template-columns:1fr;} .qr-grid{grid-template-columns:1fr;} .style-selector{flex-direction:column;} }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Code Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080b0f; --bg2:#0f1318; --bg3:#161d25; --bg4:#1e2832;
+  --text:#e8edf3; --muted:#6b7d8f; --accent:#00e5ff; --accent2:#00ff88;
+  --warn:#ffaa00; --danger:#ff4455; --border:#1e2832; --border2:#2a3a4a;
+  --radius:6px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;overflow-x:hidden;}
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:var(--bg2);} ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+/* AUTH */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;
+  background:radial-gradient(ellipse 60% 50% at 20% 60%,rgba(0,229,255,.06) 0%,transparent 70%),
+             radial-gradient(ellipse 50% 40% at 80% 30%,rgba(0,255,136,.04) 0%,transparent 60%);}
+.auth-box{width:100%;max-width:420px;background:var(--bg2);border:1px solid var(--border2);padding:2.5rem;position:relative;}
+.auth-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),transparent);animation:shimmer 3s ease-in-out infinite;}
+@keyframes shimmer{0%,100%{opacity:.4}50%{opacity:1}}
+.auth-title{font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:.25rem;}
+.auth-sub{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:2rem;}
+.field{margin-bottom:1.25rem;}
+.field label{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:.4rem;}
+.field input,.field select{width:100%;padding:.65rem .85rem;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;border-radius:var(--radius);transition:.2s;}
+.field input:focus,.field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,229,255,.1);}
+.btn{width:100%;padding:.7rem;background:var(--accent);color:#000;border:none;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.8rem;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:var(--radius);transition:.2s;}
+.btn:hover{background:#33eeff;transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,229,255,.3);}
+.btn:active{transform:none;}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text);}
+.btn-ghost:hover{border-color:var(--accent);background:rgba(0,229,255,.06);transform:none;box-shadow:none;}
+.btn-sm{padding:.4rem .8rem;font-size:.7rem;width:auto;}
+.btn-danger{background:var(--danger);}
+.btn-danger:hover{background:#ff2233;box-shadow:0 4px 12px rgba(255,68,85,.3);}
+.btn-green{background:var(--accent2);color:#000;}
+.btn-green:hover{background:#33ff99;box-shadow:0 4px 12px rgba(0,255,136,.3);}
+.err{color:var(--danger);font-size:.8rem;margin-top:.75rem;padding:.5rem .75rem;background:rgba(255,68,85,.08);border-left:2px solid var(--danger);border-radius:0 var(--radius) var(--radius) 0;}
+
+/* DASHBOARD */
+.dash{display:none;min-height:100vh;}
+.dash.on{display:block;}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border2);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:200;}
+.topbar-title{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.user-chip{font-size:.75rem;color:var(--muted);background:var(--bg3);border:1px solid var(--border2);padding:.3rem .7rem;border-radius:20px;}
+.main{padding:2rem;max-width:1500px;margin:0 auto;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2rem;}
+.stat{background:var(--bg2);border:1px solid var(--border2);padding:1.25rem 1.5rem;border-radius:var(--radius);position:relative;overflow:hidden;transition:.3s;}
+.stat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent);transform:scaleX(0);transform-origin:left;transition:transform .4s;}
+.stat:hover::after{transform:scaleX(1);}
+.stat-label{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:.4rem;}
+.stat-val{font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:700;color:var(--accent);}
+
+/* CREATE PANEL */
+.create-panel{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);margin-bottom:2rem;overflow:hidden;}
+.panel-header{padding:1rem 1.5rem;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
+.panel-header h2{font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);}
+.panel-toggle{font-size:1.2rem;color:var(--muted);transition:transform .3s;}
+.panel-toggle.open{transform:rotate(180deg);}
+.panel-body{padding:1.5rem;}
+
+/* STYLE PICKER */
+.style-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.6rem;margin-bottom:1.5rem;}
+.style-btn{padding:.75rem .5rem;background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--radius);color:var(--muted);cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;display:flex;flex-direction:column;align-items:center;gap:.35rem;transition:.2s;width:100%;}
+.style-btn:hover{border-color:var(--accent);color:var(--text);}
+.style-btn.sel{border-color:var(--accent);background:rgba(0,229,255,.07);color:var(--accent);}
+.style-icon{font-size:1.6rem;line-height:1;}
+.style-name{font-weight:600;}
+.style-img{width:36px;height:36px;object-fit:contain;filter:invert(1) brightness(2);}
+.style-btn.sel .style-img{filter:invert(1) sepia(1) saturate(5) hue-rotate(90deg);}
+
+/* CUSTOMIZER */
+.customizer{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.5rem;}
+.custom-title{font-size:.65rem;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin-bottom:1rem;font-family:'JetBrains Mono',monospace;}
+.custom-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;}
+.custom-item{display:flex;flex-direction:column;gap:.4rem;}
+.custom-label{font-size:.65rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+.color-row{display:flex;align-items:center;gap:.5rem;}
+.color-swatch{width:36px;height:36px;border-radius:var(--radius);border:1.5px solid var(--border2);cursor:pointer;flex-shrink:0;}
+input[type=color]{width:0;height:0;opacity:0;position:absolute;}
+.range-row{display:flex;align-items:center;gap:.75rem;}
+.range-row input[type=range]{flex:1;-webkit-appearance:none;height:4px;background:var(--border2);border-radius:2px;outline:none;}
+.range-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:var(--accent);border-radius:50%;cursor:pointer;}
+.range-val{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--accent);min-width:28px;text-align:right;}
+.upload-zone{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:.75rem;text-align:center;cursor:pointer;transition:.2s;font-size:.75rem;color:var(--muted);position:relative;}
+.upload-zone:hover{border-color:var(--accent);color:var(--text);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-preview{width:40px;height:40px;object-fit:contain;border-radius:4px;margin:0 auto .3rem;display:block;}
+.badge-size-row{display:flex;align-items:center;gap:.5rem;}
+.badge-size-row input[type=range]{flex:1;}
+.dot-shape-row{display:flex;gap:.4rem;}
+.dot-shape-btn{flex:1;padding:.4rem;background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--radius);color:var(--muted);cursor:pointer;font-size:.65rem;text-align:center;text-transform:uppercase;letter-spacing:.5px;transition:.2s;}
+.dot-shape-btn:hover,.dot-shape-btn.sel{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.06);}
+
+/* CREATE FORM */
+.create-row{display:grid;grid-template-columns:2fr 1fr auto;gap:1rem;align-items:end;}
+.preview-strip{margin-top:1rem;padding:1rem;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);display:flex;align-items:center;gap:1rem;}
+.preview-canvas-wrap{background:repeating-conic-gradient(#1a2030 0% 25%,#141b25 0% 50%) 0 0/16px 16px;border-radius:4px;padding:.5rem;flex-shrink:0;}
+.preview-info{font-size:.75rem;color:var(--muted);line-height:1.6;}
+.preview-info strong{color:var(--text);}
+
+/* QR GRID */
+.qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem;}
+.qr-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:1.25rem;transition:.3s;animation:fadeUp .3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.qr-card:hover{border-color:var(--border2);box-shadow:0 8px 32px rgba(0,0,0,.4);}
+.qr-card.locked{border-color:var(--warn);}
+.qr-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.6rem;text-transform:uppercase;letter-spacing:1px;padding:.15rem .5rem;background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.2);color:var(--accent);border-radius:3px;margin-bottom:.75rem;}
+.qr-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;}
+.qr-name{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1rem;word-break:break-word;}
+.lock-btn{background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--muted);padding:.2rem;transition:.2s;width:auto;}
+.lock-btn:hover{color:var(--warn);transform:rotate(15deg);box-shadow:none;background:none;}
+.qr-img-wrap{background:repeating-conic-gradient(#1a2030 0% 25%,#141b25 0% 50%) 0 0/14px 14px;padding:.75rem;margin-bottom:1rem;border-radius:4px;display:flex;justify-content:center;align-items:center;min-height:160px;}
+.qr-img-wrap img{max-width:100%;height:auto;display:block;max-height:200px;}
+.qr-stats{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem;padding:.75rem 1rem;background:var(--bg3);border-left:2px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;}
+.qr-stat-label{font-size:.6rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:.15rem;}
+.qr-stat-val{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.1rem;color:var(--accent);}
+.qr-url{margin-bottom:1rem;padding:.6rem .75rem;background:var(--bg3);border-radius:var(--radius);font-size:.7rem;word-break:break-all;color:var(--muted);}
+.qr-url a{color:var(--accent);text-decoration:none;}
+.qr-actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
+.empty{text-align:center;padding:4rem 2rem;color:var(--muted);}
+.empty-icon{font-size:3rem;opacity:.2;margin-bottom:1rem;}
+
+/* SCAN */
+.scan-wrap{display:none;min-height:100vh;align-items:center;justify-content:center;padding:2rem;}
+.scan-wrap.on{display:flex;}
+.scan-box{background:var(--bg2);border:1px solid var(--border2);padding:3rem;max-width:480px;width:100%;text-align:center;border-radius:var(--radius);}
+.scan-icon{font-size:3.5rem;color:var(--accent);margin-bottom:1rem;display:block;}
+.scan-icon.spin-anim{animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.08)}}
+.scan-lbl{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:700;}
+
+/* OVERLAY */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;align-items:center;justify-content:center;flex-direction:column;gap:1rem;font-family:'JetBrains Mono',monospace;color:var(--accent);font-size:1rem;letter-spacing:2px;text-align:center;padding:2rem;}
+.overlay.on{display:flex;}
+.spinner{width:52px;height:52px;border:2.5px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* LIVE PREVIEW CANVAS */
+#previewCanvas{max-width:160px;max-height:160px;display:block;}
+
+@media(max-width:768px){
+  .topbar{flex-direction:column;gap:.75rem;align-items:flex-start;}
+  .create-row{grid-template-columns:1fr;}
+  .qr-grid{grid-template-columns:1fr;}
+  .custom-grid{grid-template-columns:1fr;}
+  .style-grid{grid-template-columns:repeat(3,1fr);}
+}
+</style>
 </head>
 <body>
 
-<div class="generating-overlay" id="generatingOverlay">
-    <div class="big-spin"></div>
-    <div id="generatingText">GENERATING QR CODE...</div>
+<div class="overlay" id="overlay"><div class="spinner"></div><div id="overlayMsg">GENERATING...</div></div>
+
+<!-- AUTH -->
+<div class="auth-wrap" id="authWrap">
+  <div class="auth-box">
+    <div class="auth-title">QR Manager</div>
+    <div class="auth-sub">Secure Access Portal</div>
+    <div class="field"><label>Email</label><input type="email" id="authEmail" placeholder="you@example.com"></div>
+    <div class="field"><label>Password</label><input type="password" id="authPass" placeholder="••••••••"></div>
+    <button class="btn" id="btnLogin">Login</button>
+    <p style="margin-top:1.5rem;font-size:.75rem;color:var(--muted);text-align:center;line-height:1.6;">New signups require admin approval.<br>Contact the administrator for access.</p>
+    <div class="err" id="authErr" style="display:none;"></div>
+  </div>
 </div>
 
-<div id="authContainer" class="auth-container">
-    <div class="auth-box">
-        <h1>QR Manager</h1>
-        <p class="subtitle">Secure Access Portal</p>
-        <div class="input-group"><label for="authEmail">Email</label><input type="email" id="authEmail" placeholder="user@example.com"></div>
-        <div class="input-group"><label for="authPassword">Password</label><input type="password" id="authPassword" placeholder="••••••••"></div>
-        <button id="btnLogin">Login</button>
-        <p style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);color:var(--text-secondary);font-size:0.85rem;text-align:center;">New signups require admin approval.<br>Contact the administrator for access.</p>
-        <div id="authError" class="error-message" style="display:none;"></div>
+<!-- DASHBOARD -->
+<div class="dash" id="dash">
+  <div class="topbar">
+    <div class="topbar-title">QR Code Manager</div>
+    <div class="topbar-right">
+      <span class="user-chip" id="userEmail">—</span>
+      <button class="btn btn-ghost btn-sm" id="btnLogout">Logout</button>
     </div>
-</div>
+  </div>
+  <div class="main">
 
-<div id="dashboard" class="dashboard">
-    <div class="header">
-        <h1>QR Code Manager</h1>
-        <div class="user-info"><span class="user-email" id="userEmail"></span><button class="btn-logout" id="btnLogout">Logout</button></div>
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Total Codes</div><div class="stat-val" id="statTotal">0</div></div>
+      <div class="stat"><div class="stat-label">Total Scans</div><div class="stat-val" id="statScans">0</div></div>
+      <div class="stat"><div class="stat-label">Locked</div><div class="stat-val" id="statLocked">0</div></div>
     </div>
-    <div class="main-content">
-        <div class="stats">
-            <div class="stat-card"><div class="stat-label">Total QR Codes</div><div class="stat-value" id="totalCodes">0</div></div>
-            <div class="stat-card"><div class="stat-label">Total Scans</div><div class="stat-value" id="totalScans">0</div></div>
-            <div class="stat-card"><div class="stat-label">Locked Codes</div><div class="stat-value" id="lockedCodes">0</div></div>
-        </div>
-        <div class="controls">
-            <div>
-                <label style="margin-bottom:0.75rem;display:block;">QR Code Style</label>
-                <div class="style-selector" id="styleSelector">
-                    <!-- populated by JS so image srcs can be injected -->
-                </div>
+
+    <!-- CREATE PANEL -->
+    <div class="create-panel">
+      <div class="panel-header" id="panelToggle">
+        <h2>⊞ Create New QR Code</h2>
+        <span class="panel-toggle open" id="panelArrow">▾</span>
+      </div>
+      <div class="panel-body" id="panelBody">
+
+        <!-- STYLE PICKER -->
+        <div style="margin-bottom:.75rem;font-size:.65rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);">Module Style</div>
+        <div class="style-grid" id="styleGrid"></div>
+
+        <!-- CUSTOMIZER -->
+        <div class="customizer">
+          <div class="custom-title">⚙ Customize Appearance</div>
+          <div class="custom-grid">
+
+            <!-- Dark color -->
+            <div class="custom-item">
+              <div class="custom-label">Module Color</div>
+              <div class="color-row">
+                <div class="color-swatch" id="swatchDark" style="background:#000000;" onclick="document.getElementById('pickerDark').click()"></div>
+                <span id="lblDark" style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted);">#000000</span>
+                <input type="color" id="pickerDark" value="#000000">
+              </div>
             </div>
-            <div class="input-row">
-                <div class="input-group" style="margin:0;"><label for="qrUrl">Target URL</label><input type="text" id="qrUrl" placeholder="https://example.com"></div>
-                <div class="input-group" style="margin:0;"><label for="qrLabel">Label</label><input type="text" id="qrLabel" placeholder="My QR Code"></div>
-                <button class="btn-create" id="btnCreate">Create QR</button>
+
+            <!-- Corner roundness -->
+            <div class="custom-item">
+              <div class="custom-label">Module Roundness</div>
+              <div class="range-row">
+                <input type="range" id="sliderRound" min="0" max="50" value="0">
+                <span class="range-val" id="lblRound">0%</span>
+              </div>
             </div>
+
+            <!-- Finder roundness -->
+            <div class="custom-item">
+              <div class="custom-label">Finder Corner Radius</div>
+              <div class="range-row">
+                <input type="range" id="sliderFinder" min="0" max="50" value="0">
+                <span class="range-val" id="lblFinder">0%</span>
+              </div>
+            </div>
+
+            <!-- Center image -->
+            <div class="custom-item">
+              <div class="custom-label">Center Image</div>
+              <div class="upload-zone" id="uploadZone">
+                <input type="file" id="centerImgInput" accept="image/*">
+                <img id="centerImgPreview" class="upload-preview" style="display:none;">
+                <div id="uploadPrompt">📁 Upload image</div>
+                <div style="font-size:.6rem;margin-top:.2rem;color:var(--muted);">PNG / JPG / SVG</div>
+              </div>
+              <button class="btn btn-ghost btn-sm" id="clearCenterImg" style="display:none;margin-top:.3rem;">✕ Remove</button>
+            </div>
+
+            <!-- Center image size -->
+            <div class="custom-item">
+              <div class="custom-label">Center Image Size</div>
+              <div class="range-row">
+                <input type="range" id="sliderCenterSize" min="10" max="35" value="22">
+                <span class="range-val" id="lblCenterSize">22%</span>
+              </div>
+            </div>
+
+            <!-- Quiet zone -->
+            <div class="custom-item">
+              <div class="custom-label">Quiet Zone (modules)</div>
+              <div class="range-row">
+                <input type="range" id="sliderQuiet" min="1" max="8" value="4">
+                <span class="range-val" id="lblQuiet">4</span>
+              </div>
+            </div>
+
+          </div>
         </div>
-        <div id="qrGrid" class="qr-grid">
-            <div class="empty-state"><div class="empty-state-icon">⊞</div><p>No QR codes yet. Create your first one above.</p></div>
+
+        <!-- LIVE PREVIEW + FORM -->
+        <div class="preview-strip">
+          <div class="preview-canvas-wrap">
+            <canvas id="previewCanvas" width="160" height="160"></canvas>
+          </div>
+          <div class="preview-info">
+            <strong>Live Preview</strong><br>
+            Transparent background<br>
+            Downloads as PNG<br>
+            <span style="color:var(--muted);font-size:.65rem;">Scanned codes count every scan</span>
+          </div>
         </div>
+
+        <div style="margin-top:1rem;">
+          <div class="create-row">
+            <div class="field" style="margin:0;"><label>Target URL</label><input type="text" id="qrUrl" placeholder="https://example.com"></div>
+            <div class="field" style="margin:0;"><label>Label</label><input type="text" id="qrLabel" placeholder="My QR Code"></div>
+            <button class="btn btn-green" id="btnCreate">Create QR</button>
+          </div>
+        </div>
+
+      </div>
     </div>
+
+    <!-- QR GRID -->
+    <div class="qr-grid" id="qrGrid">
+      <div class="empty"><div class="empty-icon">⊞</div><p>No QR codes yet. Create your first one above.</p></div>
+    </div>
+
+  </div>
 </div>
 
-<div id="scanContainer" class="scan-container">
-    <div class="scan-result">
-        <div class="scan-success loading" id="scanSuccessIcon">⏳</div>
-        <div class="scan-label" id="scanLabel">Processing scan...</div>
-        <p style="margin:1rem 0;color:var(--text-secondary);font-size:0.9rem;">Redirecting...</p>
-    </div>
+<!-- SCAN -->
+<div class="scan-wrap" id="scanWrap">
+  <div class="scan-box">
+    <span class="scan-icon spin-anim" id="scanIcon">⏳</span>
+    <div class="scan-lbl" id="scanLbl">Processing...</div>
+    <p style="margin-top:.75rem;color:var(--muted);font-size:.85rem;">Redirecting you shortly...</p>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-
-// ================================================================
-// EMBEDDED IMAGE ICONS (black silhouettes, PNG base64)
-// ================================================================
-const ICON_IMAGES = {
-    longneck:  'data:image/png;base64,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',
-    trex:      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASkAAAHPCAYAAAAGKsaFAAAgpklEQVR4nO3d2ZLbSA4FUJbD///LNQ8etWWVFi65AMhzIjqmw9OWyBSZvILA5NcG2/b95M++hm8FAEARgtTanoXrZxwnAAAHCE9r2huu7zlWAAB2EpzWcSZYP+OYAQD4QGCqr1W4vue4AQB449fsDSClHsEdAKCM37M34IU9IU819TUhGABgoghBVa9wO6PDtTEHAHhiZkjSK9zWlfF8Nm5+TQAAOGlWSOpdcV0t/J0dz0/j9Ol1VxtnAIBdRvVkj25juH+/qkHw6phWHRcAgOl6h+wIN+BVCtyCNQBAAj2X8IsQsB99bzG3aw8BGwAgiR6V7AwhNuJNfT3HTcAGABiodcgeuRxf7zB/9PW/Tvyd3oRrAIAJWoawXitc9Hrfylp9rlYXAQA4oVVP9qyAfXsNYe+vkWPhCw4AwBOzqsi9guDKoW/mmPqSAwBw50o4OhNoZ4SxqsF71FjuHT9BGwDg/84GozM3BUaRNXTPHENBGwDggDOhKHPAPpQhcEcYvyy/WgAAhHA0CB0JW5VCljWs4/XfAwCEdSQArRqw+cMTJwEAduoRsoWpukY+bAgAIK29YUfA5l6P9hnHDgBQRsvHlwtJ6xG2AQCe+BRoBGw+6XVTqGMKAEjrXZARsMuigiEIQOWAIIIXNVfUI+SKNeihSqAIK3VY7CfhIkRtAWJMdYIFV1tOBuDNgAVepJ3JhzguF5hOykBb5nHFRi5e9bYHPHMTsQiSFRISvSYoG0cNB6UDjXGCKz+yRwxJBZ0R+3K7Ev9PoD+/7lGr7b1vBQAAAAASUVORK5CYII=',
-    dinofoot:  'data:image/png;base64,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',
-    bootprint: 'data:image/png;base64,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'
+// ═══════════════════════════════════════════════
+// ICON IMAGE DATA (base64 silhouettes)
+// ═══════════════════════════════════════════════
+const ICON_IMGS = {
+  longneck:'data:image/png;base64,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',
+  trex:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASkAAAHPCAYAAAAGKsaFAAAgpklEQVR4nO3d2ZLbSA4FUJbD///LNQ8etWWVFi65AMhzIjqmw9OWyBSZvILA5NcG2/b95M++hm8FAEARgtTanoXrZxwnAAAHCE9r2huu7zlWAAB2EpzWcSZYP+OYAQD4QGCqr1W4vue4AQB449fsDSClHsEdAKCM37M34IU9IU819TUhGABgoghBVa9wO6PDtTEHAHhiZkjSK9zWlfF8Nm5+TQAAOGlWSOpdcV0t/J0dz0/j9Ol1VxtnAIBdRvVkj25juH+/qkHw6phWHRcAgOl6h+wIN+BVCtyCNQBAAj2X8IsQsB99bzG3aw8BGwAgiR6V7AwhNuJNfT3HTcAGABiodcgeuRxf7zB/9PW/Tvyd3oRrAIAJWoawXitc9Hrfylp9rlYXAQA4oVVP9qyAfXsNYe+vkWPhCw4AwBOzqsi9guDKoW/mmPqSAwBw50o4OhNoZ4SxqsF71FjuHT9BGwDg/84GozM3BUaRNXTPHENBGwDggDOhKHPAPpQhcEcYvyy/WgAAhHA0CB0JW5VCljWs4/XfAwCEdSQArRqw+cMTJwEAduoRsoWpukY+bAgAIK29YUfA5l6P9hnHDgBQRsvHlwtJ6xG2AQCe+BRoBGw+6XVTqGMKAEjrXZARsMuigiEIQOWAIIIXNVfUI+SKNeihSqAIK3VY7CfhIkRtAWJMdYIFV1tOBuDNgAVepJ3JhzguF5hOykBb5nHFRi5e9bYHPHMTsQiSFRISvSYoG0cNB6UDjXGCKz+yRwxJBZ0R+3K7Ev9PoD+/7lGr7b1vBQAAAAASUVORK5CYII=',
+  dinofoot:'data:image/png;base64,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',
+  bootprint:'data:image/png;base64,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'
 };
 
-// Preload all icon images so they're ready when needed
-const _preloadedIcons = {};
-Object.entries(ICON_IMAGES).forEach(([key, src]) => {
-    const img = new Image();
-    img.src = src;
-    _preloadedIcons[key] = img;
-});
+// Preload icon images
+const _icons = {};
+Object.entries(ICON_IMGS).forEach(([k,s])=>{ const i=new Image(); i.src=s; _icons[k]=i; });
 
-// ================================================================
-// STYLE DEFINITIONS — drives both the selector UI and generation
-// ================================================================
+// ═══════════════════════════════════════════════
+// MODULE STYLES CONFIG
+// ═══════════════════════════════════════════════
 const STYLES = [
-    { key:'regular',   label:'Regular',      desc:'Classic square QR',           iconType:'emoji', icon:'⬛' },
-    { key:'footprint', label:'Dino Tracks',   desc:'Modules as dino footprints',  iconType:'emoji', icon:'🦕' },
-    { key:'bootprint', label:'Boot Prints',   desc:'Modules as boot sole prints', iconType:'emoji', icon:'👢' },
-    { key:'longneck',  label:'Long Neck',     desc:'QR with Brachiosaurus icon',  iconType:'img',   icon:'longneck' },
-    { key:'trex',      label:'T-Rex',         desc:'QR with T-Rex icon',          iconType:'img',   icon:'trex' },
-    { key:'dinofoot',  label:'Foot Print',    desc:'QR with dino footprint icon', iconType:'img',   icon:'dinofoot' },
+  {key:'square',    label:'Square',     icon:'⬛', type:'emoji'},
+  {key:'dot',       label:'Dots',       icon:'⚫', type:'emoji'},
+  {key:'footprint', label:'Dino Track', icon:'🦕', type:'emoji'},
+  {key:'bootprint', label:'Boot Print', icon:'boot', type:'emoji'},
+  {key:'longneck',  label:'Long Neck',  icon:'longneck', type:'img'},
+  {key:'trex',      label:'T-Rex',      icon:'trex', type:'img'},
+  {key:'dinofoot',  label:'Foot Print', icon:'dinofoot', type:'img'},
 ];
 
-// Build selector buttons
-(function buildSelector() {
-    const container = document.getElementById('styleSelector');
-    STYLES.forEach((s, i) => {
-        const btn = document.createElement('button');
-        btn.className = 'style-option' + (i === 0 ? ' selected' : '');
-        btn.dataset.style = s.key;
-        btn.onclick = function() { selectStyle(s.key, this); };
-        const iconHtml = s.iconType === 'img'
-            ? `<img class="style-icon-img" src="${ICON_IMAGES[s.icon]}" alt="${s.label}">`
-            : `<span class="style-icon-emoji">${s.icon}</span>`;
-        btn.innerHTML = `${iconHtml}<span class="style-name">${s.label}</span><span class="style-desc">${s.desc}</span>`;
-        container.appendChild(btn);
-    });
-})();
+// Build style buttons
+const styleGrid = document.getElementById('styleGrid');
+STYLES.forEach((s,i)=>{
+  const b = document.createElement('button');
+  b.className='style-btn'+(i===0?' sel':'');
+  b.dataset.key = s.key;
+  b.onclick = ()=>{ selectStyle(s.key, b); };
+  const iconHtml = s.type==='img'
+    ? `<img class="style-img" src="${ICON_IMGS[s.icon]}" alt="${s.label}">`
+    : `<span class="style-icon">${s.icon}</span>`;
+  b.innerHTML = `${iconHtml}<span class="style-name">${s.label}</span>`;
+  styleGrid.appendChild(b);
+});
 
-window._selectedStyle = 'regular';
-window.selectStyle = function(style, el) {
-    window._selectedStyle = style;
-    document.querySelectorAll('.style-option').forEach(b => b.classList.remove('selected'));
-    el.classList.add('selected');
-};
-
-// ================================================================
-// REGULAR QR — canvas-rendered with TRANSPARENT background
-// ================================================================
-window.generateRegularQR = function(scanUrl) {
-    return new Promise(function(resolve) {
-        var SIZE = 500;
-        var div = document.createElement('div');
-        div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;';
-        document.body.appendChild(div);
-        new QRCode(div, { text: scanUrl, width: SIZE, height: SIZE, correctLevel: QRCode.CorrectLevel.H });
-
-        setTimeout(function() {
-            var srcCanvas = div.querySelector('canvas');
-            if (!srcCanvas) { document.body.removeChild(div); resolve(null); return; }
-
-            // Copy QR to a new canvas but make white pixels transparent
-            var out = document.createElement('canvas');
-            out.width = out.height = SIZE;
-            var ctx = out.getContext('2d');
-            // Draw QR onto output canvas
-            ctx.drawImage(srcCanvas, 0, 0, SIZE, SIZE);
-            document.body.removeChild(div);
-
-            // Make white pixels transparent
-            var imageData = ctx.getImageData(0, 0, SIZE, SIZE);
-            var data = imageData.data;
-            for (var i = 0; i < data.length; i += 4) {
-                var r = data[i], g = data[i+1], b = data[i+2];
-                // If pixel is white (or near-white), make transparent
-                if (r > 200 && g > 200 && b > 200) {
-                    data[i+3] = 0; // set alpha to 0
-                }
-            }
-            ctx.putImageData(imageData, 0, 0);
-            resolve(out.toDataURL('image/png'));
-        }, 600);
-    });
-};
-
-// ================================================================
-// SHARED: sample a canvas-rendered QR into a boolean matrix
-// ================================================================
-function sampleQRMatrix(srcCanvas) {
-    var W = srcCanvas.width;
-    var ctx = srcCanvas.getContext('2d');
-    var pixels = ctx.getImageData(0, 0, W, W).data;
-
-    function isDarkAt(px, py) {
-        var ix = Math.round(Math.min(Math.max(px, 0), W-1));
-        var iy = Math.round(Math.min(Math.max(py, 0), W-1));
-        return pixels[(iy * W + ix) * 4] < 128;
-    }
-
-    // Detect quiet zone boundaries
-    var quietLeft = 0;
-    for (var x = 0; x < W/2; x++) {
-        for (var y = W*0.1; y < W*0.9; y++) { if (isDarkAt(x,y)) { quietLeft = x; break; } }
-        if (quietLeft) break;
-    }
-    var quietTop = 0;
-    for (var y = 0; y < W/2; y++) {
-        for (var x = W*0.1; x < W*0.9; x++) { if (isDarkAt(x,y)) { quietTop = y; break; } }
-        if (quietTop) break;
-    }
-    var quietRight = W;
-    for (var x = W-1; x > W/2; x--) {
-        for (var y = W*0.1; y < W*0.9; y++) { if (isDarkAt(x,y)) { quietRight = x; break; } }
-        if (quietRight < W) break;
-    }
-
-    // Measure module size from first finder row
-    var darkEnd = quietLeft;
-    for (var x = quietLeft; x < W; x++) {
-        if (isDarkAt(x, quietTop + 2)) darkEnd = x; else break;
-    }
-    var modPx = (darkEnd - quietLeft + 1) / 7;
-    var N = Math.round((quietRight - quietLeft + modPx) / modPx);
-
-    // Build boolean matrix
-    var matrix = [];
-    for (var r = 0; r < N; r++) {
-        matrix[r] = [];
-        for (var c = 0; c < N; c++) {
-            matrix[r][c] = isDarkAt(quietLeft + (c+0.5)*modPx, quietTop + (r+0.5)*modPx);
-        }
-    }
-    return { matrix, N, modPx };
+let _style = 'square';
+function selectStyle(key, el){
+  _style = key;
+  document.querySelectorAll('.style-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  schedulePreview();
 }
 
-// Structural zone helpers
-function makeStructuralChecker(N) {
-    function isFinder(r,c)    { return (r<7&&c<7)||(r<7&&c>=N-7)||(r>=N-7&&c<7); }
-    function isSeparator(r,c) { return (r===7&&c<=7)||(c===7&&r<=7)||(r===7&&c>=N-8)||(c===N-8&&r<=7)||(r===N-8&&c<=7)||(c===7&&r>=N-8); }
-    function isTiming(r,c)    { return r===6||c===6; }
-    function isFormat(r,c)    { return (r===8&&c<=8)||(r===8&&c>=N-8)||(c===8&&r<=8)||(c===8&&r>=N-8); }
-    function isAlign(r,c)     { var b=N-7; return Math.abs(r-b)<=2&&Math.abs(c-b)<=2; }
-    return function(r,c) { return isFinder(r,c)||isSeparator(r,c)||isTiming(r,c)||isFormat(r,c)||isAlign(r,c); };
+// ═══════════════════════════════════════════════
+// CUSTOMIZER STATE
+// ═══════════════════════════════════════════════
+let _darkColor = '#000000';
+let _roundness = 0;      // 0-50 (percent of cell)
+let _finderRadius = 0;   // 0-50
+let _centerImg = null;   // HTMLImageElement or null
+let _centerSize = 22;    // percent of QR size
+let _quiet = 4;
+
+// Color picker wiring
+const pickerDark = document.getElementById('pickerDark');
+const swatchDark = document.getElementById('swatchDark');
+const lblDark    = document.getElementById('lblDark');
+pickerDark.addEventListener('input', e=>{
+  _darkColor = e.target.value;
+  swatchDark.style.background = _darkColor;
+  lblDark.textContent = _darkColor.toUpperCase();
+  schedulePreview();
+});
+
+// Sliders
+function wireSlider(id, lblId, suffix, cb){
+  const s = document.getElementById(id);
+  const l = document.getElementById(lblId);
+  s.addEventListener('input', ()=>{ l.textContent=s.value+suffix; cb(parseInt(s.value)); });
+}
+wireSlider('sliderRound','lblRound','%', v=>{ _roundness=v; schedulePreview(); });
+wireSlider('sliderFinder','lblFinder','%', v=>{ _finderRadius=v; schedulePreview(); });
+wireSlider('sliderCenterSize','lblCenterSize','%', v=>{ _centerSize=v; schedulePreview(); });
+wireSlider('sliderQuiet','lblQuiet','', v=>{ _quiet=v; schedulePreview(); });
+
+// Center image upload
+const centerImgInput = document.getElementById('centerImgInput');
+const centerImgPreview = document.getElementById('centerImgPreview');
+const uploadPrompt = document.getElementById('uploadPrompt');
+const clearCenterBtn = document.getElementById('clearCenterImg');
+
+centerImgInput.addEventListener('change', e=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    const img = new Image();
+    img.onload = ()=>{ _centerImg=img; centerImgPreview.src=ev.target.result; centerImgPreview.style.display='block'; uploadPrompt.style.display='none'; clearCenterBtn.style.display='block'; schedulePreview(); };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+clearCenterBtn.addEventListener('click',()=>{
+  _centerImg=null; centerImgPreview.style.display='none'; uploadPrompt.style.display='block'; clearCenterBtn.style.display='none'; centerImgInput.value=''; schedulePreview();
+});
+
+// Panel toggle
+document.getElementById('panelToggle').addEventListener('click',()=>{
+  const b = document.getElementById('panelBody');
+  const a = document.getElementById('panelArrow');
+  const vis = b.style.display!=='none';
+  b.style.display = vis?'none':'block';
+  a.classList.toggle('open',!vis);
+});
+
+// ═══════════════════════════════════════════════
+// CORE QR GENERATION ENGINE (transparent bg)
+// ═══════════════════════════════════════════════
+
+// Sample hidden QRCode lib canvas into a boolean matrix
+function sampleMatrix(srcCanvas){
+  const W=srcCanvas.width, ctx=srcCanvas.getContext('2d');
+  const px=ctx.getImageData(0,0,W,W).data;
+  function dark(x,y){ const i=(Math.round(y)*W+Math.round(x))*4; return px[i]<128; }
+  let qL=0,qT=0,qR=W;
+  for(let x=0;x<W/2;x++){ let f=false; for(let y=W*.1;y<W*.9;y++) if(dark(x,y)){qL=x;f=true;break;} if(f)break; }
+  for(let y=0;y<W/2;y++){ let f=false; for(let x=W*.1;x<W*.9;x++) if(dark(x,y)){qT=y;f=true;break;} if(f)break; }
+  for(let x=W-1;x>W/2;x--){ let f=false; for(let y=W*.1;y<W*.9;y++) if(dark(x,y)){qR=x;f=true;break;} if(f)break; }
+  let de=qL; for(let x=qL;x<W;x++){ if(dark(x,qT+2)) de=x; else break; }
+  const mod=(de-qL+1)/7;
+  const N=Math.round((qR-qL+mod)/mod);
+  const m=[];
+  for(let r=0;r<N;r++){ m[r]=[]; for(let c=0;c<N;c++) m[r][c]=dark(qL+(c+.5)*mod,qT+(r+.5)*mod); }
+  return {m,N,mod};
 }
 
-// ================================================================
-// SHARED: render a module-stamp QR onto a canvas (TRANSPARENT bg)
-// drawStampFn(ctx, x, y, cellSize) draws one dark module stamp
-// ================================================================
-function renderStampQR(scanUrl, drawStampFn, resolve) {
-    var SAMPLE_SIZE = 4500;
-    var div = document.createElement('div');
-    div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;';
+function mkStructCheck(N){
+  return function(r,c){
+    if(r<7&&c<7) return true;
+    if(r<7&&c>=N-7) return true;
+    if(r>=N-7&&c<7) return true;
+    if(r===7&&c<=7||c===7&&r<=7||r===7&&c>=N-8||c===N-8&&r<=7||r===N-8&&c<=7||c===7&&r>=N-8) return true;
+    if(r===6||c===6) return true;
+    if(r===8&&c<=8||r===8&&c>=N-8||c===8&&r<=8||c===8&&r>=N-8) return true;
+    const b=N-7; if(Math.abs(r-b)<=2&&Math.abs(c-b)<=2) return true;
+    return false;
+  };
+}
+
+// Draw one rounded rect (used for square/dot modules and finders)
+function rrect(ctx, x, y, w, h, r, color){
+  r = Math.min(r, w/2, h/2);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// Draw finder pattern (three-ring square eye)
+function drawFinder(ctx, ox, oy, CELL, color, outerR, innerR){
+  const S = CELL*7;
+  // outer ring
+  rrect(ctx, ox, oy, S, S, outerR, color);
+  // white gap
+  rrect(ctx, ox+CELL, oy+CELL, S-CELL*2, S-CELL*2, Math.max(0,outerR-CELL*.8), '#00000000');
+  // inner dot
+  rrect(ctx, ox+CELL*2, oy+CELL*2, CELL*3, CELL*3, innerR, color);
+}
+
+// Dino footprint stamp
+function drawDinoFoot(ctx, x, y, S, color){
+  ctx.save(); ctx.beginPath(); ctx.rect(x,y,S,S); ctx.clip();
+  ctx.fillStyle=color;
+  ctx.beginPath(); ctx.ellipse(x+S*.50,y+S*.76,S*.32,S*.20,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x+S*.47,y+S*.43,S*.095,S*.26,-0.10,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x+S*.44,y+S*.12,S*.058,S*.10,-0.20,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x+S*.22,y+S*.46,S*.085,S*.25,-0.90,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x+S*.065,y+S*.20,S*.052,S*.095,-0.90,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x+S*.74,y+S*.50,S*.085,S*.21,0.70,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x+S*.895,y+S*.28,S*.052,S*.085,0.70,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+// Boot print stamp
+function drawBootPrint(ctx, x, y, S){
+  ctx.save(); ctx.beginPath(); ctx.rect(x,y,S,S); ctx.clip();
+  const img=_icons['bootprint'];
+  if(img&&img.complete&&img.naturalWidth>0){
+    const sc=Math.min(S/img.naturalWidth,S/img.naturalHeight);
+    const dw=img.naturalWidth*sc, dh=img.naturalHeight*sc;
+    ctx.drawImage(img, x+(S-dw)/2, y+(S-dh)/2, dw, dh);
+  } else {
+    ctx.fillStyle='#000'; ctx.fillRect(x+S*.15,y+S*.03,S*.7,S*.94);
+  }
+  ctx.restore();
+}
+
+// Overlay center image onto canvas
+function overlayCenter(ctx, SIZE, iconKey){
+  const pct = _centerSize/100;
+  const iconSize = SIZE * pct;
+  const cx=SIZE/2, cy=SIZE/2;
+  const pad = iconSize*.18, bh=iconSize/2+pad, br=bh*.3;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(cx-bh+br,cy-bh);
+  ctx.arcTo(cx+bh,cy-bh,cx+bh,cy+bh,br);
+  ctx.arcTo(cx+bh,cy+bh,cx-bh,cy+bh,br);
+  ctx.arcTo(cx-bh,cy+bh,cx-bh,cy-bh,br);
+  ctx.arcTo(cx-bh,cy-bh,cx+bh,cy-bh,br);
+  ctx.closePath();
+  ctx.fillStyle='#ffffff'; ctx.fill();
+  ctx.lineWidth=1.5; ctx.strokeStyle='#dddddd'; ctx.stroke();
+  ctx.restore();
+
+  const img = iconKey ? _icons[iconKey] : _centerImg;
+  if(!img) return;
+  const iw=img.naturalWidth||1, ih=img.naturalHeight||1;
+  const asp=iw/ih;
+  const dw=asp>=1?iconSize:iconSize*asp, dh=asp>=1?iconSize/asp:iconSize;
+  ctx.drawImage(img,cx-dw/2,cy-dh/2,dw,dh);
+}
+
+// Remove white (or near-white) pixels -> transparent
+function makeTransparent(ctx, w, h){
+  const d=ctx.getImageData(0,0,w,h), px=d.data;
+  for(let i=0;i<px.length;i+=4){
+    if(px[i]>210&&px[i+1]>210&&px[i+2]>210) px[i+3]=0;
+  }
+  ctx.putImageData(d,0,0);
+}
+
+// ═══════════════════════════════════════════════
+// MAIN QR RENDER — builds fully customized QR on a canvas
+// opts: {style, darkColor, roundness, finderRadius, centerImg, centerImgKey, centerSize, quiet, targetUrl}
+// Returns: Promise<dataURL>
+// ═══════════════════════════════════════════════
+function renderQR(opts, destCanvas, sampleSrc){
+  return new Promise(resolve=>{
+    const {style, darkColor, roundness, finderRadius, centerImgKey, quiet} = opts;
+    const SAMPLE = sampleSrc || 4000;
+    const CELL = destCanvas ? 28 : 14;
+
+    const div=document.createElement('div');
+    div.style.cssText='position:fixed;left:-9999px;top:0;background:white;';
     document.body.appendChild(div);
-    new QRCode(div, { text: scanUrl, width: SAMPLE_SIZE, height: SAMPLE_SIZE, correctLevel: QRCode.CorrectLevel.H });
+    new QRCode(div,{text:opts.targetUrl,width:SAMPLE,height:SAMPLE,correctLevel:QRCode.CorrectLevel.H});
 
-    setTimeout(function() {
-        var srcCanvas = div.querySelector('canvas');
-        if (!srcCanvas) { document.body.removeChild(div); resolve(null); return; }
+    setTimeout(()=>{
+      const src=div.querySelector('canvas');
+      if(!src){document.body.removeChild(div);resolve(null);return;}
+      const {m:matrix,N}=sampleMatrix(src);
+      document.body.removeChild(div);
+      if(!matrix[0]||N<21){resolve(null);return;}
 
-        var result = sampleQRMatrix(srcCanvas);
-        document.body.removeChild(div);
-        var matrix = result.matrix, N = result.N;
+      const QUIET=quiet;
+      const TOTAL=(N+QUIET*2)*CELL;
+      const out = destCanvas || document.createElement('canvas');
+      out.width=out.height=TOTAL;
+      const ctx=out.getContext('2d');
+      ctx.clearRect(0,0,TOTAL,TOTAL);
 
-        if (!matrix[0] || matrix[0][0] !== true || N < 21) {
-            console.warn('Matrix read failed, N=' + N);
-            resolve(null); return;
+      const isStruct=mkStructCheck(N);
+      const ox=c=>(QUIET+c)*CELL;
+      const oy=r=>(QUIET+r)*CELL;
+      const rPx=CELL*(roundness/100);
+      const fOuter=CELL*7*(finderRadius/100);
+      const fInner=CELL*3*(finderRadius/100);
+
+      // Draw finders
+      const finderPositions=[[0,0],[0,N-7],[N-7,0]];
+      finderPositions.forEach(([fr,fc])=>{
+        drawFinder(ctx, ox(fc), oy(fr), CELL, darkColor, fOuter, fInner);
+      });
+      // Separator lines (white clear)
+      for(let r=0;r<N;r++) for(let c=0;c<N;c++){
+        if(!isStruct(r,c)) continue;
+        if(!matrix[r][c]){
+          // For non-finder structural light modules: just leave transparent
         }
+      }
+      // Timing patterns
+      for(let i=8;i<N-8;i++){
+        if(matrix[6][i]){ if(style==='dot') rrect(ctx,ox(i)+CELL*.1,oy(6)+CELL*.1,CELL*.8,CELL*.8,CELL*.4,darkColor); else rrect(ctx,ox(i),oy(6),CELL,CELL,rPx,darkColor); }
+        if(matrix[i][6]){ if(style==='dot') rrect(ctx,ox(6)+CELL*.1,oy(i)+CELL*.1,CELL*.8,CELL*.8,CELL*.4,darkColor); else rrect(ctx,ox(6),oy(i),CELL,CELL,rPx,darkColor); }
+      }
+      // Alignment pattern
+      const b=N-7;
+      drawFinder(ctx,ox(b-2),oy(b-2),CELL,darkColor,fOuter*.6,fInner*.7);
 
-        var CELL  = 28;
-        var QUIET = 4;
-        var TOTAL = (N + QUIET*2) * CELL;
+      // Data modules
+      for(let r=0;r<N;r++) for(let c=0;c<N;c++){
+        if(isStruct(r,c)||!matrix[r][c]) continue;
+        const x=ox(c), y=oy(r);
+        if(style==='footprint') drawDinoFoot(ctx,x,y,CELL,darkColor);
+        else if(style==='bootprint') drawBootPrint(ctx,x,y,CELL);
+        else if(style==='dot') rrect(ctx,x+CELL*.08,y+CELL*.08,CELL*.84,CELL*.84,CELL*.42,darkColor);
+        else rrect(ctx,x,y,CELL,CELL,rPx,darkColor);
+      }
 
-        var outCanvas = document.createElement('canvas');
-        outCanvas.width = outCanvas.height = TOTAL;
-        var ctx = outCanvas.getContext('2d');
-        // NOTE: No white fillRect — canvas stays transparent by default
+      // Center image / icon overlay
+      const hasIconKey = ['longneck','trex','dinofoot'].includes(style);
+      if(hasIconKey){
+        overlayCenter(ctx,TOTAL,style);
+      } else if(_centerImg){
+        overlayCenter(ctx,TOTAL,null);
+      }
 
-        var isStructural = makeStructuralChecker(N);
-        function ox(c) { return (QUIET+c)*CELL; }
-        function oy(r) { return (QUIET+r)*CELL; }
-
-        // Pass 1: structural zones as solid squares (dark modules only, light = transparent)
-        for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) {
-            if (!isStructural(r,c)) continue;
-            if (matrix[r][c]) {
-                ctx.fillStyle = '#000000';
-                ctx.fillRect(ox(c), oy(r), CELL, CELL);
-            }
-            // light structural modules: leave transparent (no fill)
-        }
-        // Pass 2: data modules as stamps
-        for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) {
-            if (isStructural(r,c) || !matrix[r][c]) continue;
-            drawStampFn(ctx, ox(c), oy(r), CELL);
-        }
-
-        resolve(outCanvas.toDataURL('image/png'));
-    }, 800);
+      resolve(out.toDataURL('image/png'));
+    },700);
+  });
 }
 
-// ================================================================
-// DINO TRACKS — stamp each dark module with a dino footprint
-// ================================================================
-function drawDinoFootprint(ctx, x, y, S) {
-    ctx.save();
-    ctx.beginPath(); ctx.rect(x, y, S, S); ctx.clip();
-    ctx.fillStyle = '#000000';
-    // Heel pad
-    ctx.beginPath(); ctx.ellipse(x+S*0.50, y+S*0.76, S*0.32, S*0.20, 0, 0, Math.PI*2); ctx.fill();
-    // Center toe
-    ctx.beginPath(); ctx.ellipse(x+S*0.50-S*0.03, y+S*0.43, S*0.095, S*0.26, -0.10, 0, Math.PI*2); ctx.fill();
-    // Center claw
-    ctx.beginPath(); ctx.ellipse(x+S*0.50-S*0.06, y+S*0.12, S*0.058, S*0.10, -0.20, 0, Math.PI*2); ctx.fill();
-    // Left toe
-    ctx.beginPath(); ctx.ellipse(x+S*0.22, y+S*0.46, S*0.085, S*0.25, -0.90, 0, Math.PI*2); ctx.fill();
-    // Left claw
-    ctx.beginPath(); ctx.ellipse(x+S*0.065, y+S*0.20, S*0.052, S*0.095, -0.90, 0, Math.PI*2); ctx.fill();
-    // Right toe
-    ctx.beginPath(); ctx.ellipse(x+S*0.74, y+S*0.50, S*0.085, S*0.21, 0.70, 0, Math.PI*2); ctx.fill();
-    // Right claw
-    ctx.beginPath(); ctx.ellipse(x+S*0.895, y+S*0.28, S*0.052, S*0.085, 0.70, 0, Math.PI*2); ctx.fill();
-    ctx.restore();
+// ═══════════════════════════════════════════════
+// LIVE PREVIEW
+// ═══════════════════════════════════════════════
+let _previewTimer = null;
+const previewCanvas = document.getElementById('previewCanvas');
+
+function schedulePreview(){
+  clearTimeout(_previewTimer);
+  _previewTimer = setTimeout(runPreview, 600);
 }
 
-window.generateFootprintQR = function(scanUrl) {
-    return new Promise(function(resolve) { renderStampQR(scanUrl, drawDinoFootprint, resolve); });
-};
-
-// ================================================================
-// BOOT PRINTS — stamp each dark module with the hiking boot sole
-// ================================================================
-function drawBootPrint(ctx, x, y, S) {
-    ctx.save();
-    ctx.beginPath(); ctx.rect(x, y, S, S); ctx.clip();
-    var img = _preloadedIcons['bootprint'];
-    if (img && img.complete && img.naturalWidth > 0) {
-        var iw = img.naturalWidth, ih = img.naturalHeight;
-        var scale = Math.min(S / iw, S / ih);
-        var dw = iw * scale, dh = ih * scale;
-        ctx.drawImage(img, x + (S - dw) / 2, y + (S - dh) / 2, dw, dh);
-    } else {
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(x + S*0.15, y + S*0.03, S*0.7, S*0.94);
-    }
-    ctx.restore();
+function runPreview(){
+  const url = document.getElementById('qrUrl').value.trim() || 'https://example.com';
+  const pCanvas = document.createElement('canvas');
+  pCanvas.width = pCanvas.height = 160*2;
+  renderQR({
+    style:_style, darkColor:_darkColor, roundness:_roundness,
+    finderRadius:_finderRadius, centerImgKey:null, quiet:_quiet,
+    targetUrl:url
+  }, pCanvas, 800).then(dataUrl=>{
+    if(!dataUrl) return;
+    const ctx = previewCanvas.getContext('2d');
+    ctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
+    const img=new Image(); img.onload=()=>{ ctx.drawImage(img,0,0,previewCanvas.width,previewCanvas.height); }; img.src=dataUrl;
+  });
 }
 
-window.generateBootprintQR = function(scanUrl) {
-    return new Promise(function(resolve) { renderStampQR(scanUrl, drawBootPrint, resolve); });
+document.getElementById('qrUrl').addEventListener('input',()=>schedulePreview());
+document.getElementById('qrUrl').addEventListener('change',()=>schedulePreview());
+setTimeout(schedulePreview, 1000);
+
+// ═══════════════════════════════════════════════
+// TRANSPARENT DOWNLOAD HELPER
+// ═══════════════════════════════════════════════
+window._downloadQRTransparent = async function(qrImageUrl, filename, code){
+  // If it's a data URL, download directly (already transparent from our engine)
+  if(qrImageUrl && qrImageUrl.startsWith('data:')){
+    const a=document.createElement('a'); a.href=qrImageUrl; a.download=filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    return;
+  }
+  // Fallback: re-render the QR with current stored settings
+  if(code && code.scanUrl){
+    document.getElementById('overlay').classList.add('on');
+    document.getElementById('overlayMsg').textContent='PREPARING DOWNLOAD...';
+    try{
+      const url = await renderQR({
+        style: code.qrStyle||'square',
+        darkColor: code.darkColor||'#000000',
+        roundness: code.roundness||0,
+        finderRadius: code.finderRadius||0,
+        quiet: code.quiet||4,
+        targetUrl: code.scanUrl
+      }, null, 4000);
+      if(url){ const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+    } finally { document.getElementById('overlay').classList.remove('on'); }
+  }
 };
-
-// ================================================================
-// IMAGE ICON OVERLAY QR (Long Neck / T-Rex / Dino Footprint)
-// TRANSPARENT background — white pixels from QR lib are removed
-// ================================================================
-window.generateIconQR = function(scanUrl, iconKey) {
-    return new Promise(function(resolve) {
-        var SIZE = 500;
-        var div = document.createElement('div');
-        div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;';
-        document.body.appendChild(div);
-        new QRCode(div, { text: scanUrl, width: SIZE, height: SIZE, correctLevel: QRCode.CorrectLevel.H });
-
-        setTimeout(function() {
-            var srcCanvas = div.querySelector('canvas');
-            if (!srcCanvas) { document.body.removeChild(div); resolve(null); return; }
-
-            var out = document.createElement('canvas');
-            out.width = out.height = SIZE;
-            var ctx = out.getContext('2d');
-            ctx.drawImage(srcCanvas, 0, 0, SIZE, SIZE);
-            document.body.removeChild(div);
-
-            // Make white pixels transparent (background removal)
-            var imageData = ctx.getImageData(0, 0, SIZE, SIZE);
-            var data = imageData.data;
-            for (var i = 0; i < data.length; i += 4) {
-                var r = data[i], g = data[i+1], b = data[i+2];
-                if (r > 200 && g > 200 && b > 200) {
-                    data[i+3] = 0;
-                }
-            }
-            ctx.putImageData(imageData, 0, 0);
-
-            var iconSize = Math.round(SIZE * 0.22);
-            var cx = SIZE/2, cy = SIZE/2;
-            var pad = Math.round(iconSize * 0.18);
-            var bh = iconSize/2 + pad;
-            var r  = Math.round(bh * 0.3);
-
-            // Draw white rounded badge behind the icon (so icon is readable)
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(cx-bh+r, cy-bh);
-            ctx.arcTo(cx+bh, cy-bh, cx+bh, cy+bh, r);
-            ctx.arcTo(cx+bh, cy+bh, cx-bh, cy+bh, r);
-            ctx.arcTo(cx-bh, cy+bh, cx-bh, cy-bh, r);
-            ctx.arcTo(cx-bh, cy-bh, cx+bh, cy-bh, r);
-            ctx.closePath();
-            ctx.fillStyle = '#ffffff';
-            ctx.fill();
-            ctx.lineWidth = 1.5; ctx.strokeStyle = '#cccccc'; ctx.stroke();
-            ctx.restore();
-
-            var iconImg = _preloadedIcons[iconKey];
-            var drawIcon = function() {
-                var iw = iconImg.naturalWidth||1, ih = iconImg.naturalHeight||1;
-                var aspect = iw/ih;
-                var dw = aspect>=1 ? iconSize : iconSize*aspect;
-                var dh = aspect>=1 ? iconSize/aspect : iconSize;
-                ctx.drawImage(iconImg, cx-dw/2, cy-dh/2, dw, dh);
-                resolve(out.toDataURL('image/png'));
-            };
-            if (iconImg.complete && iconImg.naturalWidth > 0) drawIcon();
-            else { iconImg.onload = drawIcon; iconImg.onerror = function(){ resolve(out.toDataURL('image/png')); }; }
-        }, 600);
-    });
-};
-
-// ================================================================
-// DOWNLOAD HELPER — strips white background from legacy API URLs
-// and downloads the QR as a transparent PNG
-// ================================================================
-window._downloadTransparent = async function(qrImageUrl, filename) {
-    try {
-        // If it's already a data URL (canvas-generated), download directly
-        if (qrImageUrl.startsWith('data:')) {
-            const a = document.createElement('a');
-            a.href = qrImageUrl;
-            a.download = filename;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            return;
-        }
-
-        // For legacy API URLs (https://api.qrserver.com/...), fetch and make transparent
-        const res = await fetch(qrImageUrl);
-        const blob = await res.blob();
-        const bmp = await createImageBitmap(blob);
-
-        const canvas = document.createElement('canvas');
-        canvas.width = bmp.width; canvas.height = bmp.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(bmp, 0, 0);
-
-        // Remove white background
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-        for (let i = 0; i < data.length; i += 4) {
-            if (data[i] > 200 && data[i+1] > 200 && data[i+2] > 200) {
-                data[i+3] = 0;
-            }
-        }
-        ctx.putImageData(imageData, 0, 0);
-
-        canvas.toBlob(function(transparentBlob) {
-            const burl = URL.createObjectURL(transparentBlob);
-            const a = document.createElement('a');
-            a.href = burl; a.download = filename;
-            document.body.appendChild(a); a.click();
-            URL.revokeObjectURL(burl); document.body.removeChild(a);
-        }, 'image/png');
-    } catch(e) {
-        console.error('Transparent download failed:', e);
-        alert('Download failed: ' + e.message);
-    }
-};
-
 </script>
 
 <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-    import { getDatabase, ref, set, onValue, remove, update, push, serverTimestamp, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getDatabase, ref, set, onValue, remove, update, push, serverTimestamp, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyD4UGL6xY4WaUctzhBrY0_0aisBYsY5RYE",
-        authDomain: "trails-qr-tracker.firebaseapp.com",
-        databaseURL: "https://trails-qr-tracker-default-rtdb.firebaseio.com",
-        projectId: "trails-qr-tracker",
-        storageBucket: "trails-qr-tracker.firebasestorage.app",
-        messagingSenderId: "712760332585",
-        appId: "1:712760332585:web:318373bb1359360de16738",
-        measurementId: "G-0XXHDT6ZHQ"
-    };
+const cfg={
+  apiKey:"AIzaSyD4UGL6xY4WaUctzhBrY0_0aisBYsY5RYE",
+  authDomain:"trails-qr-tracker.firebaseapp.com",
+  databaseURL:"https://trails-qr-tracker-default-rtdb.firebaseio.com",
+  projectId:"trails-qr-tracker",
+  storageBucket:"trails-qr-tracker.firebasestorage.app",
+  messagingSenderId:"712760332585",
+  appId:"1:712760332585:web:318373bb1359360de16738"
+};
+const app=initializeApp(cfg);
+const auth=getAuth(app);
+const db=getDatabase(app);
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+// Scan mode check
+const sp=new URLSearchParams(window.location.search);
+if(sp.get('scan')&&sp.get('uid')){ document.getElementById('authWrap').style.display='none'; document.getElementById('scanWrap').classList.add('on'); }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('scan') && urlParams.get('uid')) {
-        document.getElementById('authContainer').style.display = 'none';
-        document.getElementById('scanContainer').classList.add('active');
-    }
+let me=null, codes={};
 
-    let currentUser = null;
-    let qrCodes = {};
+onAuthStateChanged(auth, user=>{
+  const p=new URLSearchParams(window.location.search);
+  if(p.get('scan')&&p.get('uid')){ handleScan(p.get('uid'),p.get('scan')); return; }
+  if(user){ me=user; document.getElementById('userEmail').textContent=user.email; showDash(); loadCodes(); }
+  else { me=null; showAuth(); }
+});
 
-    const authContainer = document.getElementById('authContainer');
-    const dashboard = document.getElementById('dashboard');
-    const scanContainer = document.getElementById('scanContainer');
-    const generatingOverlay = document.getElementById('generatingOverlay');
-    const generatingText = document.getElementById('generatingText');
+document.getElementById('btnLogin').addEventListener('click',async()=>{
+  const em=document.getElementById('authEmail').value.trim();
+  const pw=document.getElementById('authPass').value;
+  if(!em||!pw){showErr('Enter email and password');return;}
+  const btn=document.getElementById('btnLogin'); btn.disabled=true; btn.textContent='...';
+  try{ await signInWithEmailAndPassword(auth,em,pw); }
+  catch(e){ showErr(errMsg(e.code)); }
+  finally{ btn.disabled=false; btn.textContent='Login'; }
+});
+document.getElementById('btnLogout').addEventListener('click',()=>signOut(auth));
+document.getElementById('authPass').addEventListener('keypress',e=>{ if(e.key==='Enter') document.getElementById('btnLogin').click(); });
 
-    onAuthStateChanged(auth, user => {
-        const p = new URLSearchParams(window.location.search);
-        const sid = p.get('scan'), uid = p.get('uid');
-        if (sid && uid) { handlePublicScan(uid, sid); return; }
-        if (user) { currentUser = user; document.getElementById('userEmail').textContent = user.email; showDashboard(); loadQRCodes(); }
-        else { currentUser = null; showAuth(); }
+function showErr(m){ const el=document.getElementById('authErr'); el.textContent=m; el.style.display='block'; setTimeout(()=>el.style.display='none',5000); }
+function errMsg(c){ return {'auth/invalid-email':'Invalid email','auth/user-disabled':'Account disabled','auth/user-not-found':'No account','auth/wrong-password':'Wrong password','auth/network-request-failed':'Network error','auth/too-many-requests':'Too many attempts'}[c]||'Auth error'; }
+function showAuth(){ document.getElementById('authWrap').style.display='flex'; document.getElementById('dash').classList.remove('on'); }
+function showDash(){ document.getElementById('authWrap').style.display='none'; document.getElementById('dash').classList.add('on'); }
+
+function loadCodes(){
+  onValue(ref(db,`users/${me.uid}/qrcodes`),snap=>{
+    codes=snap.val()||{};
+    renderCodes(); updateStats();
+  });
+}
+
+document.getElementById('btnCreate').addEventListener('click',async()=>{
+  const url=document.getElementById('qrUrl').value.trim();
+  const label=document.getElementById('qrLabel').value.trim();
+  if(!url){alert('Enter a URL');return;}
+  if(!label){alert('Enter a label');return;}
+  const btn=document.getElementById('btnCreate'); btn.disabled=true;
+  const ov=document.getElementById('overlay'); ov.classList.add('on');
+  const msgs={square:'BUILDING QR CODE...',dot:'ROUNDING DOTS...',footprint:'STAMPING DINO TRACKS...',bootprint:'LACING UP BOOTS...',longneck:'SUMMONING LONG NECK...',trex:'UNLEASHING T-REX...',dinofoot:'PRESSING FOOTPRINT...'};
+  document.getElementById('overlayMsg').textContent=msgs[window._style]||'GENERATING...';
+  try{
+    const newRef=push(ref(db,`users/${me.uid}/qrcodes`));
+    const id=newRef.key;
+    const scanUrl=`${location.origin}${location.pathname}?scan=${id}&uid=${me.uid}`;
+
+    const hasIconKey=['longneck','trex','dinofoot'].includes(window._style);
+    const qrImageUrl=await window.renderQR({
+      style:window._style,
+      darkColor:window._darkColor,
+      roundness:window._roundness,
+      finderRadius:window._finderRadius,
+      quiet:window._quiet,
+      targetUrl:scanUrl
+    }, null, 4000);
+
+    if(!qrImageUrl) throw new Error('QR generation failed');
+    await set(newRef,{
+      id, label, url, qrImageUrl,
+      scanUrl,
+      qrStyle:window._style,
+      darkColor:window._darkColor,
+      roundness:window._roundness,
+      finderRadius:window._finderRadius,
+      quiet:window._quiet,
+      scanCount:0, locked:false,
+      createdAt:serverTimestamp(), lastScanned:null
     });
+    document.getElementById('qrUrl').value='';
+    document.getElementById('qrLabel').value='';
+  } catch(e){ console.error(e); alert('Failed: '+e.message); }
+  finally{ btn.disabled=false; ov.classList.remove('on'); }
+});
 
-    document.getElementById('btnLogin').addEventListener('click', async () => {
-        const email = document.getElementById('authEmail').value.trim();
-        const password = document.getElementById('authPassword').value;
-        if (!email || !password) { showError('Please enter email and password'); return; }
-        const btn = document.getElementById('btnLogin');
-        btn.disabled = true; btn.innerHTML = '<span class="loading"></span>';
-        try { await signInWithEmailAndPassword(auth, email, password); }
-        catch(e) { showError(getErrMsg(e.code)); }
-        finally { btn.disabled = false; btn.textContent = 'Login'; }
-    });
+const styleLbls={square:'⬛ Square',dot:'⚫ Dots',footprint:'🦕 Dino Track',bootprint:'👢 Boot Print',longneck:'🦕 Long Neck',trex:'🦖 T-Rex',dinofoot:'🐾 Foot Print'};
 
-    document.getElementById('btnLogout').addEventListener('click', () => signOut(auth));
-    document.getElementById('authPassword').addEventListener('keypress', e => { if(e.key==='Enter') document.getElementById('btnLogin').click(); });
+function renderCodes(){
+  const arr=Object.values(codes).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const grid=document.getElementById('qrGrid');
+  if(!arr.length){ grid.innerHTML=`<div class="empty"><div class="empty-icon">⊞</div><p>No QR codes yet. Create your first one above.</p></div>`; return; }
+  grid.innerHTML=arr.map(c=>{
+    const scanUrl=c.scanUrl||`${location.origin}${location.pathname}?scan=${c.id}&uid=${me.uid}`;
+    const last=c.lastScanned?new Date(c.lastScanned).toLocaleDateString():'Never';
+    return `<div class="qr-card ${c.locked?'locked':''}" data-id="${c.id}">
+      <div class="qr-badge">${styleLbls[c.qrStyle]||'⬛ Square'}</div>
+      <div class="qr-head">
+        <div class="qr-name">${esc(c.label)}</div>
+        <button class="lock-btn" onclick="toggleLock('${c.id}')">${c.locked?'🔒':'🔓'}</button>
+      </div>
+      <div class="qr-img-wrap"><img src="${c.qrImageUrl}" alt="${esc(c.label)}"></div>
+      <div class="qr-stats">
+        <div><div class="qr-stat-label">Scans</div><div class="qr-stat-val">${c.scanCount||0}</div></div>
+        <div><div class="qr-stat-label">Last Scan</div><div class="qr-stat-val" style="font-size:.75rem;">${last}</div></div>
+      </div>
+      <div class="qr-url"><a href="${scanUrl}" target="_blank">${scanUrl}</a></div>
+      <div class="qr-actions">
+        <button class="btn btn-ghost btn-sm" onclick="dlQR('${c.id}')">⬇ Download</button>
+        <button class="btn btn-danger btn-sm" onclick="delQR('${c.id}')" ${c.locked?'disabled':''}>✕ ${c.locked?'Locked':'Delete'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
 
-    function showError(msg) { const el = document.getElementById('authError'); el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display='none', 5000); }
-    function getErrMsg(code) { return {'auth/invalid-email':'Invalid email','auth/user-disabled':'Account disabled','auth/user-not-found':'No account found','auth/wrong-password':'Incorrect password','auth/network-request-failed':'Network error','auth/too-many-requests':'Too many attempts'}[code] || 'Authentication error'; }
-    function showAuth() { authContainer.style.display='flex'; dashboard.classList.remove('active'); scanContainer.classList.remove('active'); }
-    function showDashboard() { authContainer.style.display='none'; dashboard.classList.add('active'); scanContainer.classList.remove('active'); }
+function updateStats(){
+  const arr=Object.values(codes);
+  document.getElementById('statTotal').textContent=arr.length;
+  document.getElementById('statScans').textContent=arr.reduce((s,c)=>s+(c.scanCount||0),0);
+  document.getElementById('statLocked').textContent=arr.filter(c=>c.locked).length;
+}
 
-    function loadQRCodes() {
-        onValue(ref(db, `users/${currentUser.uid}/qrcodes`), snap => {
-            qrCodes = snap.val() || {};
-            renderQRCodes(); updateStats();
-        });
-    }
+window.toggleLock=async id=>{
+  const c=codes[id]; if(!c) return;
+  await update(ref(db,`users/${me.uid}/qrcodes/${id}`),{locked:!c.locked});
+};
+window.delQR=async id=>{
+  const c=codes[id]; if(!c) return;
+  if(c.locked){alert('Unlock first.');return;}
+  if(!confirm(`Delete "${c.label}"?`)) return;
+  await remove(ref(db,`users/${me.uid}/qrcodes/${id}`));
+};
+window.dlQR=async id=>{
+  const c=codes[id]; if(!c) return;
+  const fn=`${c.label.replace(/[^a-z0-9]/gi,'_').toLowerCase()}_qr.png`;
+  window._downloadQRTransparent(c.qrImageUrl, fn, c);
+};
+function esc(t){ return t.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
 
-    document.getElementById('btnCreate').addEventListener('click', async () => {
-        const url = document.getElementById('qrUrl').value.trim();
-        const label = document.getElementById('qrLabel').value.trim();
-        if (!url) { alert('Please enter a URL'); return; }
-        if (!label) { alert('Please enter a label'); return; }
-        const style = window._selectedStyle;
-        const btn = document.getElementById('btnCreate');
-        btn.disabled = true;
-        const msgs = { regular:'GENERATING QR CODE...', footprint:'STAMPING DINO TRACKS...', bootprint:'LACING UP BOOTS...', longneck:'ADDING LONG NECK DINO...', trex:'SUMMONING T-REX...', dinofoot:'STAMPING FOOTPRINT...' };
-        generatingText.textContent = msgs[style] || 'GENERATING...';
-        generatingOverlay.classList.add('active');
-        try {
-            const newRef = push(ref(db, `users/${currentUser.uid}/qrcodes`));
-            const qrId = newRef.key;
-            const scanUrl = `${window.location.origin}${window.location.pathname}?scan=${qrId}&uid=${currentUser.uid}`;
+async function handleScan(uid,qrId){
+  document.getElementById('authWrap').style.display='none';
+  document.getElementById('dash').classList.remove('on');
+  document.getElementById('scanWrap').classList.add('on');
+  const icon=document.getElementById('scanIcon');
+  try{
+    const r=ref(db,`users/${uid}/qrcodes/${qrId}`);
+    const snap=await get(r);
+    if(!snap.exists()){icon.classList.remove('spin-anim');icon.textContent='✗';document.getElementById('scanLbl').textContent='Not Found';return;}
+    const d=snap.val();
+    await update(r,{scanCount:(d.scanCount||0)+1,lastScanned:Date.now()});
+    icon.classList.remove('spin-anim'); icon.textContent='✓';
+    document.getElementById('scanLbl').textContent=d.label;
+    setTimeout(()=>location.href=d.url,1000);
+  } catch(e){ icon.classList.remove('spin-anim'); icon.textContent='✗'; document.getElementById('scanLbl').textContent='Error'; }
+}
 
-            let qrImageUrl;
-            if      (style === 'regular')   qrImageUrl = await window.generateRegularQR(scanUrl);
-            else if (style === 'footprint') qrImageUrl = await window.generateFootprintQR(scanUrl);
-            else if (style === 'bootprint') qrImageUrl = await window.generateBootprintQR(scanUrl);
-            else if (style === 'longneck')  qrImageUrl = await window.generateIconQR(scanUrl, 'longneck');
-            else if (style === 'trex')      qrImageUrl = await window.generateIconQR(scanUrl, 'trex');
-            else if (style === 'dinofoot')  qrImageUrl = await window.generateIconQR(scanUrl, 'dinofoot');
+// Expose globals needed by inline event handlers
+window._style = 'square';
+window._darkColor = '#000000';
+window._roundness = 0;
+window._finderRadius = 0;
+window._quiet = 4;
+// renderQR is defined in the non-module script above and is already on window
+</script>
 
-            if (!qrImageUrl) throw new Error('QR generation returned null');
-            await set(newRef, { id:qrId, label, url, qrImageUrl, qrStyle:style, scanCount:0, locked:false, createdAt:serverTimestamp(), lastScanned:null });
-            document.getElementById('qrUrl').value = '';
-            document.getElementById('qrLabel').value = '';
-        } catch(e) { console.error(e); alert('Failed to create QR code: ' + e.message); }
-        finally { btn.disabled = false; generatingOverlay.classList.remove('active'); }
-    });
-
-    const styleLabels = { regular:'⬛ Regular', footprint:'🦕 Dino Tracks', bootprint:'👢 Boot Prints', longneck:'🦕 Long Neck', trex:'🦖 T-Rex', dinofoot:'🐾 Foot Print' };
-
-    function renderQRCodes() {
-        const codes = Object.values(qrCodes);
-        const grid = document.getElementById('qrGrid');
-        if (!codes.length) { grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⊞</div><p>No QR codes yet. Create your first one above.</p></div>`; return; }
-        codes.sort((a,b) => (b.createdAt||0)-(a.createdAt||0));
-        grid.innerHTML = codes.map(code => {
-            const scanUrl = `${window.location.origin}${window.location.pathname}?scan=${code.id}&uid=${currentUser.uid}`;
-            const lastScanned = code.lastScanned ? new Date(code.lastScanned).toLocaleString() : 'Never';
-            return `
-                <div class="qr-card ${code.locked?'locked':''}" data-id="${code.id}">
-                    <div class="qr-style-badge">${styleLabels[code.qrStyle]||'⬛ Regular'}</div>
-                    <div class="qr-header">
-                        <div class="qr-label">${esc(code.label)}</div>
-                        <div class="lock-icon" onclick="toggleLock('${code.id}')">${code.locked?'🔒':'🔓'}</div>
-                    </div>
-                    <div class="qr-image-container">
-                        <img src="${code.qrImageUrl}" alt="${esc(code.label)}" style="max-width:100%;height:auto;">
-                    </div>
-                    <div class="qr-stats">
-                        <div class="qr-stat"><div class="qr-stat-label">Scans</div><div class="qr-stat-value">${code.scanCount||0}</div></div>
-                        <div class="qr-stat"><div class="qr-stat-label">Last Scan</div><div class="qr-stat-value" style="font-size:0.75rem;">${lastScanned==='Never'?lastScanned:lastScanned.split(',')[0]}</div></div>
-                    </div>
-                    <div style="margin-bottom:1rem;padding:0.75rem;background:var(--bg-tertiary);font-size:0.75rem;word-break:break-all;">
-                        <div style="color:var(--text-secondary);margin-bottom:0.25rem;">SCAN URL:</div>
-                        <a href="${scanUrl}" target="_blank" style="color:var(--accent);text-decoration:none;">${scanUrl}</a>
-                    </div>
-                    <div class="qr-actions">
-                        <button class="btn-action btn-download" onclick="downloadQR('${code.id}')">Download</button>
-                        <button class="btn-action btn-delete" onclick="deleteQR('${code.id}')" ${code.locked?'disabled':''}>${code.locked?'Locked':'Delete'}</button>
-                    </div>
-                </div>`;
-        }).join('');
-    }
-
-    function updateStats() {
-        const codes = Object.values(qrCodes);
-        document.getElementById('totalCodes').textContent = codes.length;
-        document.getElementById('totalScans').textContent = codes.reduce((s,c)=>s+(c.scanCount||0),0);
-        document.getElementById('lockedCodes').textContent = codes.filter(c=>c.locked).length;
-    }
-
-    window.toggleLock = async id => {
-        const code = qrCodes[id]; if (!code) return;
-        try { await update(ref(db,`users/${currentUser.uid}/qrcodes/${id}`),{locked:!code.locked}); }
-        catch(e) { alert('Failed to toggle lock'); }
-    };
-    window.deleteQR = async id => {
-        const code = qrCodes[id]; if (!code) return;
-        if (code.locked) { alert('Unlock first.'); return; }
-        if (!confirm(`Delete "${code.label}"?`)) return;
-        try { await remove(ref(db,`users/${currentUser.uid}/qrcodes/${id}`)); }
-        catch(e) { alert('Failed to delete'); }
-    };
-
-    // Updated downloadQR — always produces transparent PNG
-    window.downloadQR = async id => {
-        const code = qrCodes[id]; if (!code) return;
-        const filename = `${code.label.replace(/[^a-z0-9]/gi,'_').toLowerCase()}_qr.png`;
-        window._downloadTransparent(code.qrImageUrl, filename);
-    };
-
-    function esc(t) { return t.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
-
-    async function handlePublicScan(userId, qrId) {
-        authContainer.style.display='none'; dashboard.classList.remove('active'); scanContainer.classList.add('active');
-        const iconEl = document.getElementById('scanSuccessIcon');
-        try {
-            const qrRef = ref(db,`users/${userId}/qrcodes/${qrId}`);
-            const snap = await get(qrRef);
-            if (!snap.exists()) { iconEl.classList.remove('loading'); iconEl.textContent='✗'; document.getElementById('scanLabel').textContent='QR Code Not Found'; return; }
-            const qrData = snap.val();
-            await update(qrRef,{scanCount:(qrData.scanCount||0)+1,lastScanned:Date.now()});
-            iconEl.classList.remove('loading'); iconEl.textContent='✓';
-            document.getElementById('scanLabel').textContent = qrData.label;
-            setTimeout(()=>{ window.location.href = qrData.url; },1000);
-        } catch(e) { iconEl.classList.remove('loading'); iconEl.textContent='✗'; document.getElementById('scanLabel').textContent='Error Processing Scan'; }
-    }
+<script>
+// Bridge module-scope vars to window for Firebase module to read
+document.addEventListener('DOMContentLoaded',()=>{
+  // Keep window globals in sync with customizer vars (which are in the non-module script)
+  const syncGlobals=()=>{
+    window._style=_style;
+    window._darkColor=_darkColor;
+    window._roundness=_roundness;
+    window._finderRadius=_finderRadius;
+    window._quiet=_quiet;
+  };
+  // Patch all setters
+  const origSchedule=window.schedulePreview;
+  window.schedulePreview=function(){ syncGlobals(); if(origSchedule) origSchedule(); };
+  setInterval(syncGlobals,500);
+  window.renderQR=renderQR;
+  window._downloadQRTransparent=window._downloadQRTransparent||function(){};
+});
 </script>
 </body>
 </html>
