@@ -585,7 +585,7 @@ window._downloadTransparent = async function(qrImageUrl, filename) {
     document.getElementById('authPassword').addEventListener('keypress', e => { if(e.key==='Enter') document.getElementById('btnLogin').click(); });
 
     function showError(msg) { const el = document.getElementById('authError'); el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display='none', 5000); }
-    function getErrMsg(code) { return {'auth/invalid-email':'Invalid email','auth/user-disabled':'Account disabled','auth/user-not-found':'No account found','auth/wrong-password':'Incorrect password','auth/network-request-failed':'Network error', || 'Authentication error'; }
+    function getErrMsg(code) { return {'auth/invalid-email':'Invalid email','auth/user-disabled':'Account disabled','auth/user-not-found':'No account found','auth/wrong-password':'Incorrect password','auth/network-request-failed':'Network error','auth/too-many-requests':'Too many attempts'}[code] || 'Authentication error'; }
     function showAuth() { authContainer.style.display='flex'; dashboard.classList.remove('active'); scanContainer.classList.remove('active'); }
     function showDashboard() { authContainer.style.display='none'; dashboard.classList.add('active'); scanContainer.classList.remove('active'); }
 
