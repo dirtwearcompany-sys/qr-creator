@@ -73,10 +73,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);lin
 .style-btn{padding:.75rem .5rem;background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--radius);color:var(--muted);cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;display:flex;flex-direction:column;align-items:center;gap:.35rem;transition:.2s;width:100%;}
 .style-btn:hover{border-color:var(--accent);color:var(--text);}
 .style-btn.sel{border-color:var(--accent);background:rgba(0,229,255,.07);color:var(--accent);}
-.style-svg-icon{display:flex;align-items:center;justify-content:center;width:44px;height:44px;flex-shrink:0;}
-.style-svg-icon svg{width:100%;height:100%;color:var(--muted);}
-.style-btn:hover .style-svg-icon svg{color:var(--text);}
-.style-btn.sel .style-svg-icon svg{color:var(--accent);}
+.style-emoji{font-size:1.8rem;line-height:1;}
 .style-name{font-weight:600;}
 
 /* CUSTOMIZER */
@@ -148,6 +145,13 @@ input[type=color]{width:0;height:0;opacity:0;position:absolute;}
 
 /* LIVE PREVIEW CANVAS */
 #previewCanvas{max-width:160px;max-height:160px;display:block;}
+.preview-bg-toggle{display:flex;gap:.3rem;}
+.bg-toggle-btn{padding:.3rem .6rem;font-size:.65rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.5px;background:var(--bg3);border:1px solid var(--border2);color:var(--muted);border-radius:var(--radius);cursor:pointer;transition:.15s;width:auto;}
+.bg-toggle-btn:hover{border-color:var(--accent);color:var(--text);transform:none;box-shadow:none;}
+.bg-toggle-btn.sel{border-color:var(--accent);background:rgba(0,229,255,.1);color:var(--accent);}
+.preview-canvas-wrap{border-radius:4px;padding:.5rem;flex-shrink:0;transition:background .2s;}
+.preview-canvas-wrap.bg-transparent{background:repeating-conic-gradient(#1a2030 0% 25%,#141b25 0% 50%) 0 0/16px 16px;}
+.preview-canvas-wrap.bg-white{background:#ffffff;}
 
 @media(max-width:768px){
   .topbar{flex-direction:column;gap:.75rem;align-items:flex-start;}
@@ -273,14 +277,19 @@ input[type=color]{width:0;height:0;opacity:0;position:absolute;}
 
         <!-- LIVE PREVIEW + FORM -->
         <div class="preview-strip">
-          <div class="preview-canvas-wrap">
-            <canvas id="previewCanvas" width="160" height="160"></canvas>
+          <div style="display:flex;flex-direction:column;gap:.5rem;align-items:center;">
+            <div class="preview-canvas-wrap bg-transparent" id="previewCanvasWrap">
+              <canvas id="previewCanvas" width="160" height="160"></canvas>
+            </div>
+            <div class="preview-bg-toggle">
+              <button class="bg-toggle-btn sel" id="bgTransparent" onclick="setPreviewBg(this)">Transparent</button>
+              <button class="bg-toggle-btn" id="bgWhite" onclick="setPreviewBg(this)">White BG</button>
+            </div>
           </div>
           <div class="preview-info">
             <strong>Live Preview</strong><br>
-            Transparent background<br>
-            Downloads as PNG<br>
-            <span style="color:var(--muted);font-size:.65rem;">Scanned codes count every scan</span>
+            Downloads always as transparent PNG<br>
+            <span style="color:var(--muted);font-size:.65rem;">Toggle to see how it looks on white</span>
           </div>
         </div>
 
@@ -331,158 +340,14 @@ Object.entries(ICON_IMGS).forEach(([k,s])=>{ const i=new Image(); i.src=s; _icon
 // ═══════════════════════════════════════════════
 // MODULE STYLES CONFIG
 // ═══════════════════════════════════════════════
-// SVG icons drawn inline — crisp at any size, themed to match the dark UI
-const STYLE_SVGS = {
-  square: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="4" y="4" width="14" height="14" rx="1" fill="currentColor"/>
-    <rect x="30" y="4" width="14" height="14" rx="1" fill="currentColor"/>
-    <rect x="4" y="30" width="14" height="14" rx="1" fill="currentColor"/>
-    <rect x="20" y="4" width="6" height="6" rx="0.5" fill="currentColor" opacity=".6"/>
-    <rect x="20" y="12" width="6" height="6" rx="0.5" fill="currentColor" opacity=".6"/>
-    <rect x="4" y="20" width="6" height="6" rx="0.5" fill="currentColor" opacity=".6"/>
-    <rect x="12" y="20" width="6" height="6" rx="0.5" fill="currentColor" opacity=".6"/>
-    <rect x="20" y="20" width="6" height="6" rx="0.5" fill="currentColor" opacity=".6"/>
-    <rect x="28" y="20" width="6" height="6" rx="0.5" fill="currentColor" opacity=".6"/>
-    <rect x="36" y="20" width="6" height="6" rx="0.5" fill="currentColor" opacity=".6"/>
-    <rect x="20" y="28" width="6" height="6" rx="0.5" fill="currentColor" opacity=".6"/>
-    <rect x="28" y="28" width="6" height="6" rx="0.5" fill="currentColor" opacity=".6"/>
-    <rect x="36" y="28" width="6" height="6" rx="0.5" fill="currentColor" opacity=".6"/>
-    <rect x="20" y="36" width="6" height="6" rx="0.5" fill="currentColor" opacity=".6"/>
-    <rect x="28" y="36" width="6" height="6" rx="0.5" fill="currentColor" opacity=".6"/>
-    <rect x="36" y="36" width="6" height="6" rx="0.5" fill="currentColor" opacity=".6"/>
-  </svg>`,
-
-  dot: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="4" y="4" width="14" height="14" rx="7" fill="currentColor"/>
-    <rect x="30" y="4" width="14" height="14" rx="7" fill="currentColor"/>
-    <rect x="4" y="30" width="14" height="14" rx="7" fill="currentColor"/>
-    <circle cx="23" cy="7" r="3" fill="currentColor" opacity=".6"/>
-    <circle cx="23" cy="15" r="3" fill="currentColor" opacity=".6"/>
-    <circle cx="7" cy="23" r="3" fill="currentColor" opacity=".6"/>
-    <circle cx="15" cy="23" r="3" fill="currentColor" opacity=".6"/>
-    <circle cx="23" cy="23" r="3" fill="currentColor" opacity=".6"/>
-    <circle cx="31" cy="23" r="3" fill="currentColor" opacity=".6"/>
-    <circle cx="39" cy="23" r="3" fill="currentColor" opacity=".6"/>
-    <circle cx="23" cy="31" r="3" fill="currentColor" opacity=".6"/>
-    <circle cx="31" cy="31" r="3" fill="currentColor" opacity=".6"/>
-    <circle cx="39" cy="31" r="3" fill="currentColor" opacity=".6"/>
-    <circle cx="23" cy="39" r="3" fill="currentColor" opacity=".6"/>
-    <circle cx="31" cy="39" r="3" fill="currentColor" opacity=".6"/>
-    <circle cx="39" cy="39" r="3" fill="currentColor" opacity=".6"/>
-  </svg>`,
-
-  // 3-toed dino footprint (birdlike theropod track)
-  footprint: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- heel pad -->
-    <ellipse cx="24" cy="38" rx="9" ry="5.5" fill="currentColor"/>
-    <!-- center toe -->
-    <ellipse cx="23.5" cy="22" rx="4" ry="9" transform="rotate(-5 23.5 22)" fill="currentColor"/>
-    <!-- center claw tip -->
-    <ellipse cx="22" cy="9.5" rx="2.5" ry="4" transform="rotate(-10 22 9.5)" fill="currentColor"/>
-    <!-- left toe -->
-    <ellipse cx="13" cy="24" rx="3.5" ry="8.5" transform="rotate(-42 13 24)" fill="currentColor"/>
-    <!-- left claw -->
-    <ellipse cx="5.5" cy="13" rx="2.2" ry="3.8" transform="rotate(-42 5.5 13)" fill="currentColor"/>
-    <!-- right toe -->
-    <ellipse cx="35" cy="26" rx="3.5" ry="7.5" transform="rotate(38 35 26)" fill="currentColor"/>
-    <!-- right claw -->
-    <ellipse cx="42.5" cy="16" rx="2.2" ry="3.5" transform="rotate(38 42.5 16)" fill="currentColor"/>
-  </svg>`,
-
-  // Hiking boot sole — chunky tread silhouette
-  bootprint: `<svg viewBox="0 0 48 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- boot sole outline -->
-    <path d="M12 4 C12 2 14 1 17 1 L31 1 C34 1 36 3 36 6 L36 46 C36 53 30 63 24 63 C18 63 12 53 12 46 Z" fill="currentColor"/>
-    <!-- tread grooves (white cuts) -->
-    <rect x="14" y="10" width="20" height="3" rx="1.5" fill="var(--bg3,#161d25)"/>
-    <rect x="14" y="17" width="20" height="3" rx="1.5" fill="var(--bg3,#161d25)"/>
-    <rect x="14" y="24" width="20" height="3" rx="1.5" fill="var(--bg3,#161d25)"/>
-    <rect x="14" y="31" width="20" height="3" rx="1.5" fill="var(--bg3,#161d25)"/>
-    <!-- toe lug blocks -->
-    <rect x="14" y="38" width="8" height="5" rx="2" fill="var(--bg3,#161d25)"/>
-    <rect x="26" y="38" width="8" height="5" rx="2" fill="var(--bg3,#161d25)"/>
-    <!-- heel lug -->
-    <rect x="16" y="52" width="16" height="5" rx="2.5" fill="var(--bg3,#161d25)"/>
-  </svg>`,
-
-  // Brachiosaurus / long neck silhouette
-  longneck: `<svg viewBox="0 0 80 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- body -->
-    <ellipse cx="38" cy="46" rx="22" ry="13" fill="currentColor"/>
-    <!-- front legs -->
-    <rect x="20" y="54" width="8" height="12" rx="3" fill="currentColor"/>
-    <rect x="32" y="56" width="7" height="10" rx="3" fill="currentColor"/>
-    <!-- back legs -->
-    <rect x="46" y="56" width="7" height="10" rx="3" fill="currentColor"/>
-    <rect x="56" y="54" width="8" height="12" rx="3" fill="currentColor"/>
-    <!-- tail -->
-    <path d="M58 50 Q70 52 76 45 Q78 40 74 38" stroke="currentColor" stroke-width="7" stroke-linecap="round" fill="none"/>
-    <!-- neck -->
-    <path d="M22 40 Q14 20 18 6" stroke="currentColor" stroke-width="10" stroke-linecap="round" fill="none"/>
-    <!-- head -->
-    <ellipse cx="20" cy="4" rx="8" ry="5" transform="rotate(-20 20 4)" fill="currentColor"/>
-    <!-- nostril -->
-    <circle cx="14" cy="2" r="1.5" fill="var(--bg3,#161d25)"/>
-    <!-- eye -->
-    <circle cx="22" cy="1" r="2" fill="var(--bg3,#161d25)"/>
-  </svg>`,
-
-  // T-Rex silhouette — upright stance, big head, tiny arms
-  trex: `<svg viewBox="0 0 64 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- massive head -->
-    <path d="M8 6 C8 2 12 0 18 0 L46 0 C52 0 56 3 56 8 L56 22 C56 28 50 32 44 30 L36 28 L36 36 L20 36 C14 36 8 30 8 24 Z" fill="currentColor"/>
-    <!-- jaw / lower mouth -->
-    <path d="M10 22 L54 22 L54 30 C54 34 50 36 46 36 L18 36 C14 36 10 34 10 30 Z" fill="currentColor"/>
-    <!-- teeth row -->
-    <path d="M14 22 L16 28 L18 22 L20 28 L22 22 L24 28 L26 22 L28 28 L30 22 L32 28 L34 22 L36 28 L38 22 L40 28 L42 22 L44 28 L46 22" stroke="var(--bg3,#161d25)" stroke-width="1.5" fill="none"/>
-    <!-- eye -->
-    <circle cx="40" cy="12" r="5" fill="var(--bg3,#161d25)"/>
-    <circle cx="41" cy="11" r="2" fill="currentColor"/>
-    <!-- nostril -->
-    <ellipse cx="14" cy="10" rx="2" ry="3" fill="var(--bg3,#161d25)"/>
-    <!-- neck -->
-    <path d="M20 36 L24 54 L38 54 L42 36" fill="currentColor"/>
-    <!-- body -->
-    <ellipse cx="31" cy="62" rx="16" ry="11" fill="currentColor"/>
-    <!-- tiny arms -->
-    <path d="M18 42 Q10 44 8 50 Q10 52 14 50 Q16 46 20 46" fill="currentColor"/>
-    <!-- back legs -->
-    <rect x="18" y="68" width="10" height="14" rx="4" fill="currentColor"/>
-    <rect x="34" y="68" width="10" height="14" rx="4" fill="currentColor"/>
-    <!-- tail -->
-    <path d="M46 62 Q56 58 60 50 Q62 44 58 40" stroke="currentColor" stroke-width="8" stroke-linecap="round" fill="none"/>
-    <!-- claws -->
-    <path d="M18 82 L15 86 M24 82 L24 86 M30 82 L33 86" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-    <path d="M34 82 L31 86 M40 82 L40 86 M46 82 L49 86" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-  </svg>`,
-
-  // Dino footprint (used as center overlay icon too) — same 3-toe shape, larger
-  dinofoot: `<svg viewBox="0 0 56 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- heel pad, wide -->
-    <ellipse cx="28" cy="54" rx="14" ry="8" fill="currentColor"/>
-    <!-- center toe -->
-    <ellipse cx="27" cy="32" rx="6" ry="14" transform="rotate(-4 27 32)" fill="currentColor"/>
-    <!-- center claw -->
-    <ellipse cx="25" cy="12" rx="3.5" ry="6" transform="rotate(-8 25 12)" fill="currentColor"/>
-    <!-- left toe -->
-    <ellipse cx="11" cy="34" rx="5" ry="12" transform="rotate(-40 11 34)" fill="currentColor"/>
-    <!-- left claw -->
-    <ellipse cx="2" cy="16" rx="3" ry="5.5" transform="rotate(-40 2 16)" fill="currentColor"/>
-    <!-- right toe -->
-    <ellipse cx="45" cy="36" rx="5" ry="11" transform="rotate(36 45 36)" fill="currentColor"/>
-    <!-- right claw -->
-    <ellipse cx="53" cy="20" rx="3" ry="5" transform="rotate(36 53 20)" fill="currentColor"/>
-  </svg>`,
-};
-
 const STYLES = [
-  {key:'square',    label:'Square',     svgKey:'square'},
-  {key:'dot',       label:'Dots',       svgKey:'dot'},
-  {key:'footprint', label:'Dino Track', svgKey:'footprint'},
-  {key:'bootprint', label:'Boot Print', svgKey:'bootprint'},
-  {key:'longneck',  label:'Long Neck',  svgKey:'longneck'},
-  {key:'trex',      label:'T-Rex',      svgKey:'trex'},
-  {key:'dinofoot',  label:'Foot Print', svgKey:'dinofoot'},
+  {key:'square',    label:'Square',     emoji:'⬛'},
+  {key:'dot',       label:'Dots',       emoji:'🔵'},
+  {key:'footprint', label:'Dino Track', emoji:'🦶'},
+  {key:'bootprint', label:'Boot Print', emoji:'👢'},
+  {key:'longneck',  label:'Long Neck',  emoji:'🦕'},
+  {key:'trex',      label:'T-Rex',      emoji:'🦖'},
+  {key:'dinofoot',  label:'Foot Print', emoji:'🐾'},
 ];
 
 // Build style buttons
@@ -492,7 +357,7 @@ STYLES.forEach((s,i)=>{
   b.className='style-btn'+(i===0?' sel':'');
   b.dataset.key = s.key;
   b.onclick = ()=>{ selectStyle(s.key, b); };
-  b.innerHTML = `<span class="style-svg-icon">${STYLE_SVGS[s.svgKey]||''}</span><span class="style-name">${s.label}</span>`;
+  b.innerHTML = `<span class="style-emoji">${s.emoji}</span><span class="style-name">${s.label}</span>`;
   styleGrid.appendChild(b);
 });
 
@@ -775,6 +640,23 @@ function renderQR(opts, destCanvas, sampleSrc){
 let _previewTimer = null;
 const previewCanvas = document.getElementById('previewCanvas');
 
+let _previewBg = 'transparent';
+window.setPreviewBg = function(btn){
+  document.querySelectorAll('.bg-toggle-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  _previewBg = btn.id === 'bgWhite' ? 'white' : 'transparent';
+  const wrap = document.getElementById('previewCanvasWrap');
+  wrap.className = 'preview-canvas-wrap ' + (_previewBg==='white' ? 'bg-white' : 'bg-transparent');
+  // redraw preview canvas with new bg
+  const canvas = document.getElementById('previewCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(_previewBg==='white'){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);}
+  if(window._lastPreviewDataUrl){
+    const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,canvas.width,canvas.height); img.src=window._lastPreviewDataUrl;
+  }
+};
+
 function schedulePreview(){
   clearTimeout(_previewTimer);
   _previewTimer = setTimeout(runPreview, 600);
@@ -790,8 +672,10 @@ function runPreview(){
     targetUrl:url
   }, pCanvas, 800).then(dataUrl=>{
     if(!dataUrl) return;
+    window._lastPreviewDataUrl = dataUrl;
     const ctx = previewCanvas.getContext('2d');
     ctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
+    if(window._previewBg==='white'){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,previewCanvas.width,previewCanvas.height);}
     const img=new Image(); img.onload=()=>{ ctx.drawImage(img,0,0,previewCanvas.width,previewCanvas.height); }; img.src=dataUrl;
   });
 }
