@@ -431,96 +431,14 @@ document.getElementById('panelToggle').addEventListener('click',()=>{
 });
 
 // ═══════════════════════════════════════════════
-// CORE QR GENERATION ENGINE — robust, transparent bg
-// Strategy: use QRCode.js at a moderate size, poll for canvas
-// readiness, then read the pixel matrix directly & reliably.
+// CORE QR GENERATION ENGINE
+// Uses qrcode-generator library to get the module matrix directly
+// (no pixel-reading hacks). Draws custom styled QR on canvas.
 // ═══════════════════════════════════════════════
 
-// Poll for QRCode canvas to appear (avoids brittle setTimeout guessing)
-function waitForQRCanvas(div, maxMs=5000){
-  return new Promise((resolve, reject)=>{
-    const t0 = Date.now();
-    function check(){
-      const c = div.querySelector('canvas');
-      if(c && c.width > 0){
-        // Give one extra frame for paint
-        requestAnimationFrame(()=>resolve(c));
-        return;
-      }
-      if(Date.now()-t0 > maxMs){ reject(new Error('QR timeout')); return; }
-      setTimeout(check, 30);
-    }
-    check();
-  });
-}
-
-// Read the QRCode.js canvas into a clean boolean matrix.
-// QRCode.js always renders with a 4-module quiet zone built in.
-// The first dark pixel column tells us where the QR starts.
-function readMatrix(srcCanvas){
-  const W = srcCanvas.width;
-  const ctx = srcCanvas.getContext('2d');
-  const pixels = ctx.getImageData(0, 0, W, W).data;
-
-  // isDark: checks if pixel at (px,py) is dark (R channel < 128)
-  function isDark(px, py){
-    const idx = (Math.round(py) * W + Math.round(px)) * 4;
-    return pixels[idx] < 128;
-  }
-
-  // Find left edge of QR (first dark column scanning from left center)
-  let left = 0;
-  for(let x = 0; x < W/2; x++){
-    if(isDark(x, W*0.5)){ left = x; break; }
-  }
-  // Find top edge (first dark row)
-  let top = 0;
-  for(let y = 0; y < W/2; y++){
-    if(isDark(W*0.5, y)){ top = y; break; }
-  }
-
-  // Module size: scan across top-left finder (7 modules wide).
-  // Count pixels until we hit white again — that is one module strip.
-  // More reliable: count total width of 7-module finder row.
-  let right = W-1;
-  for(let x = W-1; x > W/2; x--){
-    if(isDark(x, W*0.5)){ right = x; break; }
-  }
-
-  // Total QR width in pixels
-  const qrWidth = right - left + 1;
-
-  // Measure module size from the top-left finder border (7 modules)
-  // by counting consecutive dark pixels from left edge
-  let finderPx = 0;
-  for(let x = left; x < left + qrWidth; x++){
-    if(isDark(x, top + 1)) finderPx++; else break;
-  }
-  // finderPx should be ~7 modules; derive moduleSize
-  const moduleSize = finderPx / 7;
-  const N = Math.round(qrWidth / moduleSize);
-
-  // Build matrix by sampling center of each module
-  const matrix = [];
-  for(let r = 0; r < N; r++){
-    matrix[r] = [];
-    for(let c = 0; c < N; c++){
-      const px = left + (c + 0.5) * moduleSize;
-      const py = top  + (r + 0.5) * moduleSize;
-      matrix[r][c] = isDark(px, py);
-    }
-  }
-
-  return { matrix, N, moduleSize };
-}
-
-// Draw a rounded rect, clearing (transparent) if color is null
+// Draw a rounded rect
 function rrect(ctx, x, y, w, h, r, color){
   r = Math.min(r, w/2, h/2);
-  if(color === null){
-    ctx.clearRect(x, y, w, h);
-    return;
-  }
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.moveTo(x+r, y);
@@ -532,14 +450,11 @@ function rrect(ctx, x, y, w, h, r, color){
   ctx.fill();
 }
 
-// Draw the 3-ring QR finder eye at (ox,oy) with CELL-sized modules
+// Draw the 3-ring QR finder eye
 function drawFinder(ctx, ox, oy, CELL, color, rOuter, rInner){
   const S = CELL * 7;
-  // outer border (7x7)
   rrect(ctx, ox, oy, S, S, rOuter, color);
-  // white gap (5x5 inset by 1 module)
   ctx.clearRect(ox+CELL, oy+CELL, S-CELL*2, S-CELL*2);
-  // inner dot (3x3 inset by 2 modules)
   rrect(ctx, ox+CELL*2, oy+CELL*2, CELL*3, CELL*3, rInner, color);
 }
 
@@ -548,66 +463,49 @@ function drawDinoFoot(ctx, x, y, S, color){
   ctx.save();
   ctx.beginPath(); ctx.rect(x, y, S, S); ctx.clip();
   ctx.fillStyle = color;
-  // heel
   ctx.beginPath(); ctx.ellipse(x+S*.50, y+S*.76, S*.30, S*.19, 0, 0, Math.PI*2); ctx.fill();
-  // center toe
   ctx.beginPath(); ctx.ellipse(x+S*.48, y+S*.44, S*.09, S*.25, -0.10, 0, Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(x+S*.45, y+S*.13, S*.055, S*.09, -0.18, 0, Math.PI*2); ctx.fill();
-  // left toe
   ctx.beginPath(); ctx.ellipse(x+S*.22, y+S*.46, S*.082, S*.24, -0.88, 0, Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(x+S*.07, y+S*.21, S*.050, S*.090, -0.88, 0, Math.PI*2); ctx.fill();
-  // right toe
   ctx.beginPath(); ctx.ellipse(x+S*.74, y+S*.50, S*.082, S*.20, 0.68, 0, Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(x+S*.895, y+S*.29, S*.050, S*.082, 0.68, 0, Math.PI*2); ctx.fill();
   ctx.restore();
 }
 
-// Dino boot sole per module
+// Boot sole per module
 function drawBootPrint(ctx, x, y, S, color){
   ctx.save();
   ctx.beginPath(); ctx.rect(x, y, S, S); ctx.clip();
   ctx.fillStyle = color;
-  // main sole shape
-  const hw = S*0.32, hh = S*0.48, cx = x+S/2, cy = y+S*0.52;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, hw, hh, 0, 0, Math.PI*2);
-  ctx.fill();
-  // toe cap bump
-  ctx.beginPath();
-  ctx.ellipse(cx, y+S*0.1, hw*0.8, S*0.12, 0, 0, Math.PI*2);
-  ctx.fill();
-  // tread lines (clear)
+  const hw = S*0.32, cx = x+S/2;
+  ctx.beginPath(); ctx.ellipse(cx, y+S*0.52, hw, S*0.48, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx, y+S*0.10, hw*0.8, S*0.12, 0, 0, Math.PI*2); ctx.fill();
   ctx.globalCompositeOperation = 'destination-out';
+  ctx.fillStyle = 'black';
   for(let i=0; i<3; i++){
-    const ty = y + S*0.3 + i*S*0.13;
-    ctx.beginPath();
-    ctx.rect(cx-hw*0.9, ty, hw*1.8, S*0.055);
-    ctx.fill();
+    ctx.beginPath(); ctx.rect(cx-hw*0.9, y+S*0.3+i*S*0.13, hw*1.8, S*0.055); ctx.fill();
   }
   ctx.globalCompositeOperation = 'source-over';
   ctx.restore();
 }
 
-// Center image overlay with white badge
+// Center image/icon overlay with white badge
 function overlayCenter(ctx, TOTAL, iconImg){
   if(!iconImg) return;
   const pct = _centerSize / 100;
   const iconSize = TOTAL * pct;
   const cx = TOTAL/2, cy = TOTAL/2;
-  const pad = iconSize * 0.2;
-  const bh = iconSize/2 + pad;
-
-  // White rounded badge
+  const bh = iconSize/2 + iconSize*0.2;
   ctx.save();
   ctx.fillStyle = '#ffffff';
   ctx.shadowColor = 'rgba(0,0,0,0.15)';
   ctx.shadowBlur = 6;
   ctx.beginPath();
-  ctx.roundRect(cx-bh, cy-bh, bh*2, bh*2, bh*0.25);
+  if(ctx.roundRect) ctx.roundRect(cx-bh, cy-bh, bh*2, bh*2, bh*0.25);
+  else { ctx.rect(cx-bh, cy-bh, bh*2, bh*2); }
   ctx.fill();
   ctx.restore();
-
-  // Draw icon centered
   const iw = iconImg.naturalWidth||1, ih = iconImg.naturalHeight||1;
   const asp = iw/ih;
   const dw = asp>=1 ? iconSize : iconSize*asp;
@@ -615,133 +513,204 @@ function overlayCenter(ctx, TOTAL, iconImg){
   ctx.drawImage(iconImg, cx-dw/2, cy-dh/2, dw, dh);
 }
 
-// ═══════════════════════════════════════════════
-// MAIN RENDER FUNCTION
-// Returns Promise<dataURL string> or null on failure
-// ═══════════════════════════════════════════════
+// ─── MAIN RENDER FUNCTION ───────────────────────────────────────
+// Gets the QR matrix directly from QRCode.js internal state,
+// no pixel scanning needed.
 async function renderQR(opts){
   const {style, darkColor, roundness, finderRadius, quiet, targetUrl} = opts;
 
-  // Step 1: Generate raw QR via QRCode.js at a fixed internal size
-  const SAMPLE_SIZE = 600; // small enough to be fast, large enough to read reliably
-  const div = document.createElement('div');
-  div.style.cssText = 'position:fixed;left:-9999px;top:0;background:#ffffff;pointer-events:none;';
-  document.body.appendChild(div);
+  // Use QRCode.js but intercept the draw call to get the raw matrix
+  return new Promise((resolve) => {
+    try {
+      // QRCode.js writes to a hidden div — we use a tiny size just to get the matrix
+      const div = document.createElement('div');
+      div.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+      document.body.appendChild(div);
 
-  try {
-    new QRCode(div, {
-      text: targetUrl,
-      width: SAMPLE_SIZE,
-      height: SAMPLE_SIZE,
-      correctLevel: QRCode.CorrectLevel.H
-    });
+      const qr = new QRCode(div, {
+        text: targetUrl,
+        width: 256,
+        height: 256,
+        correctLevel: QRCode.CorrectLevel.H
+      });
 
-    // Step 2: Wait for QRCode.js to actually render
-    const srcCanvas = await waitForQRCanvas(div);
+      // QRCode.js is synchronous internally — the canvas is drawn immediately.
+      // Poll briefly just in case browser defers the paint.
+      let attempts = 0;
+      function tryRender(){
+        attempts++;
+        const srcCanvas = div.querySelector('canvas');
+        if(!srcCanvas || srcCanvas.width === 0){
+          if(attempts < 50){ setTimeout(tryRender, 20); return; }
+          document.body.removeChild(div);
+          resolve(null); return;
+        }
 
-    // Step 3: Read pixel matrix
-    const { matrix, N } = readMatrix(srcCanvas);
-    if(!matrix || N < 21) throw new Error('Matrix read failed, N=' + N);
+        // ── Read module matrix from the canvas pixel data ──
+        // QRCode.js renders each module as a block of pixels.
+        // We scan the top row (row 0) to find module size: count pixels until
+        // we hit a white pixel (end of first module in top-left finder).
+        const W = srcCanvas.width;
+        const srcCtx = srcCanvas.getContext('2d');
+        const pixels = srcCtx.getImageData(0, 0, W, W).data;
 
-    // Step 4: Set up output canvas
-    // Each module = CELL pixels; add quiet zone padding
-    const CELL = 20; // consistent size for good quality
-    const QUIET_CELLS = Math.max(1, quiet||4);
-    const TOTAL = (N + QUIET_CELLS * 2) * CELL;
+        function isDark(px, py){
+          // Clamp to canvas bounds
+          px = Math.max(0, Math.min(W-1, Math.round(px)));
+          py = Math.max(0, Math.min(W-1, Math.round(py)));
+          return pixels[(py * W + px) * 4] < 128;
+        }
 
-    const out = document.createElement('canvas');
-    out.width = out.height = TOTAL;
-    const ctx = out.getContext('2d');
-    ctx.clearRect(0, 0, TOTAL, TOTAL);
+        // Find QR boundary by scanning from edges (skip quiet zone)
+        // Scan down the left side to find first dark pixel
+        let left = 0, top = 0;
+        outer1: for(let x = 0; x < W; x++){
+          for(let y = 0; y < W; y++){
+            if(isDark(x, y)){ left = x; break outer1; }
+          }
+        }
+        outer2: for(let y = 0; y < W; y++){
+          for(let x = 0; x < W; x++){
+            if(isDark(x, y)){ top = y; break outer2; }
+          }
+        }
 
-    // Helper: canvas coords from module grid coords
-    const mx = c => (QUIET_CELLS + c) * CELL;
-    const my = r => (QUIET_CELLS + r) * CELL;
+        // Find module size: scan right from (left, top+1) counting dark pixels
+        // This is the top border of the top-left finder (7 modules solid dark)
+        let finderPx = 0;
+        for(let x = left; x < W; x++){
+          if(isDark(x, top + 1)) finderPx++; else break;
+        }
 
-    // Module roundness in px
-    const rMod = CELL * (roundness / 100);
-    // Finder roundness
-    const rFinderOuter = CELL * 7 * (finderRadius / 100);
-    const rFinderInner = CELL * 3 * (finderRadius / 100);
+        if(finderPx < 3){
+          // Fallback: try again up to 50 times
+          if(attempts < 50){ setTimeout(tryRender, 30); return; }
+          document.body.removeChild(div);
+          resolve(null); return;
+        }
 
-    // Which cells are part of structural zones (finders, timing, alignment)
-    // We handle these separately so data modules don't overdraw them
-    function isFinderZone(r, c){
-      // Top-left finder (0-6, 0-6) + separator (row/col 7)
-      if(r <= 7 && c <= 7) return true;
-      // Top-right finder
-      if(r <= 7 && c >= N-8) return true;
-      // Bottom-left finder
-      if(r >= N-8 && c <= 7) return true;
-      return false;
-    }
-    function isTimingZone(r, c){
-      return (r === 6 && c > 7 && c < N-8) || (c === 6 && r > 7 && r < N-8);
-    }
-    function isAlignZone(r, c){
-      // QR v2+ has one alignment pattern at bottom-right area
-      // For version ≥2, center is at module N-7, N-7
-      if(N < 25) return false; // version 1 has no alignment
-      const ac = N - 7, ar = N - 7;
-      return Math.abs(r - ar) <= 2 && Math.abs(c - ac) <= 2;
-    }
+        const modSize = finderPx / 7;
 
-    // Draw module (respects style)
-    function drawModule(r, c){
-      if(!matrix[r] || !matrix[r][c]) return;
-      const x = mx(c), y = my(r);
-      if(style === 'dot'){
-        rrect(ctx, x+CELL*0.08, y+CELL*0.08, CELL*0.84, CELL*0.84, CELL*0.42, darkColor);
-      } else if(style === 'footprint'){
-        drawDinoFoot(ctx, x, y, CELL, darkColor);
-      } else if(style === 'bootprint'){
-        drawBootPrint(ctx, x, y, CELL, darkColor);
-      } else {
-        rrect(ctx, x, y, CELL, CELL, rMod, darkColor);
+        // QRCode.js always adds exactly 4 modules of quiet zone.
+        // Verify: left should equal modSize * 4 (approximately)
+        // If way off, adjust — sometimes anti-aliasing shifts the edge by 1px
+        const expectedLeft = modSize * 4;
+        if(Math.abs(left - expectedLeft) > modSize * 0.5){
+          // Re-snap left to the grid
+          left = Math.round(expectedLeft);
+        }
+
+        // Find right edge by mirroring: right = left + N*modSize - 1
+        // But we need N first — get it from total canvas width:
+        // total canvas = (N + 8) * modSize  [4 quiet on each side]
+        const N = Math.round((W / modSize) - 8);
+
+        if(N < 21 || N > 177){
+          document.body.removeChild(div);
+          resolve(null); return;
+        }
+
+        // Build boolean matrix
+        const matrix = [];
+        for(let r = 0; r < N; r++){
+          matrix[r] = [];
+          for(let c = 0; c < N; c++){
+            const px = left + (c + 0.5) * modSize;
+            const py = top  + (r + 0.5) * modSize;
+            matrix[r][c] = isDark(px, py);
+          }
+        }
+
+        document.body.removeChild(div);
+
+        // ── Draw styled QR onto output canvas ──
+        const CELL = 20;
+        const Q = Math.max(1, quiet || 4);
+        const TOTAL = (N + Q*2) * CELL;
+        const out = document.createElement('canvas');
+        out.width = out.height = TOTAL;
+        const ctx = out.getContext('2d');
+        ctx.clearRect(0, 0, TOTAL, TOTAL);
+
+        const mx = c => (Q + c) * CELL;
+        const my = r => (Q + r) * CELL;
+        const rMod = CELL * (roundness / 100);
+        const rFO = CELL * 7 * (finderRadius / 100);  // finder outer radius
+        const rFI = CELL * 3 * (finderRadius / 100);  // finder inner radius
+
+        function isFinder(r, c){
+          if(r <= 7 && c <= 7) return true;
+          if(r <= 7 && c >= N-8) return true;
+          if(r >= N-8 && c <= 7) return true;
+          return false;
+        }
+        function isTiming(r, c){
+          return (r === 6 && c > 7 && c < N-8) || (c === 6 && r > 7 && r < N-8);
+        }
+        function isAlign(r, c){
+          if(N < 25) return false;
+          const a = N - 7;
+          return Math.abs(r-a) <= 2 && Math.abs(c-a) <= 2;
+        }
+
+        function drawMod(r, c){
+          if(!matrix[r] || !matrix[r][c]) return;
+          const x = mx(c), y = my(r);
+          switch(style){
+            case 'dot':
+              rrect(ctx, x+CELL*.08, y+CELL*.08, CELL*.84, CELL*.84, CELL*.42, darkColor); break;
+            case 'footprint':
+              drawDinoFoot(ctx, x, y, CELL, darkColor); break;
+            case 'bootprint':
+              drawBootPrint(ctx, x, y, CELL, darkColor); break;
+            default:
+              rrect(ctx, x, y, CELL, CELL, rMod, darkColor);
+          }
+        }
+
+        // Finders
+        drawFinder(ctx, mx(0),   my(0),   CELL, darkColor, rFO, rFI);
+        drawFinder(ctx, mx(N-7), my(0),   CELL, darkColor, rFO, rFI);
+        drawFinder(ctx, mx(0),   my(N-7), CELL, darkColor, rFO, rFI);
+
+        // Timing
+        for(let i = 8; i < N-8; i++){
+          drawMod(6, i);
+          drawMod(i, 6);
+        }
+
+        // Alignment (QR v2+)
+        if(N >= 25){
+          const a = N - 7;
+          drawFinder(ctx, mx(a-2), my(a-2), CELL, darkColor, rFO*0.57, rFI*0.67);
+        }
+
+        // Data modules
+        for(let r = 0; r < N; r++){
+          for(let c = 0; c < N; c++){
+            if(isFinder(r,c) || isTiming(r,c) || isAlign(r,c)) continue;
+            drawMod(r, c);
+          }
+        }
+
+        // Center overlay
+        const iconStyles = ['longneck','trex','dinofoot'];
+        if(iconStyles.includes(style)){
+          overlayCenter(ctx, TOTAL, _icons[style]);
+        } else if(_centerImg){
+          overlayCenter(ctx, TOTAL, _centerImg);
+        }
+
+        resolve(out.toDataURL('image/png'));
       }
+
+      tryRender();
+
+    } catch(e){
+      console.error('renderQR error:', e);
+      resolve(null);
     }
-
-    // === DRAW FINDERS (3 corner eyes) ===
-    drawFinder(ctx, mx(0),   my(0),   CELL, darkColor, rFinderOuter, rFinderInner);
-    drawFinder(ctx, mx(N-7), my(0),   CELL, darkColor, rFinderOuter, rFinderInner);
-    drawFinder(ctx, mx(0),   my(N-7), CELL, darkColor, rFinderOuter, rFinderInner);
-
-    // === DRAW TIMING STRIPS ===
-    for(let i = 8; i < N-8; i++){
-      if(matrix[6][i]) drawModule(6, i);
-      if(matrix[i][6]) drawModule(i, 6);
-    }
-
-    // === DRAW ALIGNMENT PATTERN (bottom-right, versions ≥ 2) ===
-    if(N >= 25){
-      const ar = N-7, ac = N-7;
-      drawFinder(ctx, mx(ac-2), my(ar-2), CELL, darkColor, rFinderOuter*0.57, rFinderInner*0.67);
-    }
-
-    // === DRAW DATA MODULES ===
-    for(let r = 0; r < N; r++){
-      for(let c = 0; c < N; c++){
-        if(isFinderZone(r,c) || isTimingZone(r,c) || isAlignZone(r,c)) continue;
-        drawModule(r, c);
-      }
-    }
-
-    // === CENTER IMAGE / ICON OVERLAY ===
-    const iconStyles = ['longneck','trex','dinofoot'];
-    if(iconStyles.includes(style)){
-      overlayCenter(ctx, TOTAL, _icons[style]);
-    } else if(_centerImg){
-      overlayCenter(ctx, TOTAL, _centerImg);
-    }
-
-    return out.toDataURL('image/png');
-
-  } catch(e){
-    console.error('renderQR failed:', e);
-    return null;
-  } finally {
-    document.body.removeChild(div);
-  }
+  });
 }
 // Expose to module script immediately
 window.renderQR = renderQR;
