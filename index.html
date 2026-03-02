@@ -431,208 +431,320 @@ document.getElementById('panelToggle').addEventListener('click',()=>{
 });
 
 // ═══════════════════════════════════════════════
-// CORE QR GENERATION ENGINE (transparent bg)
+// CORE QR GENERATION ENGINE — robust, transparent bg
+// Strategy: use QRCode.js at a moderate size, poll for canvas
+// readiness, then read the pixel matrix directly & reliably.
 // ═══════════════════════════════════════════════
 
-// Sample hidden QRCode lib canvas into a boolean matrix
-function sampleMatrix(srcCanvas){
-  const W=srcCanvas.width, ctx=srcCanvas.getContext('2d');
-  const px=ctx.getImageData(0,0,W,W).data;
-  function dark(x,y){ const i=(Math.round(y)*W+Math.round(x))*4; return px[i]<128; }
-  let qL=0,qT=0,qR=W;
-  for(let x=0;x<W/2;x++){ let f=false; for(let y=W*.1;y<W*.9;y++) if(dark(x,y)){qL=x;f=true;break;} if(f)break; }
-  for(let y=0;y<W/2;y++){ let f=false; for(let x=W*.1;x<W*.9;x++) if(dark(x,y)){qT=y;f=true;break;} if(f)break; }
-  for(let x=W-1;x>W/2;x--){ let f=false; for(let y=W*.1;y<W*.9;y++) if(dark(x,y)){qR=x;f=true;break;} if(f)break; }
-  let de=qL; for(let x=qL;x<W;x++){ if(dark(x,qT+2)) de=x; else break; }
-  const mod=(de-qL+1)/7;
-  const N=Math.round((qR-qL+mod)/mod);
-  const m=[];
-  for(let r=0;r<N;r++){ m[r]=[]; for(let c=0;c<N;c++) m[r][c]=dark(qL+(c+.5)*mod,qT+(r+.5)*mod); }
-  return {m,N,mod};
+// Poll for QRCode canvas to appear (avoids brittle setTimeout guessing)
+function waitForQRCanvas(div, maxMs=5000){
+  return new Promise((resolve, reject)=>{
+    const t0 = Date.now();
+    function check(){
+      const c = div.querySelector('canvas');
+      if(c && c.width > 0){
+        // Give one extra frame for paint
+        requestAnimationFrame(()=>resolve(c));
+        return;
+      }
+      if(Date.now()-t0 > maxMs){ reject(new Error('QR timeout')); return; }
+      setTimeout(check, 30);
+    }
+    check();
+  });
 }
 
-function mkStructCheck(N){
-  return function(r,c){
-    if(r<7&&c<7) return true;
-    if(r<7&&c>=N-7) return true;
-    if(r>=N-7&&c<7) return true;
-    if(r===7&&c<=7||c===7&&r<=7||r===7&&c>=N-8||c===N-8&&r<=7||r===N-8&&c<=7||c===7&&r>=N-8) return true;
-    if(r===6||c===6) return true;
-    if(r===8&&c<=8||r===8&&c>=N-8||c===8&&r<=8||c===8&&r>=N-8) return true;
-    const b=N-7; if(Math.abs(r-b)<=2&&Math.abs(c-b)<=2) return true;
-    return false;
-  };
+// Read the QRCode.js canvas into a clean boolean matrix.
+// QRCode.js always renders with a 4-module quiet zone built in.
+// The first dark pixel column tells us where the QR starts.
+function readMatrix(srcCanvas){
+  const W = srcCanvas.width;
+  const ctx = srcCanvas.getContext('2d');
+  const pixels = ctx.getImageData(0, 0, W, W).data;
+
+  // isDark: checks if pixel at (px,py) is dark (R channel < 128)
+  function isDark(px, py){
+    const idx = (Math.round(py) * W + Math.round(px)) * 4;
+    return pixels[idx] < 128;
+  }
+
+  // Find left edge of QR (first dark column scanning from left center)
+  let left = 0;
+  for(let x = 0; x < W/2; x++){
+    if(isDark(x, W*0.5)){ left = x; break; }
+  }
+  // Find top edge (first dark row)
+  let top = 0;
+  for(let y = 0; y < W/2; y++){
+    if(isDark(W*0.5, y)){ top = y; break; }
+  }
+
+  // Module size: scan across top-left finder (7 modules wide).
+  // Count pixels until we hit white again — that is one module strip.
+  // More reliable: count total width of 7-module finder row.
+  let right = W-1;
+  for(let x = W-1; x > W/2; x--){
+    if(isDark(x, W*0.5)){ right = x; break; }
+  }
+
+  // Total QR width in pixels
+  const qrWidth = right - left + 1;
+
+  // Measure module size from the top-left finder border (7 modules)
+  // by counting consecutive dark pixels from left edge
+  let finderPx = 0;
+  for(let x = left; x < left + qrWidth; x++){
+    if(isDark(x, top + 1)) finderPx++; else break;
+  }
+  // finderPx should be ~7 modules; derive moduleSize
+  const moduleSize = finderPx / 7;
+  const N = Math.round(qrWidth / moduleSize);
+
+  // Build matrix by sampling center of each module
+  const matrix = [];
+  for(let r = 0; r < N; r++){
+    matrix[r] = [];
+    for(let c = 0; c < N; c++){
+      const px = left + (c + 0.5) * moduleSize;
+      const py = top  + (r + 0.5) * moduleSize;
+      matrix[r][c] = isDark(px, py);
+    }
+  }
+
+  return { matrix, N, moduleSize };
 }
 
-// Draw one rounded rect (used for square/dot modules and finders)
+// Draw a rounded rect, clearing (transparent) if color is null
 function rrect(ctx, x, y, w, h, r, color){
   r = Math.min(r, w/2, h/2);
+  if(color === null){
+    ctx.clearRect(x, y, w, h);
+    return;
+  }
   ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r);
-  ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r);
-  ctx.arcTo(x,y,x+w,y,r);
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y,   x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x,   y+h, r);
+  ctx.arcTo(x,   y+h, x,   y,   r);
+  ctx.arcTo(x,   y,   x+w, y,   r);
   ctx.closePath();
   ctx.fill();
 }
 
-// Draw finder pattern (three-ring square eye)
-function drawFinder(ctx, ox, oy, CELL, color, outerR, innerR){
-  const S = CELL*7;
-  // outer ring
-  rrect(ctx, ox, oy, S, S, outerR, color);
-  // white gap
-  rrect(ctx, ox+CELL, oy+CELL, S-CELL*2, S-CELL*2, Math.max(0,outerR-CELL*.8), '#00000000');
-  // inner dot
-  rrect(ctx, ox+CELL*2, oy+CELL*2, CELL*3, CELL*3, innerR, color);
+// Draw the 3-ring QR finder eye at (ox,oy) with CELL-sized modules
+function drawFinder(ctx, ox, oy, CELL, color, rOuter, rInner){
+  const S = CELL * 7;
+  // outer border (7x7)
+  rrect(ctx, ox, oy, S, S, rOuter, color);
+  // white gap (5x5 inset by 1 module)
+  ctx.clearRect(ox+CELL, oy+CELL, S-CELL*2, S-CELL*2);
+  // inner dot (3x3 inset by 2 modules)
+  rrect(ctx, ox+CELL*2, oy+CELL*2, CELL*3, CELL*3, rInner, color);
 }
 
-// Dino footprint stamp
+// 3-toed dino footprint per module
 function drawDinoFoot(ctx, x, y, S, color){
-  ctx.save(); ctx.beginPath(); ctx.rect(x,y,S,S); ctx.clip();
-  ctx.fillStyle=color;
-  ctx.beginPath(); ctx.ellipse(x+S*.50,y+S*.76,S*.32,S*.20,0,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(x+S*.47,y+S*.43,S*.095,S*.26,-0.10,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(x+S*.44,y+S*.12,S*.058,S*.10,-0.20,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(x+S*.22,y+S*.46,S*.085,S*.25,-0.90,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(x+S*.065,y+S*.20,S*.052,S*.095,-0.90,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(x+S*.74,y+S*.50,S*.085,S*.21,0.70,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(x+S*.895,y+S*.28,S*.052,S*.085,0.70,0,Math.PI*2); ctx.fill();
-  ctx.restore();
-}
-
-// Boot print stamp
-function drawBootPrint(ctx, x, y, S){
-  ctx.save(); ctx.beginPath(); ctx.rect(x,y,S,S); ctx.clip();
-  const img=_icons['bootprint'];
-  if(img&&img.complete&&img.naturalWidth>0){
-    const sc=Math.min(S/img.naturalWidth,S/img.naturalHeight);
-    const dw=img.naturalWidth*sc, dh=img.naturalHeight*sc;
-    ctx.drawImage(img, x+(S-dw)/2, y+(S-dh)/2, dw, dh);
-  } else {
-    ctx.fillStyle='#000'; ctx.fillRect(x+S*.15,y+S*.03,S*.7,S*.94);
-  }
-  ctx.restore();
-}
-
-// Overlay center image onto canvas
-function overlayCenter(ctx, SIZE, iconKey){
-  const pct = _centerSize/100;
-  const iconSize = SIZE * pct;
-  const cx=SIZE/2, cy=SIZE/2;
-  const pad = iconSize*.18, bh=iconSize/2+pad, br=bh*.3;
-
   ctx.save();
+  ctx.beginPath(); ctx.rect(x, y, S, S); ctx.clip();
+  ctx.fillStyle = color;
+  // heel
+  ctx.beginPath(); ctx.ellipse(x+S*.50, y+S*.76, S*.30, S*.19, 0, 0, Math.PI*2); ctx.fill();
+  // center toe
+  ctx.beginPath(); ctx.ellipse(x+S*.48, y+S*.44, S*.09, S*.25, -0.10, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x+S*.45, y+S*.13, S*.055, S*.09, -0.18, 0, Math.PI*2); ctx.fill();
+  // left toe
+  ctx.beginPath(); ctx.ellipse(x+S*.22, y+S*.46, S*.082, S*.24, -0.88, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x+S*.07, y+S*.21, S*.050, S*.090, -0.88, 0, Math.PI*2); ctx.fill();
+  // right toe
+  ctx.beginPath(); ctx.ellipse(x+S*.74, y+S*.50, S*.082, S*.20, 0.68, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x+S*.895, y+S*.29, S*.050, S*.082, 0.68, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+// Dino boot sole per module
+function drawBootPrint(ctx, x, y, S, color){
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x, y, S, S); ctx.clip();
+  ctx.fillStyle = color;
+  // main sole shape
+  const hw = S*0.32, hh = S*0.48, cx = x+S/2, cy = y+S*0.52;
   ctx.beginPath();
-  ctx.moveTo(cx-bh+br,cy-bh);
-  ctx.arcTo(cx+bh,cy-bh,cx+bh,cy+bh,br);
-  ctx.arcTo(cx+bh,cy+bh,cx-bh,cy+bh,br);
-  ctx.arcTo(cx-bh,cy+bh,cx-bh,cy-bh,br);
-  ctx.arcTo(cx-bh,cy-bh,cx+bh,cy-bh,br);
-  ctx.closePath();
-  ctx.fillStyle='#ffffff'; ctx.fill();
-  ctx.lineWidth=1.5; ctx.strokeStyle='#dddddd'; ctx.stroke();
+  ctx.ellipse(cx, cy, hw, hh, 0, 0, Math.PI*2);
+  ctx.fill();
+  // toe cap bump
+  ctx.beginPath();
+  ctx.ellipse(cx, y+S*0.1, hw*0.8, S*0.12, 0, 0, Math.PI*2);
+  ctx.fill();
+  // tread lines (clear)
+  ctx.globalCompositeOperation = 'destination-out';
+  for(let i=0; i<3; i++){
+    const ty = y + S*0.3 + i*S*0.13;
+    ctx.beginPath();
+    ctx.rect(cx-hw*0.9, ty, hw*1.8, S*0.055);
+    ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.restore();
+}
+
+// Center image overlay with white badge
+function overlayCenter(ctx, TOTAL, iconImg){
+  if(!iconImg) return;
+  const pct = _centerSize / 100;
+  const iconSize = TOTAL * pct;
+  const cx = TOTAL/2, cy = TOTAL/2;
+  const pad = iconSize * 0.2;
+  const bh = iconSize/2 + pad;
+
+  // White rounded badge
+  ctx.save();
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = 'rgba(0,0,0,0.15)';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.roundRect(cx-bh, cy-bh, bh*2, bh*2, bh*0.25);
+  ctx.fill();
   ctx.restore();
 
-  const img = iconKey ? _icons[iconKey] : _centerImg;
-  if(!img) return;
-  const iw=img.naturalWidth||1, ih=img.naturalHeight||1;
-  const asp=iw/ih;
-  const dw=asp>=1?iconSize:iconSize*asp, dh=asp>=1?iconSize/asp:iconSize;
-  ctx.drawImage(img,cx-dw/2,cy-dh/2,dw,dh);
+  // Draw icon centered
+  const iw = iconImg.naturalWidth||1, ih = iconImg.naturalHeight||1;
+  const asp = iw/ih;
+  const dw = asp>=1 ? iconSize : iconSize*asp;
+  const dh = asp>=1 ? iconSize/asp : iconSize;
+  ctx.drawImage(iconImg, cx-dw/2, cy-dh/2, dw, dh);
 }
 
-// Remove white (or near-white) pixels -> transparent
-function makeTransparent(ctx, w, h){
-  const d=ctx.getImageData(0,0,w,h), px=d.data;
-  for(let i=0;i<px.length;i+=4){
-    if(px[i]>210&&px[i+1]>210&&px[i+2]>210) px[i+3]=0;
+// ═══════════════════════════════════════════════
+// MAIN RENDER FUNCTION
+// Returns Promise<dataURL string> or null on failure
+// ═══════════════════════════════════════════════
+async function renderQR(opts){
+  const {style, darkColor, roundness, finderRadius, quiet, targetUrl} = opts;
+
+  // Step 1: Generate raw QR via QRCode.js at a fixed internal size
+  const SAMPLE_SIZE = 600; // small enough to be fast, large enough to read reliably
+  const div = document.createElement('div');
+  div.style.cssText = 'position:fixed;left:-9999px;top:0;background:#ffffff;pointer-events:none;';
+  document.body.appendChild(div);
+
+  try {
+    new QRCode(div, {
+      text: targetUrl,
+      width: SAMPLE_SIZE,
+      height: SAMPLE_SIZE,
+      correctLevel: QRCode.CorrectLevel.H
+    });
+
+    // Step 2: Wait for QRCode.js to actually render
+    const srcCanvas = await waitForQRCanvas(div);
+
+    // Step 3: Read pixel matrix
+    const { matrix, N } = readMatrix(srcCanvas);
+    if(!matrix || N < 21) throw new Error('Matrix read failed, N=' + N);
+
+    // Step 4: Set up output canvas
+    // Each module = CELL pixels; add quiet zone padding
+    const CELL = 20; // consistent size for good quality
+    const QUIET_CELLS = Math.max(1, quiet||4);
+    const TOTAL = (N + QUIET_CELLS * 2) * CELL;
+
+    const out = document.createElement('canvas');
+    out.width = out.height = TOTAL;
+    const ctx = out.getContext('2d');
+    ctx.clearRect(0, 0, TOTAL, TOTAL);
+
+    // Helper: canvas coords from module grid coords
+    const mx = c => (QUIET_CELLS + c) * CELL;
+    const my = r => (QUIET_CELLS + r) * CELL;
+
+    // Module roundness in px
+    const rMod = CELL * (roundness / 100);
+    // Finder roundness
+    const rFinderOuter = CELL * 7 * (finderRadius / 100);
+    const rFinderInner = CELL * 3 * (finderRadius / 100);
+
+    // Which cells are part of structural zones (finders, timing, alignment)
+    // We handle these separately so data modules don't overdraw them
+    function isFinderZone(r, c){
+      // Top-left finder (0-6, 0-6) + separator (row/col 7)
+      if(r <= 7 && c <= 7) return true;
+      // Top-right finder
+      if(r <= 7 && c >= N-8) return true;
+      // Bottom-left finder
+      if(r >= N-8 && c <= 7) return true;
+      return false;
+    }
+    function isTimingZone(r, c){
+      return (r === 6 && c > 7 && c < N-8) || (c === 6 && r > 7 && r < N-8);
+    }
+    function isAlignZone(r, c){
+      // QR v2+ has one alignment pattern at bottom-right area
+      // For version ≥2, center is at module N-7, N-7
+      if(N < 25) return false; // version 1 has no alignment
+      const ac = N - 7, ar = N - 7;
+      return Math.abs(r - ar) <= 2 && Math.abs(c - ac) <= 2;
+    }
+
+    // Draw module (respects style)
+    function drawModule(r, c){
+      if(!matrix[r] || !matrix[r][c]) return;
+      const x = mx(c), y = my(r);
+      if(style === 'dot'){
+        rrect(ctx, x+CELL*0.08, y+CELL*0.08, CELL*0.84, CELL*0.84, CELL*0.42, darkColor);
+      } else if(style === 'footprint'){
+        drawDinoFoot(ctx, x, y, CELL, darkColor);
+      } else if(style === 'bootprint'){
+        drawBootPrint(ctx, x, y, CELL, darkColor);
+      } else {
+        rrect(ctx, x, y, CELL, CELL, rMod, darkColor);
+      }
+    }
+
+    // === DRAW FINDERS (3 corner eyes) ===
+    drawFinder(ctx, mx(0),   my(0),   CELL, darkColor, rFinderOuter, rFinderInner);
+    drawFinder(ctx, mx(N-7), my(0),   CELL, darkColor, rFinderOuter, rFinderInner);
+    drawFinder(ctx, mx(0),   my(N-7), CELL, darkColor, rFinderOuter, rFinderInner);
+
+    // === DRAW TIMING STRIPS ===
+    for(let i = 8; i < N-8; i++){
+      if(matrix[6][i]) drawModule(6, i);
+      if(matrix[i][6]) drawModule(i, 6);
+    }
+
+    // === DRAW ALIGNMENT PATTERN (bottom-right, versions ≥ 2) ===
+    if(N >= 25){
+      const ar = N-7, ac = N-7;
+      drawFinder(ctx, mx(ac-2), my(ar-2), CELL, darkColor, rFinderOuter*0.57, rFinderInner*0.67);
+    }
+
+    // === DRAW DATA MODULES ===
+    for(let r = 0; r < N; r++){
+      for(let c = 0; c < N; c++){
+        if(isFinderZone(r,c) || isTimingZone(r,c) || isAlignZone(r,c)) continue;
+        drawModule(r, c);
+      }
+    }
+
+    // === CENTER IMAGE / ICON OVERLAY ===
+    const iconStyles = ['longneck','trex','dinofoot'];
+    if(iconStyles.includes(style)){
+      overlayCenter(ctx, TOTAL, _icons[style]);
+    } else if(_centerImg){
+      overlayCenter(ctx, TOTAL, _centerImg);
+    }
+
+    return out.toDataURL('image/png');
+
+  } catch(e){
+    console.error('renderQR failed:', e);
+    return null;
+  } finally {
+    document.body.removeChild(div);
   }
-  ctx.putImageData(d,0,0);
 }
-
-// ═══════════════════════════════════════════════
-// MAIN QR RENDER — builds fully customized QR on a canvas
-// opts: {style, darkColor, roundness, finderRadius, centerImg, centerImgKey, centerSize, quiet, targetUrl}
-// Returns: Promise<dataURL>
-// ═══════════════════════════════════════════════
-function renderQR(opts, destCanvas, sampleSrc){
-  return new Promise(resolve=>{
-    const {style, darkColor, roundness, finderRadius, centerImgKey, quiet} = opts;
-    const SAMPLE = sampleSrc || 4000;
-    const CELL = destCanvas ? 28 : 14;
-
-    const div=document.createElement('div');
-    div.style.cssText='position:fixed;left:-9999px;top:0;background:white;';
-    document.body.appendChild(div);
-    new QRCode(div,{text:opts.targetUrl,width:SAMPLE,height:SAMPLE,correctLevel:QRCode.CorrectLevel.H});
-
-    setTimeout(()=>{
-      const src=div.querySelector('canvas');
-      if(!src){document.body.removeChild(div);resolve(null);return;}
-      const {m:matrix,N}=sampleMatrix(src);
-      document.body.removeChild(div);
-      if(!matrix[0]||N<21){resolve(null);return;}
-
-      const QUIET=quiet;
-      const TOTAL=(N+QUIET*2)*CELL;
-      const out = destCanvas || document.createElement('canvas');
-      out.width=out.height=TOTAL;
-      const ctx=out.getContext('2d');
-      ctx.clearRect(0,0,TOTAL,TOTAL);
-
-      const isStruct=mkStructCheck(N);
-      const ox=c=>(QUIET+c)*CELL;
-      const oy=r=>(QUIET+r)*CELL;
-      const rPx=CELL*(roundness/100);
-      const fOuter=CELL*7*(finderRadius/100);
-      const fInner=CELL*3*(finderRadius/100);
-
-      // Draw finders
-      const finderPositions=[[0,0],[0,N-7],[N-7,0]];
-      finderPositions.forEach(([fr,fc])=>{
-        drawFinder(ctx, ox(fc), oy(fr), CELL, darkColor, fOuter, fInner);
-      });
-      // Separator lines (white clear)
-      for(let r=0;r<N;r++) for(let c=0;c<N;c++){
-        if(!isStruct(r,c)) continue;
-        if(!matrix[r][c]){
-          // For non-finder structural light modules: just leave transparent
-        }
-      }
-      // Timing patterns
-      for(let i=8;i<N-8;i++){
-        if(matrix[6][i]){ if(style==='dot') rrect(ctx,ox(i)+CELL*.1,oy(6)+CELL*.1,CELL*.8,CELL*.8,CELL*.4,darkColor); else rrect(ctx,ox(i),oy(6),CELL,CELL,rPx,darkColor); }
-        if(matrix[i][6]){ if(style==='dot') rrect(ctx,ox(6)+CELL*.1,oy(i)+CELL*.1,CELL*.8,CELL*.8,CELL*.4,darkColor); else rrect(ctx,ox(6),oy(i),CELL,CELL,rPx,darkColor); }
-      }
-      // Alignment pattern
-      const b=N-7;
-      drawFinder(ctx,ox(b-2),oy(b-2),CELL,darkColor,fOuter*.6,fInner*.7);
-
-      // Data modules
-      for(let r=0;r<N;r++) for(let c=0;c<N;c++){
-        if(isStruct(r,c)||!matrix[r][c]) continue;
-        const x=ox(c), y=oy(r);
-        if(style==='footprint') drawDinoFoot(ctx,x,y,CELL,darkColor);
-        else if(style==='bootprint') drawBootPrint(ctx,x,y,CELL);
-        else if(style==='dot') rrect(ctx,x+CELL*.08,y+CELL*.08,CELL*.84,CELL*.84,CELL*.42,darkColor);
-        else rrect(ctx,x,y,CELL,CELL,rPx,darkColor);
-      }
-
-      // Center image / icon overlay
-      const hasIconKey = ['longneck','trex','dinofoot'].includes(style);
-      if(hasIconKey){
-        overlayCenter(ctx,TOTAL,style);
-      } else if(_centerImg){
-        overlayCenter(ctx,TOTAL,null);
-      }
-
-      resolve(out.toDataURL('image/png'));
-    },700);
-  });
-}
+// Expose to module script immediately
+window.renderQR = renderQR;
 
 // ═══════════════════════════════════════════════
 // LIVE PREVIEW
@@ -662,22 +774,20 @@ function schedulePreview(){
   _previewTimer = setTimeout(runPreview, 600);
 }
 
-function runPreview(){
+async function runPreview(){
   const url = document.getElementById('qrUrl').value.trim() || 'https://example.com';
-  const pCanvas = document.createElement('canvas');
-  pCanvas.width = pCanvas.height = 160*2;
-  renderQR({
+  const dataUrl = await renderQR({
     style:_style, darkColor:_darkColor, roundness:_roundness,
-    finderRadius:_finderRadius, centerImgKey:null, quiet:_quiet,
-    targetUrl:url
-  }, pCanvas, 800).then(dataUrl=>{
-    if(!dataUrl) return;
-    window._lastPreviewDataUrl = dataUrl;
-    const ctx = previewCanvas.getContext('2d');
-    ctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
-    if(window._previewBg==='white'){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,previewCanvas.width,previewCanvas.height);}
-    const img=new Image(); img.onload=()=>{ ctx.drawImage(img,0,0,previewCanvas.width,previewCanvas.height); }; img.src=dataUrl;
+    finderRadius:_finderRadius, quiet:_quiet, targetUrl:url
   });
+  if(!dataUrl) return;
+  window._lastPreviewDataUrl = dataUrl;
+  const ctx = previewCanvas.getContext('2d');
+  ctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
+  if(_previewBg==='white'){ ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,previewCanvas.width,previewCanvas.height); }
+  const img = new Image();
+  img.onload = ()=>{ ctx.drawImage(img,0,0,previewCanvas.width,previewCanvas.height); };
+  img.src = dataUrl;
 }
 
 document.getElementById('qrUrl').addEventListener('input',()=>schedulePreview());
@@ -706,7 +816,7 @@ window._downloadQRTransparent = async function(qrImageUrl, filename, code){
         finderRadius: code.finderRadius||0,
         quiet: code.quiet||4,
         targetUrl: code.scanUrl
-      }, null, 4000);
+      });
       if(url){ const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
     } finally { document.getElementById('overlay').classList.remove('on'); }
   }
@@ -782,7 +892,6 @@ document.getElementById('btnCreate').addEventListener('click',async()=>{
     const id=newRef.key;
     const scanUrl=`${location.origin}${location.pathname}?scan=${id}&uid=${me.uid}`;
 
-    const hasIconKey=['longneck','trex','dinofoot'].includes(window._style);
     const qrImageUrl=await window.renderQR({
       style:window._style,
       darkColor:window._darkColor,
@@ -790,7 +899,7 @@ document.getElementById('btnCreate').addEventListener('click',async()=>{
       finderRadius:window._finderRadius,
       quiet:window._quiet,
       targetUrl:scanUrl
-    }, null, 4000);
+    });
 
     if(!qrImageUrl) throw new Error('QR generation failed');
     await set(newRef,{
