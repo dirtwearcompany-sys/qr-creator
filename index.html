@@ -623,7 +623,6 @@
         // ============================================
         // FIREBASE CONFIGURATION
         // ============================================
-        // REPLACE THIS WITH YOUR FIREBASE CONFIG
         const firebaseConfig = {
               apiKey: "AIzaSyD4UGL6xY4WaUctzhBrY0_0aisBYsY5RYE",
               authDomain: "trails-qr-tracker.firebaseapp.com",
@@ -642,15 +641,12 @@
         // ============================================
         // IMMEDIATE SCAN CHECK (before Firebase loads)
         // ============================================
-        // Check if this is a scan URL IMMEDIATELY to avoid showing login page
         const urlParams = new URLSearchParams(window.location.search);
         const scanId = urlParams.get('scan');
         const userId = urlParams.get('uid');
         
         if (scanId && userId) {
-            // Hide auth container immediately
             document.getElementById('authContainer').style.display = 'none';
-            // Show scan container
             document.getElementById('scanContainer').classList.add('active');
         }
 
@@ -684,13 +680,11 @@
         // AUTHENTICATION
         // ============================================
         onAuthStateChanged(auth, (user) => {
-            // Check if this is a scan request FIRST (before auth check)
             const urlParams = new URLSearchParams(window.location.search);
             const scanId = urlParams.get('scan');
             const userId = urlParams.get('uid');
             
             if (scanId && userId) {
-                // Public scan - no login required
                 handlePublicScan(userId, scanId);
                 return;
             }
@@ -740,18 +734,27 @@
             }, 5000);
         }
 
+        // ============================================
+        // FIX: Updated error codes for Firebase SDK v10+
+        // ============================================
         function getErrorMessage(code) {
             const messages = {
+                // Firebase SDK v10+ uses this consolidated code instead of
+                // user-not-found / wrong-password (which are now deprecated)
+                'auth/invalid-credential': 'Invalid email or password. Please try again.',
                 'auth/invalid-email': 'Invalid email address',
-                'auth/user-disabled': 'This account has been disabled',
+                'auth/user-disabled': 'This account has been disabled. Contact the administrator.',
                 'auth/user-not-found': 'No account found with this email',
                 'auth/wrong-password': 'Incorrect password',
                 'auth/email-already-in-use': 'Email already in use',
-                'auth/weak-password': 'Password is too weak',
-                'auth/network-request-failed': 'Network error. Please check your connection',
-                'auth/too-many-requests': 'Too many attempts. Please try again later'
+                'auth/weak-password': 'Password is too weak (minimum 6 characters)',
+                'auth/network-request-failed': 'Network error. Please check your connection.',
+                'auth/too-many-requests': 'Too many failed attempts. Account temporarily locked — try again later or reset your password.',
+                'auth/operation-not-allowed': 'Email/password login is not enabled. Contact the administrator.',
+                'auth/missing-password': 'Please enter a password.',
+                'auth/missing-email': 'Please enter an email address.'
             };
-            return messages[code] || 'Authentication error. Please try again';
+            return messages[code] || `Authentication error (${code}). Please try again.`;
         }
 
         function showAuth() {
@@ -797,14 +800,10 @@
             btnCreate.innerHTML = '<span class="loading"></span>';
 
             try {
-                // Create new QR code entry
                 const newCodeRef = push(ref(database, `users/${currentUser.uid}/qrcodes`));
                 const qrId = newCodeRef.key;
 
-                // IMPORTANT: Generate scan URL (this is what the QR code should point to)
                 const scanUrl = `${window.location.origin}${window.location.pathname}?scan=${qrId}&uid=${currentUser.uid}`;
-                
-                // Generate QR code using the SCAN URL (not the target URL!)
                 const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(scanUrl)}`;
 
                 await set(newCodeRef, {
@@ -818,7 +817,6 @@
                     lastScanned: null
                 });
 
-                // Clear inputs
                 qrUrl.value = '';
                 qrLabel.value = '';
                 
@@ -844,7 +842,6 @@
                 return;
             }
 
-            // Sort by creation date (newest first)
             codes.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
             qrGrid.innerHTML = codes.map(code => {
@@ -967,7 +964,6 @@
         // SCAN HANDLING
         // ============================================
         async function handlePublicScan(userId, qrId) {
-            // Make absolutely sure only scan container is visible
             authContainer.style.display = 'none';
             dashboard.classList.remove('active');
             scanContainer.classList.add('active');
@@ -975,7 +971,6 @@
             const iconEl = document.getElementById('scanSuccessIcon');
             
             try {
-                // Get the QR code data (no auth required for reading)
                 const qrRef = ref(database, `users/${userId}/qrcodes/${qrId}`);
                 const snapshot = await get(qrRef);
                 
@@ -988,19 +983,16 @@
 
                 const qrData = snapshot.val();
                 
-                // Update scan count and last scanned time
                 const newScanCount = (qrData.scanCount || 0) + 1;
                 await update(qrRef, {
                     scanCount: newScanCount,
                     lastScanned: Date.now()
                 });
 
-                // Show success
                 iconEl.classList.remove('loading');
                 iconEl.textContent = '✓';
                 document.getElementById('scanLabel').textContent = qrData.label;
 
-                // Redirect to target URL after 1 second
                 setTimeout(() => {
                     window.location.href = qrData.url;
                 }, 1000);
@@ -1019,7 +1011,13 @@
                 btnLogin.click();
             }
         });
+
+        // Also allow Enter on email field
+        authEmail.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                authPassword.focus();
+            }
+        });
     </script>
 </body>
 </html>
-
