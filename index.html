@@ -6,1018 +6,707 @@
     <title>QR Code Manager</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-primary: #0a0a0a;
-            --bg-secondary: #151515;
-            --bg-tertiary: #1f1f1f;
-            --text-primary: #e0e0e0;
-            --text-secondary: #a0a0a0;
-            --accent: #00ff88;
-            --accent-dim: #00aa55;
-            --border: #2a2a2a;
-            --danger: #ff4444;
-            --warning: #ffaa00;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Space Mono', monospace;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        /* Auth Container */
-        .auth-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 80% 50%, rgba(0, 255, 136, 0.03) 0%, transparent 50%);
-        }
-
-        .auth-box {
-            background: var(--bg-secondary);
-            border: 2px solid var(--border);
-            padding: 3rem;
-            max-width: 400px;
-            width: 100%;
-            position: relative;
-        }
-
-        .auth-box::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            height: 2px;
-            background: linear-gradient(90deg, var(--accent), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
-        }
-
-        h1 {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            margin-bottom: 2rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .input-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-secondary);
-        }
-
-        input {
-            width: 100%;
-            padding: 0.75rem;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            font-family: 'Space Mono', monospace;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.1);
-        }
-
-        button {
-            width: 100%;
-            padding: 0.75rem;
-            background: var(--accent);
-            color: var(--bg-primary);
-            border: none;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        button:hover {
-            background: var(--accent-dim);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .error-message {
-            color: var(--danger);
-            font-size: 0.85rem;
-            margin-top: 1rem;
-            padding: 0.5rem;
-            background: rgba(255, 68, 68, 0.1);
-            border-left: 2px solid var(--danger);
-        }
-
-        /* Dashboard */
-        .dashboard {
-            display: none;
-            min-height: 100vh;
-        }
-
-        .dashboard.active {
-            display: block;
-        }
-
-        .header {
-            background: var(--bg-secondary);
-            border-bottom: 2px solid var(--border);
-            padding: 1.5rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-        }
-
-        .header h1 {
-            font-size: 1.5rem;
-            margin: 0;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-email {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-
-        .btn-logout {
-            padding: 0.5rem 1rem;
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            width: auto;
-        }
-
-        .btn-logout:hover {
-            background: var(--bg-tertiary);
-            border-color: var(--accent);
-        }
-
-        .main-content {
-            padding: 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .controls {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-        }
-
-        .input-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr auto;
-            gap: 1rem;
-            align-items: end;
-        }
-
-        .btn-create {
-            padding: 0.75rem 1.5rem;
-            width: auto;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            padding: 1.5rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--accent);
-            transform: scaleX(0);
-            transition: transform 0.5s;
-        }
-
-        .stat-card:hover::after {
-            transform: scaleX(1);
-        }
-
-        .stat-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--accent);
-        }
-
-        /* QR Code Grid */
-        .qr-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .qr-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            padding: 1.5rem;
-            transition: all 0.3s;
-            position: relative;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .qr-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 255, 136, 0.1);
-        }
-
-        .qr-card.locked {
-            border-color: var(--warning);
-        }
-
-        .qr-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .qr-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            font-size: 1.1rem;
-            word-break: break-word;
-        }
-
-        .lock-icon {
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.3s;
-        }
-
-        .lock-icon:hover {
-            color: var(--accent);
-            transform: rotate(15deg);
-        }
-
-        .qr-image-container {
-            background: white;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .qr-image-container img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .qr-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            padding: 1rem;
-            background: var(--bg-tertiary);
-            border-left: 2px solid var(--accent);
-        }
-
-        .qr-stat {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .qr-stat-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-secondary);
-            margin-bottom: 0.25rem;
-        }
-
-        .qr-stat-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            font-size: 1.2rem;
-            color: var(--accent);
-        }
-
-        .qr-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.5rem;
-        }
-
-        .btn-action {
-            padding: 0.5rem;
-            font-size: 0.85rem;
-            width: 100%;
-        }
-
-        .btn-delete {
-            background: var(--danger);
-        }
-
-        .btn-delete:hover {
-            background: #cc0000;
-        }
-
-        .btn-download {
-            background: transparent;
-            border: 1px solid var(--accent);
-            color: var(--accent);
-        }
-
-        .btn-download:hover {
-            background: var(--accent);
-            color: var(--bg-primary);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: var(--text-secondary);
-        }
-
-        .empty-state-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            opacity: 0.3;
-        }
-
-        /* Scan Page */
-        .scan-container {
-            display: none;
-            min-height: 100vh;
-            padding: 2rem;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-
-        .scan-container.active {
-            display: flex;
-        }
-
-        .scan-result {
-            background: var(--bg-secondary);
-            border: 2px solid var(--border);
-            padding: 3rem;
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-        }
-
-        .scan-success {
-            font-size: 4rem;
-            color: var(--accent);
-            margin-bottom: 1rem;
-            animation: scaleIn 0.5s ease-out;
-        }
-
-        @keyframes scaleIn {
-            from {
-                transform: scale(0);
-            }
-            to {
-                transform: scale(1);
-            }
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.5;
-                transform: scale(1.1);
-            }
-        }
-
-        .scan-success.loading {
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        .scan-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .scan-count {
-            font-size: 3rem;
-            font-weight: 700;
-            color: var(--accent);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 1rem;
-                align-items: flex-start;
-            }
-
-            .input-row {
-                grid-template-columns: 1fr;
-            }
-
-            .qr-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .controls {
-                grid-template-columns: 1fr;
-            }
-        }
+        :root { --bg-primary:#0a0a0a; --bg-secondary:#151515; --bg-tertiary:#1f1f1f; --text-primary:#e0e0e0; --text-secondary:#a0a0a0; --accent:#00ff88; --accent-dim:#00aa55; --border:#2a2a2a; --danger:#ff4444; --warning:#ffaa00; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Space Mono',monospace; background:var(--bg-primary); color:var(--text-primary); line-height:1.6; overflow-x:hidden; }
+        .auth-container { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; background:radial-gradient(circle at 20% 50%,rgba(0,255,136,0.05) 0%,transparent 50%),radial-gradient(circle at 80% 50%,rgba(0,255,136,0.03) 0%,transparent 50%); }
+        .auth-box { background:var(--bg-secondary); border:2px solid var(--border); padding:3rem; max-width:400px; width:100%; position:relative; }
+        .auth-box::before { content:''; position:absolute; top:-2px; left:-2px; right:-2px; height:2px; background:linear-gradient(90deg,var(--accent),transparent); animation:shimmer 2s infinite; }
+        @keyframes shimmer { 0%,100%{opacity:.5}50%{opacity:1} }
+        h1 { font-family:'JetBrains Mono',monospace; font-size:2rem; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:2px; }
+        .subtitle { color:var(--text-secondary); font-size:0.85rem; margin-bottom:2rem; text-transform:uppercase; letter-spacing:1px; }
+        .input-group { margin-bottom:1.5rem; }
+        label { display:block; margin-bottom:0.5rem; font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-secondary); }
+        input { width:100%; padding:0.75rem; background:var(--bg-tertiary); border:1px solid var(--border); color:var(--text-primary); font-family:'Space Mono',monospace; font-size:0.9rem; transition:all 0.3s; }
+        input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(0,255,136,0.1); }
+        button { width:100%; padding:0.75rem; background:var(--accent); color:var(--bg-primary); border:none; font-family:'JetBrains Mono',monospace; font-weight:700; text-transform:uppercase; letter-spacing:2px; cursor:pointer; transition:all 0.3s; }
+        button:hover { background:var(--accent-dim); transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,255,136,0.3); }
+        button:active { transform:translateY(0); }
+        button:disabled { opacity:0.5; cursor:not-allowed; transform:none !important; box-shadow:none !important; }
+        .error-message { color:var(--danger); font-size:0.85rem; margin-top:1rem; padding:0.5rem; background:rgba(255,68,68,0.1); border-left:2px solid var(--danger); }
+        .dashboard { display:none; min-height:100vh; }
+        .dashboard.active { display:block; }
+        .header { background:var(--bg-secondary); border-bottom:2px solid var(--border); padding:1.5rem 2rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
+        .header h1 { font-size:1.5rem; margin:0; }
+        .user-info { display:flex; align-items:center; gap:1rem; }
+        .user-email { font-size:0.85rem; color:var(--text-secondary); }
+        .btn-logout { padding:0.5rem 1rem; background:transparent; border:1px solid var(--border); color:var(--text-primary); width:auto; }
+        .btn-logout:hover { background:var(--bg-tertiary); border-color:var(--accent); transform:none; box-shadow:none; }
+        .main-content { padding:2rem; max-width:1400px; margin:0 auto; }
+        .style-selector { display:flex; gap:0.75rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+        .style-option { flex:1; min-width:130px; padding:1rem; background:var(--bg-tertiary); border:2px solid var(--border); color:var(--text-secondary); cursor:pointer; text-align:center; transition:all 0.3s; font-family:'Space Mono',monospace; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; display:flex; flex-direction:column; align-items:center; gap:0.5rem; width:auto; }
+        .style-option:hover { border-color:var(--accent); color:var(--text-primary); background:var(--bg-secondary); transform:none; box-shadow:none; }
+        .style-option.selected { border-color:var(--accent); background:rgba(0,255,136,0.08); color:var(--accent); transform:none; box-shadow:0 0 12px rgba(0,255,136,0.2); }
+        .style-icon-img { width:48px; height:48px; object-fit:contain; display:block; margin:0 auto; filter:invert(1) brightness(2); }
+        .style-option.selected .style-icon-img { filter:invert(1) sepia(1) saturate(5) hue-rotate(90deg); }
+        .style-icon-emoji { font-size:2rem; line-height:1; }
+        .style-name { font-weight:700; }
+        .style-desc { font-size:0.7rem; color:var(--text-secondary); line-height:1.3; }
+        .controls { display:grid; gap:1rem; margin-bottom:2rem; padding:1.5rem; background:var(--bg-secondary); border:1px solid var(--border); }
+        .input-row { display:grid; grid-template-columns:2fr 1fr auto; gap:1rem; align-items:end; }
+        .btn-create { padding:0.75rem 1.5rem; width:auto; }
+        .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:2rem; }
+        .stat-card { background:var(--bg-secondary); border:1px solid var(--border); padding:1.5rem; position:relative; overflow:hidden; }
+        .stat-card::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--accent); transform:scaleX(0); transition:transform 0.5s; }
+        .stat-card:hover::after { transform:scaleX(1); }
+        .stat-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-secondary); margin-bottom:0.5rem; }
+        .stat-value { font-family:'JetBrains Mono',monospace; font-size:2rem; font-weight:700; color:var(--accent); }
+        .qr-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:1.5rem; }
+        .qr-card { background:var(--bg-secondary); border:1px solid var(--border); padding:1.5rem; transition:all 0.3s; animation:slideIn 0.3s ease-out; }
+        @keyframes slideIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .qr-card:hover { border-color:var(--accent); transform:translateY(-4px); box-shadow:0 8px 24px rgba(0,255,136,0.1); }
+        .qr-card.locked { border-color:var(--warning); }
+        .qr-style-badge { display:inline-flex; align-items:center; gap:0.3rem; font-size:0.65rem; text-transform:uppercase; letter-spacing:1px; padding:0.2rem 0.5rem; background:rgba(0,255,136,0.1); border:1px solid rgba(0,255,136,0.3); color:var(--accent); margin-bottom:0.75rem; }
+        .qr-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+        .qr-label { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.1rem; word-break:break-word; }
+        .lock-icon { cursor:pointer; font-size:1.2rem; transition:all 0.3s; }
+        .lock-icon:hover { color:var(--accent); transform:rotate(15deg); }
+        .qr-image-container { background:white; padding:1rem; margin-bottom:1rem; display:flex; justify-content:center; align-items:center; min-height:160px; }
+        .qr-image-container img { max-width:100%; height:auto; display:block; }
+        .qr-stats { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; padding:1rem; background:var(--bg-tertiary); border-left:2px solid var(--accent); }
+        .qr-stat { display:flex; flex-direction:column; }
+        .qr-stat-label { font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-secondary); margin-bottom:0.25rem; }
+        .qr-stat-value { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.2rem; color:var(--accent); }
+        .qr-actions { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
+        .btn-action { padding:0.5rem; font-size:0.85rem; width:100%; }
+        .btn-delete { background:var(--danger); }
+        .btn-delete:hover { background:#cc0000; box-shadow:none; }
+        .btn-download { background:transparent; border:1px solid var(--accent); color:var(--accent); }
+        .btn-download:hover { background:var(--accent); color:var(--bg-primary); box-shadow:none; }
+        .empty-state { text-align:center; padding:4rem 2rem; color:var(--text-secondary); }
+        .empty-state-icon { font-size:4rem; margin-bottom:1rem; opacity:0.3; }
+        .scan-container { display:none; min-height:100vh; padding:2rem; align-items:center; justify-content:center; flex-direction:column; }
+        .scan-container.active { display:flex; }
+        .scan-result { background:var(--bg-secondary); border:2px solid var(--border); padding:3rem; max-width:500px; width:100%; text-align:center; }
+        .scan-success { font-size:4rem; color:var(--accent); margin-bottom:1rem; }
+        .scan-success.loading { animation:pulse 1.5s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.1)} }
+        .scan-label { font-family:'JetBrains Mono',monospace; font-size:1.5rem; margin-bottom:1rem; }
+        .loading { display:inline-block; width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        .generating-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82); z-index:999; align-items:center; justify-content:center; flex-direction:column; gap:1rem; font-family:'JetBrains Mono',monospace; color:var(--accent); font-size:1.1rem; letter-spacing:2px; text-align:center; padding:2rem; }
+        .generating-overlay.active { display:flex; }
+        .generating-overlay .big-spin { width:60px; height:60px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
+        @media (max-width:768px) { .header{flex-direction:column;gap:1rem;align-items:flex-start;} .input-row{grid-template-columns:1fr;} .qr-grid{grid-template-columns:1fr;} .style-selector{flex-direction:column;} }
     </style>
 </head>
 <body>
-    <!-- Authentication -->
-    <div id="authContainer" class="auth-container">
-        <div class="auth-box">
-            <h1>QR Manager</h1>
-            <p class="subtitle">Secure Access Portal</p>
-            <div class="input-group">
-                <label for="authEmail">Email</label>
-                <input type="email" id="authEmail" placeholder="user@example.com">
+
+<div class="generating-overlay" id="generatingOverlay">
+    <div class="big-spin"></div>
+    <div id="generatingText">GENERATING QR CODE...</div>
+</div>
+
+<div id="authContainer" class="auth-container">
+    <div class="auth-box">
+        <h1>QR Manager</h1>
+        <p class="subtitle">Secure Access Portal</p>
+        <div class="input-group"><label for="authEmail">Email</label><input type="email" id="authEmail" placeholder="user@example.com"></div>
+        <div class="input-group"><label for="authPassword">Password</label><input type="password" id="authPassword" placeholder="••••••••"></div>
+        <button id="btnLogin">Login</button>
+        <p style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);color:var(--text-secondary);font-size:0.85rem;text-align:center;">New signups require admin approval.<br>Contact the administrator for access.</p>
+        <div id="authError" class="error-message" style="display:none;"></div>
+    </div>
+</div>
+
+<div id="dashboard" class="dashboard">
+    <div class="header">
+        <h1>QR Code Manager</h1>
+        <div class="user-info"><span class="user-email" id="userEmail"></span><button class="btn-logout" id="btnLogout">Logout</button></div>
+    </div>
+    <div class="main-content">
+        <div class="stats">
+            <div class="stat-card"><div class="stat-label">Total QR Codes</div><div class="stat-value" id="totalCodes">0</div></div>
+            <div class="stat-card"><div class="stat-label">Total Scans</div><div class="stat-value" id="totalScans">0</div></div>
+            <div class="stat-card"><div class="stat-label">Locked Codes</div><div class="stat-value" id="lockedCodes">0</div></div>
+        </div>
+        <div class="controls">
+            <div>
+                <label style="margin-bottom:0.75rem;display:block;">QR Code Style</label>
+                <div class="style-selector" id="styleSelector">
+                    <!-- populated by JS so image srcs can be injected -->
+                </div>
             </div>
-            <div class="input-group">
-                <label for="authPassword">Password</label>
-                <input type="password" id="authPassword" placeholder="••••••••">
+            <div class="input-row">
+                <div class="input-group" style="margin:0;"><label for="qrUrl">Target URL</label><input type="text" id="qrUrl" placeholder="https://example.com"></div>
+                <div class="input-group" style="margin:0;"><label for="qrLabel">Label</label><input type="text" id="qrLabel" placeholder="My QR Code"></div>
+                <button class="btn-create" id="btnCreate">Create QR</button>
             </div>
-            <button id="btnLogin">Login</button>
-            <p style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 0.85rem; text-align: center;">
-                New signups require admin approval.<br>Contact the administrator for access.
-            </p>
-            <div id="authError" class="error-message" style="display: none;"></div>
+        </div>
+        <div id="qrGrid" class="qr-grid">
+            <div class="empty-state"><div class="empty-state-icon">⊞</div><p>No QR codes yet. Create your first one above.</p></div>
         </div>
     </div>
+</div>
 
-    <!-- Dashboard -->
-    <div id="dashboard" class="dashboard">
-        <div class="header">
-            <h1>QR Code Manager</h1>
-            <div class="user-info">
-                <span class="user-email" id="userEmail"></span>
-                <button class="btn-logout" id="btnLogout">Logout</button>
-            </div>
-        </div>
-
-        <div class="main-content">
-            <div class="stats">
-                <div class="stat-card">
-                    <div class="stat-label">Total QR Codes</div>
-                    <div class="stat-value" id="totalCodes">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Total Scans</div>
-                    <div class="stat-value" id="totalScans">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Locked Codes</div>
-                    <div class="stat-value" id="lockedCodes">0</div>
-                </div>
-            </div>
-
-            <div class="controls">
-                <div class="input-row">
-                    <div class="input-group" style="margin: 0;">
-                        <label for="qrUrl">Target URL</label>
-                        <input type="text" id="qrUrl" placeholder="https://example.com">
-                    </div>
-                    <div class="input-group" style="margin: 0;">
-                        <label for="qrLabel">Label</label>
-                        <input type="text" id="qrLabel" placeholder="My QR Code">
-                    </div>
-                    <button class="btn-create" id="btnCreate">Create QR</button>
-                </div>
-            </div>
-
-            <div id="qrGrid" class="qr-grid">
-                <div class="empty-state">
-                    <div class="empty-state-icon">⊞</div>
-                    <p>No QR codes yet. Create your first one above.</p>
-                </div>
-            </div>
-        </div>
+<div id="scanContainer" class="scan-container">
+    <div class="scan-result">
+        <div class="scan-success loading" id="scanSuccessIcon">⏳</div>
+        <div class="scan-label" id="scanLabel">Processing scan...</div>
+        <p style="margin:1rem 0;color:var(--text-secondary);font-size:0.9rem;">Redirecting...</p>
     </div>
+</div>
 
-    <!-- Scan Result Page -->
-    <div id="scanContainer" class="scan-container">
-        <div class="scan-result">
-            <div class="scan-success loading" id="scanSuccessIcon">⏳</div>
-            <div class="scan-label" id="scanLabel">Processing scan...</div>
-            <p style="margin: 1rem 0; color: var(--text-secondary); font-size: 0.9rem;">Redirecting...</p>
-        </div>
-    </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getDatabase, ref, set, onValue, remove, update, push, serverTimestamp, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+// ================================================================
+// EMBEDDED IMAGE ICONS (black silhouettes, PNG base64)
+// ================================================================
+const ICON_IMAGES = {
+    longneck:  'data:image/png;base64,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',
+    trex:      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASkAAAHPCAYAAAAGKsaFAAAgpklEQVR4nO3d2ZLbSA4FUJbD///LNQ8etWWVFi65AMhzIjqmw9OWyBSZvILA5NcG2/b95M++hm8FAEARgtTanoXrZxwnAAAHCE9r2huu7zlWAAB2EpzWcSZYP+OYAQD4QGCqr1W4vue4AQB449fsDSClHsEdAKCM37M34IU9IU819TUhGABgoghBVa9wO6PDtTEHAHhiZkjSK9zWlfF8Nm5+TQAAOGlWSOpdcV0t/J0dz0/j9Ol1VxtnAIBdRvVkj25juH+/qkHw6phWHRcAgOl6h+wIN+BVCtyCNQBAAj2X8IsQsB99bzG3aw8BGwAgiR6V7AwhNuJNfT3HTcAGABiodcgeuRxf7zB/9PW/Tvyd3oRrAIAJWoawXitc9Hrfylp9rlYXAQA4oVVP9qyAfXsNYe+vkWPhCw4AwBOzqsi9guDKoW/mmPqSAwBw50o4OhNoZ4SxqsF71FjuHT9BGwDg/84GozM3BUaRNXTPHENBGwDggDOhKHPAPpQhcEcYvyy/WgAAhHA0CB0JW5VCljWs4/XfAwCEdSQArRqw+cMTJwEAduoRsoWpukY+bAgAIK29YUfA5l6P9hnHDgBQRsvHlwtJ6xG2AQCe+BRoBGw+6XVTqGMKAEjrXZARsMuigiEIQOWAIIIXNVfUI+SKNeihSqAIK3VY7CfhIkRtAWJMdYIFV1tOBuDNgAVepJ3JhzguF5hOykBb5nHFRi5e9bYHPHMTsQiSFRISvSYoG0cNB6UDjXGCKz+yRwxJBZ0R+3K7Ev9PoD+/7lGr7b1vBQAAAAASUVORK5CYII=',
+    dinofoot:  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAATEAAAFICAYAAAA4SMlhAAAKxklEQVR4nO3d2XLcSBJAQbpP/f8vux/cbqusjQuWTGTE68yckQTgMknL5Y+tps8X/9nHsFcBXPbP7BcQ0KvAAcFUnTqOhKrqZwQpVJzEjk5aJjMIrNqUcTVI1T4vCK/iJHaFqQyCETEgtWq3R60nqWqfH4RjEgNSE7FrPjfPyWAqEWtDyGASEWtHyGACEWtLyGAwEWtPyGCgil8RGBmZip8vDGUSA1KrOimMvuWr+jlDdyaxMTwng05EDEhNxMbx7X7oQMSA1Ko+cI4yEVX9/KEZkxiQWuVJIMo0tm2114Hr3u3lpfeXSQxy23MxjnTBbm7pQu8QbXGrrwfHHN2/S+4vk1gsvoZBT0vuLRGDnJYM0hl/Zr8AHnq2QZe8HeAwAbthEoNalgtg9Sv7SgtafS0rabFvl9kvJrF1+KFADdb4l+oRW+ZqdEPMKMWD/XX9DtmKwa7GxemB6pPYtjnc1LRMEEWsjs/NrSZ/W2IviFhNS2zeYqzZEyJWl6mMJYjYl8rPxYSste3rL2JAaiLGtrm1jK732qReexHjVurNvKhRa5J27UWM39JuZmoSMR4RMtIQMZ7xnKyelOstYryTcmMvYsZnn269RYw90m3sBfjMdxKxLzbMe24vCUnEgNQq/7rNLRPGcfZOP1H2Y4o1NonF2TDZ+NwIQcS4wnOy9iJ9npFey1PVI5ZikRLwObYR8XOM+Jr+Uj1iQHIpHtx1FP4qk1D1PXVGpn0Ybn1NYrSW6UCygHBVHcyB66f63toj8/4Ls74mMSC1MDWdKPPVMDr767FV9lyI9TWJwVirBCwMEaMnB5buRCzISLwwIfux2mcR4v2IGIwR4sCvSMSA1ETsi1vKvkwhdCNiQGoixiimMboQMehv5YBPf28i9sNzMXqYfshXJ2J/EzJIRsQYyVRCcyIGpCZi0I/JcwARA1ITMUarMp1UeZ/TiRi0Vy1gU9+viAEtTAuZiDFDtUmFjkQMSE3EgNRE7J5fPeIKt8qDidhjQtbfiod9xfcUnogxk0PPZSIGpCZiQCtTJmsRYza3lFwiYs95uD+OkK1j+FqKGFFkD1n295+W9UPKhQ26/YOOmkAk4EF1lVpZ2t7zP52oKqbGe63295W9YjUMSzI8F5LVBrqqtCvXqD3aGL1vUV6xIhfIvGR7AKBEewCN1zMRiX+j3/dD1VGh+plkVr0gyz7xGoZa9ZoaeD1CrBM4X+BpLaFT3gilpFao9sjngHzeqGpXBT7cuRKWcqeFR+OYBd9x5dyo40qyVgHKUgzMrVaM4okNW2bFB2XLT/juqZG/gQx6+yRN5MADUnfHx2cFcp6Jm1QgV7lW6OPlfWx3eYuGhQw/qcZQw5HLPQBzI+2yv8iOYpKYM85w7d3WIHqJn5M4BdxNv/dV6ACGfdglOFj17bcB3/zH7gBIrCtArEItU/dpbynMuC44kYWawuyowoGT00dMnTM160h4DEVOO98Gp3pGmyupAoZguaZu2hcLWDWbKtrtNHSJWM7hzaYmUxXLunH1/ZYYsgomHoHvv9vNdisQDl3DGRPZSIZq/Yt6vxWmjRKKgJHgGERnlSwU5LGN5rNVXoHbUz++GMLlpmvRX5ubmk3vXLj6rmQVPBZ/N0IEXEqDb1P5Ovn2AeZPQiHOvLZ1BjhVrXUEmcqKJLoS0UjHrVTWDMtISjn2Xk+RnAWsSnEjFmsNbnERSzp4Yi+gKWy2mtWm7XwtJ4hsB3B7Mrl2ZavzNWLrJMG6k1hIEO7pi8OsvcN6JC3n2OWYb9XIXnh6iHIxe60h6LKfRYhR0irkC6MfNERuPRt5NRAYsGdccIMApvcFfhuzMYpUTewMvauImSLyQuFSuqj5jl0c/f/hVdNn5/H40ZDdwDykWpfGnSKjhEH9+r9ezGTgaUeIIl+AxLhlUeXb1wEQG60uZFymplBD/Lab2RNJoCZRmzws92XApzPBM5AFZ7saqNyshEUDzAEXb1idXzU6j+DhwmkLTrKJfPI0xKxVSBgcMshmRJliy0U7dUNB6V645MrzeGqEr1WqHg459AtWxHY0WfmT27gzTLWEXwVV2t7NpZ60TAtbaRj6/2PSeZ0WxhydPf8D7rXswIq8i3m4nzRIRwiCr7opC1WKG1dJj6KO0pKkRGD72jWbUig7iBDKaQc2XYMpY5s3k22z3RuX6sPP6dTiEoXhUCGK3VY6GQbpB6uZgFnMjiq+jF3mbNbh+W9wUiWJ1h6mJEBe85CCuyeXYU1gv6ef29AqOf8Vxn2hoolGyvK58mWb43esZ7gJ44g5USQ1wAo2RbEfickvujqNdwZAT/roF3bsxSj1+1UKPI9gBulJ9dVuOzwRsjVqjCTpCRS1F2AapvmuctlR0yl8564VbPSdXeX9i6Q4XgrouilHkOUb3cBZfUnglL8BGigYL1WX1/9PNM5fNpVVaXIHIBtutCR/WVLw8govtoyReFt0uJuj03UBubCfytHdmA6D0uohS8myszRgSjPgH8AqL/U+HVjbV20nYcvK5Iv4o1W7I/ZE8cIRhvGvSc14JM14tFK9+NT3E3KMGjtNE7DoNP0GHiR5eAGl9UsGC8sAqfwX9js44sKMluFAV/XWs/yA5Id89VgXoBEMFdxC9bwSxlMtf9nueGTAmapT0IINfGcAteeC+AvI+/rjrmzA7sDhiaqFkaybMm6HpZobMsjCKQVFY84RNED4FddkXOtUOGfVzamu18abK6KVMRM0QCuZaAr8P0MQRe2WyJ0LyVrBJlkqrgysO+rb5oGfLG0QwcdqDiEX5UE1H1f88lKHV9UszPF2aEB6TgZ59lZBhSZy21mAcs3LxdM6V7b9KXoH0BA3jIGjOtV9uXjG+/0UW2tPLIRgeyOqQdgfE5d3XHrZOx+wcqb5onkFqROz6Dn0fXgRBGNh5osU7MAo6ngLFqiaIPxjoeu6vW6o5Yk2fpUyseX0uJ89ug8ELFCFL+8Buh9AsOq8w9q2hj+Xxr0aZi4kyXajQO2tx7aVeeErEHXyf468IIfxfNK/r555qy1UTavlRMvRd0+nECn8nXEdD2WRHcWYoqN1YmWFnYDHjOzQ2mxt+mbiawLMsVRaKM0qqPvoTd6Zzl8FgHvBv38/rj+ewO1SXjP9DNQRuVZJ/f946jADm2zQinBneqOOaCViyErfUVtOwZdmuUEfQbFRrPbHZkDjYTXFpYttKoWmhE65HUKguO0VYEuoO7G1Fzf6JwJPbATue8hZsTBbnDz+uPBLrz+BGUGkfReTyCbrkMSoK3UKKsrc/ZYTIOOarRX8nAeeJZWvXmudGyLNt1WFNLK2P4a1m2Vo45KvCxXrQsRmVdOX8+QrWpZ+a/78NGCn809kjQ0sJ+QqFky6BW3eNFizS7z6AuUxsqNd7i37OVOLaJZ2l1+SWoImLcqNigJ/I/xjSj0Vmy7UpnLGvpuBCl51Hl41HBm4WJi0CWHSQPpQLODE+T7BXG+3llYZauTV3wnsPI8veqQSVT7qCSzj0xI2aOnt3BGlgyyKA7tFqfLsGj2TQZqHQEvzK4u6542dY7h+cALUzbzHpULtUfqBA8In3y+vpO2rYF7eltpcZX5sq7jqAK5Wz0bMnaqm/9yrd7g6/dmCt4910ZiJXIpErjlfJnWb97Fa5NgVfvRdRlWK3GqjrIxFf7+C7N97iKUXCIXnu71VGv3I2QKeJUgvXCJQQnCv4N1EHuagmZt2utY5RBpYBjQaRsOzvo0RgWlq937M/rbxko1OpPQlfgB8dJgkeVY70U7+g80jjNx1fQpdnYUb5KKGEnabwHqlo4K8uWuwtFwXfl+4gyriXyn312ND7tAisKPgKVnsNIWJJvAqv6eJVDsmjmO29/U7etqeEo/6dZPlXBr8C4FKs0DcHl27mvcp6/ouBXB6DSRx9V+VbpI+ISQaHu41VMPhISwlfU+OuqpR5b/GrFS5SlY6tp/MkaLqHJVqgIHvWK1W481C9euD/LJJlQL1K34FkaHi1+VGntTMDeolC4RtAl+GyVrMMlICppXo2m7fMEn2rVAu9zkRar5zOj8qy1ZDubByavblO/g6c0aoXH/0dN/2fy9Xue3R7+ysodYtPo17EsVsVD0fIAap27X5r0kCWiGmixDihaGBpf0Z2ztiKZc0eCyk5aOA0dL1SgOlBR/ltmfuVg2HW5URpvmRRdnKjK1dHCtqam1BQ2OxhLm3e4zS9ivpkpZwt8NEdZbp/R+E6/l5n7LeiOat0TLeeIDO6U/d8THRUzueAwI3imoKORdFcEjpqzrEmj8l+TvNGpIQqWi75/5crdDvIvJgZQxrtTr9XPYCmLztI9OX/bgZMEj6ptf2UlzosTBF9puk92Ey4oC14la/C+N88EbP6OWv0KXa9CebuElufQ+Iq27AiZujualKGCo6lX6F9EMBuzstqG1vryC9j5StKsSmVdk7fLlSV4WuY6Bh3/79yTduQtWHjfQcs0Y44X7godv8Q4+0Ikkrhh+cxX5vwKb58iBe5ltHrIHFB6czfU0ifLZ1fwjIsOEBntXhoLR+0GZ1k1WcF7x9iNtYP1BYvRZ1JQyONXm/YeqNUcW+ZUUwookIL3pmQzM8YOprwZAZqTX8VLXALNso0+i4qeGVrKCupas4VqU8/U8qyJr4LCGiCCj0aeyBxZwR8j9lPmBhCVu9WboRXwzKlwQVb4efy5rsObNE+gbzBi/dl8/i0kpimHyavaxyuWQNWtAAXfyLK9UcZYfcx3Xf9tQsniVMF7cmv2BXi3l9Us2hBdN5P5iwjQxI/o261oSL0tGwXqpccsEybz+WruHVRWp5n6XeroFVrmksyygdG65Hx+l+CjpIjr6i36WAsso+ekhI8UfEVQgzLxljjAKmSP8KOAXxqU4KOvNEeeRR2Cl79nGesN2dQOJXgWr/1NzJwBbW0iVLEovazlYqjcRlTZNAp0c8STbqJIqC6oRPVPzfaaR5WCyew9gdVzz2dL3YKK4G8gX3pgzbkby+Ka3kIu1XbqwAFY3rapipTR5MnIXFTZqGn8E0yh359nBYWetY5MPF0hlQQf9fFZKAj/fr5s7xHBMztQs8KMBDPVgVWxR2LtSho/wuiQJA4uifY9RASfNUfeW19h+hiC2I3ZKnymxo8EnK2nVx2WUrZDgWp37m94jal1b0yyJaMvrUjWjKD9QqsHdyO0H1oCMt06VcHvDkji8JyQWnOmGYJ+mSGbKWTB4NBJCfsJhffjEah4i8UKWWE/ccQiE+hk3ErjuAUD4CV9tHTP/mYomO2vhWpU/4tf/IFfSwDAaRr/K/QvhkzP+ptxmsb/AoRfwf+l+D+5GKuecVEEsgAAAABJRU5ErkJggg==',
+    bootprint: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAH4AAAEQCAYAAAB2qsAWAAARLElEQVR4nO1d2XLcSBJjb8z//7L2iRMcuo48gExUW4hwWJbYdWXlDcqf6xdv/Dy+/rStgox/uhfQiJ/9I6bPHnk5jly0ExkBj85nNd4x5/mtGp8RNmJe+QvwTYKvFPZnM5/8Bfhf9wJAqBK6d56fwGdKcLrgVwerpG1ywj9Z8HKHuYGU9p8q+O4DRKWCbThV8BZkD5jpKtqFf6Lgu1M11fFcOFHwSkFbFm1+/0TB/wIAtOCRt/fn9eeJ07W+ff2qGj+6QN8k/K8L7hDCWAm4SvjvcZmCarnAqhr/RofwEfg8/sx+3gI1wa9MvLKAZ3jGJ+/1t+5H6TBnmvw+uNlBeszxe6zZzyPjz8ZWOmsZjbdo+uzf1+v7How+gxJQdJxZJgOFiuBneG8eJXwmdeo99srHvz832y8cCoLfbc4rfNS80Wfv55njp9EteMaGd9o1M+8jzfQIMBq8eS8+BAoBB6uLtiNF7rIFy7pmFCzPuUYvlnXc4ee6Nf664oowM6AvntWfs7GMLRQ0/gZLwzwaFRFIVBMjc8LkpaDxN6zR7yzHznLvWCZ39fm2mr2S4G+sLoAlEMr6XAu6LCXsoilsYLeG6GYz1TfvuCv8DD6DfrunZ5Ag2MLP+F7UmJm5Vkivo1LwiIP1BoCR/e1ihZEGR8eMIi23Kh8/K2N6CybWDWcOZlW//32T5oHs5kaXYCd8S/oWTc9mYyq1h2f7Mu8XzZiJBlRRogXTL0ezg6crYGv7LGjcrlMlnRu5gtHP3kC0Plc+/TP4ejfu82/ZNBIZpaLSp5nQvZrvrQVkzsISEEaxSgXDa2b7K9SGLZG0Rct260FmAc/xkAoweyY8OBoo/3YHadm1Mkqymf7Cbn7GJcV8eIOOXvsOaOGPAtGslWO4oj9w2q9Cyfo3qzYhLIwXq/pByWQoVBYu0L7ZMy5C68trAyrpnCoil6NK6Lt09P3cf8AUfHeFCxUcWQ/Yg1nJereG57+9862/QUJlBUu55Zt1SbDgr8rUrxoz0fFGX1eaWc9Y3srf6N/Q4K/Lx6MvAgpIWtX9b29q6GnAhM2/SjrnDZCQtfCn+fy51ub0vYbSFAwJ9CI9nbXMuKOx0Vy7lS9lNGFmZp3ivlgLr5hvN79alQ8132wNrstYbepZFuENtAtgIzuP+/Oo4C5DWmDNj8BuD2giCwKm8VYan/Fjs89kfFd2brV5Wrl4LP8UbUUqI6oIHQLerlElnevohnnxVetT9FEroCptzDQ227TxoJWBU23KUKa2u8YQxY5LKJnOXVdtmrRCJZ0riwyP0D2gFZHKEpJ1agGav9bdp09XKTs03ioEBaswQqaVm72AsLI0K1L1lDtnm/mZfM1aU7R37+UCZIQHy36qU5TRwaDy/d2hZGrvngBxd0mzhNEVzNmLUm4a0Uiv9niFX0J1TmK1pyME/4Tl5kZMJiJu6D4ziIXs3kQUWT8ZRfd5ZTODf91QNqpHp0kViKSTFvdRyTVIj8eMkldAF06mN9sxxghe16FWCZ3WEqIab91wRS6+KpSsIv2V5lfEChVjvvHvvhBEDO8tR5rELNkDXQWMCO/9skQJEJU7JoPEk1OvfubRfHhdHPh5GFBtTsT83iJJpBaOjmlW+b730jIw3W/E1CMX/3PFTF3lhZ2t7zP52oKqbGe63295W9YjUMSzI8F5LVBrqqtCvXqD3aGL1vUV6xIhfIvGR7AKBEewCN1zMRiX+j3/dD1VGh+plkVr0gyz7xGoZa9ZoaeD1CrBM4X+BpLaFT3gilpFao9sjngHzeqGpXBT7cuRKWcqeFR+OYBd9x5dyo40qyVgHKUgzMrVaM4okNW2bFB2XLT/juqZG/gQx6+yRN5MADUnfHx2cFcp6Jm1QgV7lW6OPlfWx3eYuGhQw/qcZQw5HLPQBzI+2yv8iOYpKYM85w7d3WIHqJn5M4BdxNv/dV6ACGfdglOFj17bcB3/zH7gBIrCtArEItU/dpbynMuC44kYWawuyowoGT00dMnTM160h4DEVOO98Gp3pGmyupAoZguaZu2hcLWDWbKtrtNHSJWM7hzaYmUxXLunH1/ZYYsgomHoHvv9vNdisQDl3DGRPZSIZq/Yt6vxWmjRKKgJHgGERnlSwU5LGN5rNVXoHbUz++GMLlpmvRX5ubmk3vXLj6rmQVPBZ/N0IEXEqDb1P5Ovn2AeZPQiHOvLZ1BjhVrXUEmcqKJLoS0UjHrVTWDMtISjn2Xk+RnAWsSnEjFmsNbnERSzp4Yi+gKWy2mtWm7XwtJ4hsB3B7Mrl2ZavzNWLrJMG6k1hIEO7pi8OsvcN6JC3n2OWYb9XIXnh6iHIxe60h6LKfRYhR0irkC6MfNERuPRt5NRAYsGdccIMApvcFfhuzMYpUTewMvauImSLyQuFSuqj5jl0c/f/hVdNn5/H40ZDdwDykWpfGnSKjhEH9+r9ezGTgaUeIIl+AxLhlUeXb1wEQG60uZFymplBD/Lab2RNJoCZRmzws92XApzPBM5AFZ7saqNyshEUDzAEXb1idXzU6j+DhwmkLTrKJfPI0xKxVSBgcMshmRJliy0U7dUNB6V645MrzeGqEr1WqHg459AtWxHY0WfmT27gzTLWEXwVV2t7NpZ60TAtbaRj6/2PSeZ0WxhydPf8D7rXswIq8i3m4nzRIRwiCr7opC1WKG1dJj6KO0pKkRGD72jWbUig7iBDKaQc2XYMpY5s3k22z3RuX6sPP6dTiEoXhUCGK3VY6GQbpB6uZgFnMjiq+jF3mbNbh+W9wUiWJ1h6mJEBe85CCuyeXYU1gv6ef29AqOf8Vxn2hoolGyvK58mWb43esZ7gJ44g5USQ1wAo2RbEfickvujqNdwZAT/roF3bsxSj1+1UKPI9gBulJ9dVuOzwRsjVqjCTpCRS1F2AapvmuctlR0yl8564VbPSdXeX9i6Q4XgrouilHkOUb3cBZfUnglL8BGigYL1WX1/9PNM5fNpVVaXIHIBtutCR/WVLw8govtoyReFt0uJuj03UBubCfytHdmA6D0uohS8myszRgSjPgH8AqL/U+HVjbV20nYcvK5Iv4o1W7I/ZE8cIRhvGvSc14JM14tFK9+NT3E3KMGjtNE7DoNP0GHiR5eAGl9UsGC8sAqfwX9js44sKMluFAV/XWs/yA5Id89VgXoBEMFdxC9bwSxlMtf9nueGTAmapT0IINfGcAteeC+AvI+/rjrmzA7sDhiaqFkaybMm6HpZobMsjCKQVFY84RNED4FddkXOtUOGfVzamu18abK6KVMRM0QCuZaAr8P0MQRe2WyJ0LyVrBJlkqrgysO+rb5oGfLG0QwcdqDiEX5UE1H1f88lKHV9UszPF2aEB6TgZ59lZBhSZy21mAcs3LxdM6V7b9KXoH0BA3jIGjOtV9uXjG+/0UW2tPLIRgeyOqQdgfE5d3XHrZOx+wcqb5onkFqROz6Dn0fXgRBGNh5osU7MAo6ngLFqiaIPxjoeu6vW6o5Yk2fpUyseX0uJ89ug8ELFCFL+8Buh9AsOq8w9q2hj+Xxr0aZi4kyXajQO2tx7aVeeErEHXyf468IIfxfNK/r555qy1UTavlRMvRd0+nECn8nXEdD2WRHcWYoqN1YmWFnYDHjOzQ2mxt+mbiawLMsVRaKM0qqPvoTd6Zzl8FgHvBv38/rj+ewO1SXjP9DNQRuVZJ/f946jADm2zQinBneqOOaCViyErfUVtOwZdmuUEfQbFRrPbHZkDjYTXFpYttKoWmhE65HUKguO0VYEuoO7G1Fzf6JwJPbATue8hZsTBbnDz+uPBLrz+BGUGkfReTyCbrkMSoK3UKKsrc/ZYTIOOarRX8nAeeJZWvXmudGyLNt1WFNLK2P4a1m2Vo45KvCxXrQsRmVdOX8+QrWpZ+a/78NGCn809kjQ0sJ+QqFky6BW3eNFizS7z6AuUxsqNd7i37OVOLaJZ2l1+SWoImLcqNigJ/I/xjSj0Vmy7UpnLGvpuBCl51Hl41HBm4WJi0CWHSQPpQLODE+T7BXG+3llYZauTV3wnsPI8veqQSVT7qCSzj0xI2aOnt3BGlgyyKA7tFqfLsGj2TQZqHQEvzK4u6542dY7h+cALUzbzHpULtUfqBA8In3y+vpO2rYF7eltpcZX5sq7jqAK5Wz0bMnaqm/9yrd7g6/dmCt4910ZiJXIpErjlfJnWb97Fa5NgVfvRdRlWK3GqjrIxFf7+C7N97iKUXCIXnu71VGv3I2QKeJUgvXCJQQnCv4N1EHuagmZt2utY5RBpYBjQaRsOzvo0RgWlq937M/rbxko1OpPQlfgB8dJgkeVY70U7+g80jjNx1fQpdnYUb5KKGEnabwHqlo4K8uWuwtFwXfl+4gyriXyn312ND7tAisKPgKVnsNIWJJvAqv6eJVDsmjmO29/U7etqeEo/6dZPlXBr8C4FKs0DcHl27mvcp6/ouBXB6DSRx9V+VbpI+ISQaHu41VMPhISwlfU+OuqpR5b/GrFS5SlY6tp/MkaLqHJVqgIHvWK1W481C9euD/LJJlQL1K34FkaHi1+VGntTMDeolC4RtAl+GyVrMMlICppXo2m7fMEn2rVAu9zkRar5zOj8qy1ZDubByavblO/g6c0aoXH/0dN/2fy9Xue3R7+ysodYtPo17EsVsVD0fIAap27X5r0kCWiGmixDihaGBpf0Z2ztiKZc0eCyk5aOA0dL1SgOlBR/ltmfuVg2HW5URpvmRRdnKjK1dHCtqam1BQ2OxhLm3e4zS9ivpkpZwt8NEdZbp/R+E6/l5n7LeiOat0TLeeIDO6U/d8THRUzueAwI3imoKORdFcEjpqzrEmj8l+TvNGpIQqWi75/5crdDvIvJgZQxrtTr9XPYCmLztI9OX/bgZMEj6ptf2UlzosTBF9puk92Ey4oC14la/C+N88EbP6OWv0KXa9CebuElufQ+Iq27AiZujualKGCo6lX6F9EMBuzstqG1vryC9j5StKsSmVdk7fLlSV4WuY6Bh3/79yTduQtWHjfQcs0Y44X7godv8Q4+0Ikkrhh+cxX5vwKb58iBe5ltHrIHFB6czfU0ifLZ1fwjIsOEBntXhoLR+0GZ1k1WcF7x9iNtYP1BYvRZ1JQyONXm/YeqNUcW+ZUUwookIL3pmQzM8YOprwZAZqTX8VLXALNso0+i4qeGVrKCupas4VqU8/U8qyJr4LCGiCCj0aeyBxZwR8j9lPmBhCVu9WboRXwzKlwQVb4efy5rsObNE+gbzBi/dl8/i0kpimHyavaxyuWQNWtAAXfyLK9UcZYfcx3Xf9tQsniVMF7cmv2BXi3l9Us2hBdN5P5iwjQxI/o261oSL0tGwXqpccsEybz+WruHVRWp5n6XeroFVrmksyygdG65Hx+l+CjpIjr6i36WAsso+ekhI8UfEVQgzLxljjAKmSP8KOAXxqU4KOvNEeeRR2Cl79nGesN2dQOJXgWr/1NzJwBbW0iVLEovazlYqjcRlTZNAp0c8STbqJIqC6oRPVPzfaaR5WCyew9gdVzz2dL3YKK4G8gX3pgzbkby+Ka3kIu1XbqwAFY3rapipTR5MnIXFTZqGn8E0yh359nBYWetY5MPF0hlQQf9fFZKAj/fr5s7xHBMztQs8KMBDPVgVWxR2LtSho/wuiQJA4uifY9RASfNUfeW19h+hiC2I3ZKnymxo8EnK2nVx2WUrZDgWp37m94jal1b0yyJaMvrUjWjKD9QqsHdyO0H1oCMt06VcHvDkji8JyQWnOmGYJ+mSGbKWTB4NBJCfsJhffjEah4i8UKWWE/ccQiE+hk3ErjuAUD4CV9tHTP/mYomO2vhWpU/4tf/IFfSwDAaRr/K/QvhkzP+ptxmsb/AoRfwf+l+D+5GKuecVEEsgAAAABJRU5ErkJggg=='
+};
 
-        // ============================================
-        // FIREBASE CONFIGURATION
-        // ============================================
-        const firebaseConfig = {
-          apiKey: "AIzaSyD4UGL6xY4WaUctzhBrY0_0aisBYsY5RYE",
-          authDomain: "trails-qr-tracker.firebaseapp.com",
-          databaseURL: "https://trails-qr-tracker-default-rtdb.firebaseio.com",
-          projectId: "trails-qr-tracker",
-          storageBucket: "trails-qr-tracker.firebasestorage.app",
-          messagingSenderId: "712760332585",
-          appId: "1:712760332585:web:318373bb1359360de16738",
-          measurementId: "G-0XXHDT6ZHQ"
-        };
+// Preload all icon images so they're ready when needed
+const _preloadedIcons = {};
+Object.entries(ICON_IMAGES).forEach(([key, src]) => {
+    const img = new Image();
+    img.src = src;
+    _preloadedIcons[key] = img;
+});
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const database = getDatabase(app);
+// ================================================================
+// STYLE DEFINITIONS — drives both the selector UI and generation
+// ================================================================
+const STYLES = [
+    { key:'regular',   label:'Regular',      desc:'Classic square QR',           iconType:'emoji', icon:'⬛' },
+    { key:'footprint', label:'Dino Tracks',   desc:'Modules as dino footprints',  iconType:'emoji', icon:'🦕' },
+    { key:'bootprint', label:'Boot Prints',   desc:'Modules as boot sole prints', iconType:'emoji', icon:'👢' },
+    { key:'longneck',  label:'Long Neck',     desc:'QR with Brachiosaurus icon',  iconType:'img',   icon:'longneck' },
+    { key:'trex',      label:'T-Rex',         desc:'QR with T-Rex icon',          iconType:'img',   icon:'trex' },
+    { key:'dinofoot',  label:'Foot Print',    desc:'QR with dino footprint icon', iconType:'img',   icon:'dinofoot' },
+];
 
-        // ============================================
-        // IMMEDIATE SCAN CHECK (before Firebase loads)
-        // ============================================
-        const urlParams = new URLSearchParams(window.location.search);
-        const scanId = urlParams.get('scan');
-        const userId = urlParams.get('uid');
-        
-        if (scanId && userId) {
-            document.getElementById('authContainer').style.display = 'none';
-            document.getElementById('scanContainer').classList.add('active');
-        }
+// Build selector buttons
+(function buildSelector() {
+    const container = document.getElementById('styleSelector');
+    STYLES.forEach((s, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'style-option' + (i === 0 ? ' selected' : '');
+        btn.dataset.style = s.key;
+        btn.onclick = function() { selectStyle(s.key, this); };
+        const iconHtml = s.iconType === 'img'
+            ? `<img class="style-icon-img" src="${ICON_IMAGES[s.icon]}" alt="${s.label}">`
+            : `<span class="style-icon-emoji">${s.icon}</span>`;
+        btn.innerHTML = `${iconHtml}<span class="style-name">${s.label}</span><span class="style-desc">${s.desc}</span>`;
+        container.appendChild(btn);
+    });
+})();
 
-        // ============================================
-        // STATE
-        // ============================================
-        let currentUser = null;
-        let qrCodes = {};
+window._selectedStyle = 'regular';
+window.selectStyle = function(style, el) {
+    window._selectedStyle = style;
+    document.querySelectorAll('.style-option').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+};
 
-        // ============================================
-        // DOM ELEMENTS
-        // ============================================
-        const authContainer = document.getElementById('authContainer');
-        const dashboard = document.getElementById('dashboard');
-        const scanContainer = document.getElementById('scanContainer');
-        const authEmail = document.getElementById('authEmail');
-        const authPassword = document.getElementById('authPassword');
-        const btnLogin = document.getElementById('btnLogin');
-        const authError = document.getElementById('authError');
-        const btnLogout = document.getElementById('btnLogout');
-        const userEmail = document.getElementById('userEmail');
-        const qrUrl = document.getElementById('qrUrl');
-        const qrLabel = document.getElementById('qrLabel');
-        const btnCreate = document.getElementById('btnCreate');
-        const qrGrid = document.getElementById('qrGrid');
-        const totalCodes = document.getElementById('totalCodes');
-        const totalScans = document.getElementById('totalScans');
-        const lockedCodes = document.getElementById('lockedCodes');
+// ================================================================
+// REGULAR QR — canvas-rendered with TRANSPARENT background
+// ================================================================
+window.generateRegularQR = function(scanUrl) {
+    return new Promise(function(resolve) {
+        var SIZE = 500;
+        var div = document.createElement('div');
+        div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;';
+        document.body.appendChild(div);
+        new QRCode(div, { text: scanUrl, width: SIZE, height: SIZE, correctLevel: QRCode.CorrectLevel.H });
 
-        // ============================================
-        // AUTHENTICATION
-        // ============================================
-        onAuthStateChanged(auth, (user) => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const scanId = urlParams.get('scan');
-            const userId = urlParams.get('uid');
-            
-            if (scanId && userId) {
-                handlePublicScan(userId, scanId);
-                return;
-            }
-            
-            if (user) {
-                currentUser = user;
-                userEmail.textContent = user.email;
-                showDashboard();
-                loadQRCodes();
-            } else {
-                currentUser = null;
-                showAuth();
-            }
-        });
+        setTimeout(function() {
+            var srcCanvas = div.querySelector('canvas');
+            if (!srcCanvas) { document.body.removeChild(div); resolve(null); return; }
 
-        btnLogin.addEventListener('click', async () => {
-            const email = authEmail.value.trim();
-            const password = authPassword.value;
-            
-            if (!email || !password) {
-                showError('Please enter email and password');
-                return;
-            }
+            // Copy QR to a new canvas but make white pixels transparent
+            var out = document.createElement('canvas');
+            out.width = out.height = SIZE;
+            var ctx = out.getContext('2d');
+            // Draw QR onto output canvas
+            ctx.drawImage(srcCanvas, 0, 0, SIZE, SIZE);
+            document.body.removeChild(div);
 
-            btnLogin.disabled = true;
-            btnLogin.innerHTML = '<span class="loading"></span>';
-
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-            } catch (error) {
-                showError(getErrorMessage(error.code));
-            } finally {
-                btnLogin.disabled = false;
-                btnLogin.textContent = 'Login';
-            }
-        });
-
-        btnLogout.addEventListener('click', async () => {
-            await signOut(auth);
-        });
-
-        function showError(message) {
-            authError.textContent = message;
-            authError.style.display = 'block';
-            setTimeout(() => {
-                authError.style.display = 'none';
-            }, 5000);
-        }
-
-        // ============================================
-        // FIX: Updated error codes for Firebase SDK v10+
-        // ============================================
-        function getErrorMessage(code) {
-            const messages = {
-                // Firebase SDK v10+ uses this consolidated code instead of
-                // user-not-found / wrong-password (which are now deprecated)
-                'auth/invalid-credential': 'Invalid email or password. Please try again.',
-                'auth/invalid-email': 'Invalid email address',
-                'auth/user-disabled': 'This account has been disabled. Contact the administrator.',
-                'auth/user-not-found': 'No account found with this email',
-                'auth/wrong-password': 'Incorrect password',
-                'auth/email-already-in-use': 'Email already in use',
-                'auth/weak-password': 'Password is too weak (minimum 6 characters)',
-                'auth/network-request-failed': 'Network error. Please check your connection.',
-                'auth/too-many-requests': 'Too many failed attempts. Account temporarily locked — try again later or reset your password.',
-                'auth/operation-not-allowed': 'Email/password login is not enabled. Contact the administrator.',
-                'auth/missing-password': 'Please enter a password.',
-                'auth/missing-email': 'Please enter an email address.'
-            };
-            return messages[code] || `Authentication error (${code}). Please try again.`;
-        }
-
-        function showAuth() {
-            authContainer.style.display = 'flex';
-            dashboard.classList.remove('active');
-            scanContainer.classList.remove('active');
-        }
-
-        function showDashboard() {
-            authContainer.style.display = 'none';
-            dashboard.classList.add('active');
-            scanContainer.classList.remove('active');
-        }
-
-        // ============================================
-        // QR CODE MANAGEMENT
-        // ============================================
-        function loadQRCodes() {
-            const codesRef = ref(database, `users/${currentUser.uid}/qrcodes`);
-            
-            onValue(codesRef, (snapshot) => {
-                qrCodes = snapshot.val() || {};
-                renderQRCodes();
-                updateStats();
-            });
-        }
-
-        btnCreate.addEventListener('click', async () => {
-            const url = qrUrl.value.trim();
-            const label = qrLabel.value.trim();
-
-            if (!url) {
-                alert('Please enter a URL');
-                return;
-            }
-
-            if (!label) {
-                alert('Please enter a label');
-                return;
-            }
-
-            btnCreate.disabled = true;
-            btnCreate.innerHTML = '<span class="loading"></span>';
-
-            try {
-                const newCodeRef = push(ref(database, `users/${currentUser.uid}/qrcodes`));
-                const qrId = newCodeRef.key;
-
-                const scanUrl = `${window.location.origin}${window.location.pathname}?scan=${qrId}&uid=${currentUser.uid}`;
-                const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(scanUrl)}`;
-
-                await set(newCodeRef, {
-                    id: qrId,
-                    label: label,
-                    url: url,
-                    qrImageUrl: qrCodeUrl,
-                    scanCount: 0,
-                    locked: false,
-                    createdAt: serverTimestamp(),
-                    lastScanned: null
-                });
-
-                qrUrl.value = '';
-                qrLabel.value = '';
-                
-            } catch (error) {
-                console.error('Error creating QR code:', error);
-                alert('Failed to create QR code');
-            } finally {
-                btnCreate.disabled = false;
-                btnCreate.textContent = 'Create QR';
-            }
-        });
-
-        function renderQRCodes() {
-            const codes = Object.values(qrCodes);
-            
-            if (codes.length === 0) {
-                qrGrid.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">⊞</div>
-                        <p>No QR codes yet. Create your first one above.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            codes.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-            qrGrid.innerHTML = codes.map(code => {
-                const scanUrl = `${window.location.origin}${window.location.pathname}?scan=${code.id}&uid=${currentUser.uid}`;
-                const lastScanned = code.lastScanned 
-                    ? new Date(code.lastScanned).toLocaleString() 
-                    : 'Never';
-
-                return `
-                    <div class="qr-card ${code.locked ? 'locked' : ''}" data-id="${code.id}">
-                        <div class="qr-header">
-                            <div class="qr-label">${escapeHtml(code.label)}</div>
-                            <div class="lock-icon" onclick="toggleLock('${code.id}')" title="${code.locked ? 'Unlock' : 'Lock'}">
-                                ${code.locked ? '🔒' : '🔓'}
-                            </div>
-                        </div>
-                        <div class="qr-image-container">
-                            <img src="${code.qrImageUrl}" alt="${escapeHtml(code.label)}">
-                        </div>
-                        <div class="qr-stats">
-                            <div class="qr-stat">
-                                <div class="qr-stat-label">Scans</div>
-                                <div class="qr-stat-value">${code.scanCount || 0}</div>
-                            </div>
-                            <div class="qr-stat">
-                                <div class="qr-stat-label">Last Scan</div>
-                                <div class="qr-stat-value" style="font-size: 0.75rem;">${lastScanned === 'Never' ? lastScanned : lastScanned.split(',')[0]}</div>
-                            </div>
-                        </div>
-                        <div style="margin-bottom: 1rem; padding: 0.75rem; background: var(--bg-tertiary); font-size: 0.75rem; word-break: break-all;">
-                            <div style="color: var(--text-secondary); margin-bottom: 0.25rem;">SCAN URL:</div>
-                            <a href="${scanUrl}" target="_blank" style="color: var(--accent); text-decoration: none;">${scanUrl}</a>
-                        </div>
-                        <div class="qr-actions">
-                            <button class="btn-action btn-download" onclick="downloadQR('${code.id}')">Download</button>
-                            <button class="btn-action btn-delete" onclick="deleteQR('${code.id}')" ${code.locked ? 'disabled' : ''}>
-                                ${code.locked ? 'Locked' : 'Delete'}
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function updateStats() {
-            const codes = Object.values(qrCodes);
-            totalCodes.textContent = codes.length;
-            totalScans.textContent = codes.reduce((sum, code) => sum + (code.scanCount || 0), 0);
-            lockedCodes.textContent = codes.filter(code => code.locked).length;
-        }
-
-        window.toggleLock = async (id) => {
-            const code = qrCodes[id];
-            if (!code) return;
-
-            try {
-                await update(ref(database, `users/${currentUser.uid}/qrcodes/${id}`), {
-                    locked: !code.locked
-                });
-            } catch (error) {
-                console.error('Error toggling lock:', error);
-                alert('Failed to toggle lock');
-            }
-        };
-
-        window.deleteQR = async (id) => {
-            const code = qrCodes[id];
-            if (!code) return;
-
-            if (code.locked) {
-                alert('Cannot delete locked QR code. Unlock it first.');
-                return;
-            }
-
-            if (!confirm(`Delete QR code "${code.label}"?`)) {
-                return;
-            }
-
-            try {
-                await remove(ref(database, `users/${currentUser.uid}/qrcodes/${id}`));
-            } catch (error) {
-                console.error('Error deleting QR code:', error);
-                alert('Failed to delete QR code');
-            }
-        };
-
-        window.downloadQR = async (id) => {
-            const code = qrCodes[id];
-            if (!code) return;
-
-            try {
-                const response = await fetch(code.qrImageUrl);
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${code.label.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_qr.png`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-            } catch (error) {
-                console.error('Error downloading QR code:', error);
-                alert('Failed to download QR code');
-            }
-        };
-
-        function escapeHtml(text) {
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return text.replace(/[&<>"']/g, m => map[m]);
-        }
-
-        // ============================================
-        // SCAN HANDLING
-        // ============================================
-        async function handlePublicScan(userId, qrId) {
-            authContainer.style.display = 'none';
-            dashboard.classList.remove('active');
-            scanContainer.classList.add('active');
-            
-            const iconEl = document.getElementById('scanSuccessIcon');
-            
-            try {
-                const qrRef = ref(database, `users/${userId}/qrcodes/${qrId}`);
-                const snapshot = await get(qrRef);
-                
-                if (!snapshot.exists()) {
-                    iconEl.classList.remove('loading');
-                    iconEl.textContent = '✗';
-                    document.getElementById('scanLabel').textContent = 'QR Code Not Found';
-                    return;
+            // Make white pixels transparent
+            var imageData = ctx.getImageData(0, 0, SIZE, SIZE);
+            var data = imageData.data;
+            for (var i = 0; i < data.length; i += 4) {
+                var r = data[i], g = data[i+1], b = data[i+2];
+                // If pixel is white (or near-white), make transparent
+                if (r > 200 && g > 200 && b > 200) {
+                    data[i+3] = 0; // set alpha to 0
                 }
-
-                const qrData = snapshot.val();
-                
-                const newScanCount = (qrData.scanCount || 0) + 1;
-                await update(qrRef, {
-                    scanCount: newScanCount,
-                    lastScanned: Date.now()
-                });
-
-                iconEl.classList.remove('loading');
-                iconEl.textContent = '✓';
-                document.getElementById('scanLabel').textContent = qrData.label;
-
-                setTimeout(() => {
-                    window.location.href = qrData.url;
-                }, 1000);
-
-            } catch (error) {
-                console.error('Error handling scan:', error);
-                iconEl.classList.remove('loading');
-                iconEl.textContent = '✗';
-                document.getElementById('scanLabel').textContent = 'Error Processing Scan';
             }
+            ctx.putImageData(imageData, 0, 0);
+            resolve(out.toDataURL('image/png'));
+        }, 600);
+    });
+};
+
+// ================================================================
+// SHARED: sample a canvas-rendered QR into a boolean matrix
+// ================================================================
+function sampleQRMatrix(srcCanvas) {
+    var W = srcCanvas.width;
+    var ctx = srcCanvas.getContext('2d');
+    var pixels = ctx.getImageData(0, 0, W, W).data;
+
+    function isDarkAt(px, py) {
+        var ix = Math.round(Math.min(Math.max(px, 0), W-1));
+        var iy = Math.round(Math.min(Math.max(py, 0), W-1));
+        return pixels[(iy * W + ix) * 4] < 128;
+    }
+
+    // Detect quiet zone boundaries
+    var quietLeft = 0;
+    for (var x = 0; x < W/2; x++) {
+        for (var y = W*0.1; y < W*0.9; y++) { if (isDarkAt(x,y)) { quietLeft = x; break; } }
+        if (quietLeft) break;
+    }
+    var quietTop = 0;
+    for (var y = 0; y < W/2; y++) {
+        for (var x = W*0.1; x < W*0.9; x++) { if (isDarkAt(x,y)) { quietTop = y; break; } }
+        if (quietTop) break;
+    }
+    var quietRight = W;
+    for (var x = W-1; x > W/2; x--) {
+        for (var y = W*0.1; y < W*0.9; y++) { if (isDarkAt(x,y)) { quietRight = x; break; } }
+        if (quietRight < W) break;
+    }
+
+    // Measure module size from first finder row
+    var darkEnd = quietLeft;
+    for (var x = quietLeft; x < W; x++) {
+        if (isDarkAt(x, quietTop + 2)) darkEnd = x; else break;
+    }
+    var modPx = (darkEnd - quietLeft + 1) / 7;
+    var N = Math.round((quietRight - quietLeft + modPx) / modPx);
+
+    // Build boolean matrix
+    var matrix = [];
+    for (var r = 0; r < N; r++) {
+        matrix[r] = [];
+        for (var c = 0; c < N; c++) {
+            matrix[r][c] = isDarkAt(quietLeft + (c+0.5)*modPx, quietTop + (r+0.5)*modPx);
+        }
+    }
+    return { matrix, N, modPx };
+}
+
+// Structural zone helpers
+function makeStructuralChecker(N) {
+    function isFinder(r,c)    { return (r<7&&c<7)||(r<7&&c>=N-7)||(r>=N-7&&c<7); }
+    function isSeparator(r,c) { return (r===7&&c<=7)||(c===7&&r<=7)||(r===7&&c>=N-8)||(c===N-8&&r<=7)||(r===N-8&&c<=7)||(c===7&&r>=N-8); }
+    function isTiming(r,c)    { return r===6||c===6; }
+    function isFormat(r,c)    { return (r===8&&c<=8)||(r===8&&c>=N-8)||(c===8&&r<=8)||(c===8&&r>=N-8); }
+    function isAlign(r,c)     { var b=N-7; return Math.abs(r-b)<=2&&Math.abs(c-b)<=2; }
+    return function(r,c) { return isFinder(r,c)||isSeparator(r,c)||isTiming(r,c)||isFormat(r,c)||isAlign(r,c); };
+}
+
+// ================================================================
+// SHARED: render a module-stamp QR onto a canvas (TRANSPARENT bg)
+// drawStampFn(ctx, x, y, cellSize) draws one dark module stamp
+// ================================================================
+function renderStampQR(scanUrl, drawStampFn, resolve) {
+    var SAMPLE_SIZE = 4500;
+    var div = document.createElement('div');
+    div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;';
+    document.body.appendChild(div);
+    new QRCode(div, { text: scanUrl, width: SAMPLE_SIZE, height: SAMPLE_SIZE, correctLevel: QRCode.CorrectLevel.H });
+
+    setTimeout(function() {
+        var srcCanvas = div.querySelector('canvas');
+        if (!srcCanvas) { document.body.removeChild(div); resolve(null); return; }
+
+        var result = sampleQRMatrix(srcCanvas);
+        document.body.removeChild(div);
+        var matrix = result.matrix, N = result.N;
+
+        if (!matrix[0] || matrix[0][0] !== true || N < 21) {
+            console.warn('Matrix read failed, N=' + N);
+            resolve(null); return;
         }
 
-        // Allow Enter key for login
-        authPassword.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                btnLogin.click();
-            }
-        });
+        var CELL  = 28;
+        var QUIET = 4;
+        var TOTAL = (N + QUIET*2) * CELL;
 
-        // Also allow Enter on email field
-        authEmail.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                authPassword.focus();
+        var outCanvas = document.createElement('canvas');
+        outCanvas.width = outCanvas.height = TOTAL;
+        var ctx = outCanvas.getContext('2d');
+        // NOTE: No white fillRect — canvas stays transparent by default
+
+        var isStructural = makeStructuralChecker(N);
+        function ox(c) { return (QUIET+c)*CELL; }
+        function oy(r) { return (QUIET+r)*CELL; }
+
+        // Pass 1: structural zones as solid squares (dark modules only, light = transparent)
+        for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) {
+            if (!isStructural(r,c)) continue;
+            if (matrix[r][c]) {
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(ox(c), oy(r), CELL, CELL);
             }
+            // light structural modules: leave transparent (no fill)
+        }
+        // Pass 2: data modules as stamps
+        for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) {
+            if (isStructural(r,c) || !matrix[r][c]) continue;
+            drawStampFn(ctx, ox(c), oy(r), CELL);
+        }
+
+        resolve(outCanvas.toDataURL('image/png'));
+    }, 800);
+}
+
+// ================================================================
+// DINO TRACKS — stamp each dark module with a dino footprint
+// ================================================================
+function drawDinoFootprint(ctx, x, y, S) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x, y, S, S); ctx.clip();
+    ctx.fillStyle = '#000000';
+    // Heel pad
+    ctx.beginPath(); ctx.ellipse(x+S*0.50, y+S*0.76, S*0.32, S*0.20, 0, 0, Math.PI*2); ctx.fill();
+    // Center toe
+    ctx.beginPath(); ctx.ellipse(x+S*0.50-S*0.03, y+S*0.43, S*0.095, S*0.26, -0.10, 0, Math.PI*2); ctx.fill();
+    // Center claw
+    ctx.beginPath(); ctx.ellipse(x+S*0.50-S*0.06, y+S*0.12, S*0.058, S*0.10, -0.20, 0, Math.PI*2); ctx.fill();
+    // Left toe
+    ctx.beginPath(); ctx.ellipse(x+S*0.22, y+S*0.46, S*0.085, S*0.25, -0.90, 0, Math.PI*2); ctx.fill();
+    // Left claw
+    ctx.beginPath(); ctx.ellipse(x+S*0.065, y+S*0.20, S*0.052, S*0.095, -0.90, 0, Math.PI*2); ctx.fill();
+    // Right toe
+    ctx.beginPath(); ctx.ellipse(x+S*0.74, y+S*0.50, S*0.085, S*0.21, 0.70, 0, Math.PI*2); ctx.fill();
+    // Right claw
+    ctx.beginPath(); ctx.ellipse(x+S*0.895, y+S*0.28, S*0.052, S*0.085, 0.70, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+}
+
+window.generateFootprintQR = function(scanUrl) {
+    return new Promise(function(resolve) { renderStampQR(scanUrl, drawDinoFootprint, resolve); });
+};
+
+// ================================================================
+// BOOT PRINTS — stamp each dark module with the hiking boot sole
+// ================================================================
+function drawBootPrint(ctx, x, y, S) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x, y, S, S); ctx.clip();
+    var img = _preloadedIcons['bootprint'];
+    if (img && img.complete && img.naturalWidth > 0) {
+        var iw = img.naturalWidth, ih = img.naturalHeight;
+        var scale = Math.min(S / iw, S / ih);
+        var dw = iw * scale, dh = ih * scale;
+        ctx.drawImage(img, x + (S - dw) / 2, y + (S - dh) / 2, dw, dh);
+    } else {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(x + S*0.15, y + S*0.03, S*0.7, S*0.94);
+    }
+    ctx.restore();
+}
+
+window.generateBootprintQR = function(scanUrl) {
+    return new Promise(function(resolve) { renderStampQR(scanUrl, drawBootPrint, resolve); });
+};
+
+// ================================================================
+// IMAGE ICON OVERLAY QR (Long Neck / T-Rex / Dino Footprint)
+// TRANSPARENT background — white pixels from QR lib are removed
+// ================================================================
+window.generateIconQR = function(scanUrl, iconKey) {
+    return new Promise(function(resolve) {
+        var SIZE = 500;
+        var div = document.createElement('div');
+        div.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;';
+        document.body.appendChild(div);
+        new QRCode(div, { text: scanUrl, width: SIZE, height: SIZE, correctLevel: QRCode.CorrectLevel.H });
+
+        setTimeout(function() {
+            var srcCanvas = div.querySelector('canvas');
+            if (!srcCanvas) { document.body.removeChild(div); resolve(null); return; }
+
+            var out = document.createElement('canvas');
+            out.width = out.height = SIZE;
+            var ctx = out.getContext('2d');
+            ctx.drawImage(srcCanvas, 0, 0, SIZE, SIZE);
+            document.body.removeChild(div);
+
+            // Make white pixels transparent (background removal)
+            var imageData = ctx.getImageData(0, 0, SIZE, SIZE);
+            var data = imageData.data;
+            for (var i = 0; i < data.length; i += 4) {
+                var r = data[i], g = data[i+1], b = data[i+2];
+                if (r > 200 && g > 200 && b > 200) {
+                    data[i+3] = 0;
+                }
+            }
+            ctx.putImageData(imageData, 0, 0);
+
+            var iconSize = Math.round(SIZE * 0.22);
+            var cx = SIZE/2, cy = SIZE/2;
+            var pad = Math.round(iconSize * 0.18);
+            var bh = iconSize/2 + pad;
+            var r  = Math.round(bh * 0.3);
+
+            // Draw white rounded badge behind the icon (so icon is readable)
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(cx-bh+r, cy-bh);
+            ctx.arcTo(cx+bh, cy-bh, cx+bh, cy+bh, r);
+            ctx.arcTo(cx+bh, cy+bh, cx-bh, cy+bh, r);
+            ctx.arcTo(cx-bh, cy+bh, cx-bh, cy-bh, r);
+            ctx.arcTo(cx-bh, cy-bh, cx+bh, cy-bh, r);
+            ctx.closePath();
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.lineWidth = 1.5; ctx.strokeStyle = '#cccccc'; ctx.stroke();
+            ctx.restore();
+
+            var iconImg = _preloadedIcons[iconKey];
+            var drawIcon = function() {
+                var iw = iconImg.naturalWidth||1, ih = iconImg.naturalHeight||1;
+                var aspect = iw/ih;
+                var dw = aspect>=1 ? iconSize : iconSize*aspect;
+                var dh = aspect>=1 ? iconSize/aspect : iconSize;
+                ctx.drawImage(iconImg, cx-dw/2, cy-dh/2, dw, dh);
+                resolve(out.toDataURL('image/png'));
+            };
+            if (iconImg.complete && iconImg.naturalWidth > 0) drawIcon();
+            else { iconImg.onload = drawIcon; iconImg.onerror = function(){ resolve(out.toDataURL('image/png')); }; }
+        }, 600);
+    });
+};
+
+// ================================================================
+// DOWNLOAD HELPER — strips white background from legacy API URLs
+// and downloads the QR as a transparent PNG
+// ================================================================
+window._downloadTransparent = async function(qrImageUrl, filename) {
+    try {
+        // If it's already a data URL (canvas-generated), download directly
+        if (qrImageUrl.startsWith('data:')) {
+            const a = document.createElement('a');
+            a.href = qrImageUrl;
+            a.download = filename;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            return;
+        }
+
+        // For legacy API URLs (https://api.qrserver.com/...), fetch and make transparent
+        const res = await fetch(qrImageUrl);
+        const blob = await res.blob();
+        const bmp = await createImageBitmap(blob);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = bmp.width; canvas.height = bmp.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(bmp, 0, 0);
+
+        // Remove white background
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            if (data[i] > 200 && data[i+1] > 200 && data[i+2] > 200) {
+                data[i+3] = 0;
+            }
+        }
+        ctx.putImageData(imageData, 0, 0);
+
+        canvas.toBlob(function(transparentBlob) {
+            const burl = URL.createObjectURL(transparentBlob);
+            const a = document.createElement('a');
+            a.href = burl; a.download = filename;
+            document.body.appendChild(a); a.click();
+            URL.revokeObjectURL(burl); document.body.removeChild(a);
+        }, 'image/png');
+    } catch(e) {
+        console.error('Transparent download failed:', e);
+        alert('Download failed: ' + e.message);
+    }
+};
+
+</script>
+
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getDatabase, ref, set, onValue, remove, update, push, serverTimestamp, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyD4UGL6xY4WaUctzhBrY0_0aisBYsY5RYE",
+        authDomain: "trails-qr-tracker.firebaseapp.com",
+        databaseURL: "https://trails-qr-tracker-default-rtdb.firebaseio.com",
+        projectId: "trails-qr-tracker",
+        storageBucket: "trails-qr-tracker.firebasestorage.app",
+        messagingSenderId: "712760332585",
+        appId: "1:712760332585:web:318373bb1359360de16738",
+        measurementId: "G-0XXHDT6ZHQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('scan') && urlParams.get('uid')) {
+        document.getElementById('authContainer').style.display = 'none';
+        document.getElementById('scanContainer').classList.add('active');
+    }
+
+    let currentUser = null;
+    let qrCodes = {};
+
+    const authContainer = document.getElementById('authContainer');
+    const dashboard = document.getElementById('dashboard');
+    const scanContainer = document.getElementById('scanContainer');
+    const generatingOverlay = document.getElementById('generatingOverlay');
+    const generatingText = document.getElementById('generatingText');
+
+    onAuthStateChanged(auth, user => {
+        const p = new URLSearchParams(window.location.search);
+        const sid = p.get('scan'), uid = p.get('uid');
+        if (sid && uid) { handlePublicScan(uid, sid); return; }
+        if (user) { currentUser = user; document.getElementById('userEmail').textContent = user.email; showDashboard(); loadQRCodes(); }
+        else { currentUser = null; showAuth(); }
+    });
+
+    document.getElementById('btnLogin').addEventListener('click', async () => {
+        const email = document.getElementById('authEmail').value.trim();
+        const password = document.getElementById('authPassword').value;
+        if (!email || !password) { showError('Please enter email and password'); return; }
+        const btn = document.getElementById('btnLogin');
+        btn.disabled = true; btn.innerHTML = '<span class="loading"></span>';
+        try { await signInWithEmailAndPassword(auth, email, password); }
+        catch(e) { showError(getErrMsg(e.code)); }
+        finally { btn.disabled = false; btn.textContent = 'Login'; }
+    });
+
+    document.getElementById('btnLogout').addEventListener('click', () => signOut(auth));
+    document.getElementById('authPassword').addEventListener('keypress', e => { if(e.key==='Enter') document.getElementById('btnLogin').click(); });
+
+    function showError(msg) { const el = document.getElementById('authError'); el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display='none', 5000); }
+    function getErrMsg(code) { return {'auth/invalid-email':'Invalid email','auth/user-disabled':'Account disabled','auth/user-not-found':'No account found','auth/wrong-password':'Incorrect password','auth/network-request-failed':'Network error','auth/too-many-requests':'Too many attempts'}[code] || 'Authentication error'; }
+    function showAuth() { authContainer.style.display='flex'; dashboard.classList.remove('active'); scanContainer.classList.remove('active'); }
+    function showDashboard() { authContainer.style.display='none'; dashboard.classList.add('active'); scanContainer.classList.remove('active'); }
+
+    function loadQRCodes() {
+        onValue(ref(db, `users/${currentUser.uid}/qrcodes`), snap => {
+            qrCodes = snap.val() || {};
+            renderQRCodes(); updateStats();
         });
-    </script>
+    }
+
+    document.getElementById('btnCreate').addEventListener('click', async () => {
+        const url = document.getElementById('qrUrl').value.trim();
+        const label = document.getElementById('qrLabel').value.trim();
+        if (!url) { alert('Please enter a URL'); return; }
+        if (!label) { alert('Please enter a label'); return; }
+        const style = window._selectedStyle;
+        const btn = document.getElementById('btnCreate');
+        btn.disabled = true;
+        const msgs = { regular:'GENERATING QR CODE...', footprint:'STAMPING DINO TRACKS...', bootprint:'LACING UP BOOTS...', longneck:'ADDING LONG NECK DINO...', trex:'SUMMONING T-REX...', dinofoot:'STAMPING FOOTPRINT...' };
+        generatingText.textContent = msgs[style] || 'GENERATING...';
+        generatingOverlay.classList.add('active');
+        try {
+            const newRef = push(ref(db, `users/${currentUser.uid}/qrcodes`));
+            const qrId = newRef.key;
+            const scanUrl = `${window.location.origin}${window.location.pathname}?scan=${qrId}&uid=${currentUser.uid}`;
+
+            let qrImageUrl;
+            if      (style === 'regular')   qrImageUrl = await window.generateRegularQR(scanUrl);
+            else if (style === 'footprint') qrImageUrl = await window.generateFootprintQR(scanUrl);
+            else if (style === 'bootprint') qrImageUrl = await window.generateBootprintQR(scanUrl);
+            else if (style === 'longneck')  qrImageUrl = await window.generateIconQR(scanUrl, 'longneck');
+            else if (style === 'trex')      qrImageUrl = await window.generateIconQR(scanUrl, 'trex');
+            else if (style === 'dinofoot')  qrImageUrl = await window.generateIconQR(scanUrl, 'dinofoot');
+
+            if (!qrImageUrl) throw new Error('QR generation returned null');
+            await set(newRef, { id:qrId, label, url, qrImageUrl, qrStyle:style, scanCount:0, locked:false, createdAt:serverTimestamp(), lastScanned:null });
+            document.getElementById('qrUrl').value = '';
+            document.getElementById('qrLabel').value = '';
+        } catch(e) { console.error(e); alert('Failed to create QR code: ' + e.message); }
+        finally { btn.disabled = false; generatingOverlay.classList.remove('active'); }
+    });
+
+    const styleLabels = { regular:'⬛ Regular', footprint:'🦕 Dino Tracks', bootprint:'👢 Boot Prints', longneck:'🦕 Long Neck', trex:'🦖 T-Rex', dinofoot:'🐾 Foot Print' };
+
+    function renderQRCodes() {
+        const codes = Object.values(qrCodes);
+        const grid = document.getElementById('qrGrid');
+        if (!codes.length) { grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⊞</div><p>No QR codes yet. Create your first one above.</p></div>`; return; }
+        codes.sort((a,b) => (b.createdAt||0)-(a.createdAt||0));
+        grid.innerHTML = codes.map(code => {
+            const scanUrl = `${window.location.origin}${window.location.pathname}?scan=${code.id}&uid=${currentUser.uid}`;
+            const lastScanned = code.lastScanned ? new Date(code.lastScanned).toLocaleString() : 'Never';
+            return `
+                <div class="qr-card ${code.locked?'locked':''}" data-id="${code.id}">
+                    <div class="qr-style-badge">${styleLabels[code.qrStyle]||'⬛ Regular'}</div>
+                    <div class="qr-header">
+                        <div class="qr-label">${esc(code.label)}</div>
+                        <div class="lock-icon" onclick="toggleLock('${code.id}')">${code.locked?'🔒':'🔓'}</div>
+                    </div>
+                    <div class="qr-image-container">
+                        <img src="${code.qrImageUrl}" alt="${esc(code.label)}" style="max-width:100%;height:auto;">
+                    </div>
+                    <div class="qr-stats">
+                        <div class="qr-stat"><div class="qr-stat-label">Scans</div><div class="qr-stat-value">${code.scanCount||0}</div></div>
+                        <div class="qr-stat"><div class="qr-stat-label">Last Scan</div><div class="qr-stat-value" style="font-size:0.75rem;">${lastScanned==='Never'?lastScanned:lastScanned.split(',')[0]}</div></div>
+                    </div>
+                    <div style="margin-bottom:1rem;padding:0.75rem;background:var(--bg-tertiary);font-size:0.75rem;word-break:break-all;">
+                        <div style="color:var(--text-secondary);margin-bottom:0.25rem;">SCAN URL:</div>
+                        <a href="${scanUrl}" target="_blank" style="color:var(--accent);text-decoration:none;">${scanUrl}</a>
+                    </div>
+                    <div class="qr-actions">
+                        <button class="btn-action btn-download" onclick="downloadQR('${code.id}')">Download</button>
+                        <button class="btn-action btn-delete" onclick="deleteQR('${code.id}')" ${code.locked?'disabled':''}>${code.locked?'Locked':'Delete'}</button>
+                    </div>
+                </div>`;
+        }).join('');
+    }
+
+    function updateStats() {
+        const codes = Object.values(qrCodes);
+        document.getElementById('totalCodes').textContent = codes.length;
+        document.getElementById('totalScans').textContent = codes.reduce((s,c)=>s+(c.scanCount||0),0);
+        document.getElementById('lockedCodes').textContent = codes.filter(c=>c.locked).length;
+    }
+
+    window.toggleLock = async id => {
+        const code = qrCodes[id]; if (!code) return;
+        try { await update(ref(db,`users/${currentUser.uid}/qrcodes/${id}`),{locked:!code.locked}); }
+        catch(e) { alert('Failed to toggle lock'); }
+    };
+    window.deleteQR = async id => {
+        const code = qrCodes[id]; if (!code) return;
+        if (code.locked) { alert('Unlock first.'); return; }
+        if (!confirm(`Delete "${code.label}"?`)) return;
+        try { await remove(ref(db,`users/${currentUser.uid}/qrcodes/${id}`)); }
+        catch(e) { alert('Failed to delete'); }
+    };
+
+    // Updated downloadQR — always produces transparent PNG
+    window.downloadQR = async id => {
+        const code = qrCodes[id]; if (!code) return;
+        const filename = `${code.label.replace(/[^a-z0-9]/gi,'_').toLowerCase()}_qr.png`;
+        window._downloadTransparent(code.qrImageUrl, filename);
+    };
+
+    function esc(t) { return t.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+
+    async function handlePublicScan(userId, qrId) {
+        authContainer.style.display='none'; dashboard.classList.remove('active'); scanContainer.classList.add('active');
+        const iconEl = document.getElementById('scanSuccessIcon');
+        try {
+            const qrRef = ref(db,`users/${userId}/qrcodes/${qrId}`);
+            const snap = await get(qrRef);
+            if (!snap.exists()) { iconEl.classList.remove('loading'); iconEl.textContent='✗'; document.getElementById('scanLabel').textContent='QR Code Not Found'; return; }
+            const qrData = snap.val();
+            await update(qrRef,{scanCount:(qrData.scanCount||0)+1,lastScanned:Date.now()});
+            iconEl.classList.remove('loading'); iconEl.textContent='✓';
+            document.getElementById('scanLabel').textContent = qrData.label;
+            setTimeout(()=>{ window.location.href = qrData.url; },1000);
+        } catch(e) { iconEl.classList.remove('loading'); iconEl.textContent='✗'; document.getElementById('scanLabel').textContent='Error Processing Scan'; }
+    }
+</script>
 </body>
 </html>
